@@ -1,0 +1,148 @@
+{
+    "autochoose_resBattle": {
+        "next": [
+            "openBattle"
+        ]
+    },
+    "openBattle": {
+        "recognition": "TemplateMatch",
+        "template": "battle button.png",
+        "roi": [
+            1021,
+            476,
+            207,
+            244
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "openVault"
+        ]
+    },
+    "openVault": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            586,
+            558,
+            314,
+            162
+        ],
+        "action": "Click",
+        "target_offset": [
+            742,
+            687,
+            1,
+            1
+        ],
+        "post_delay": 500,
+        "next": [
+            "findx2",
+            "chooseOwnmission"
+        ]
+    },
+    "findx2": {
+        "recognition": "TemplateMatch",
+        "template": "x2.png",
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "findmission"
+        ]
+    },
+    "findmission": {
+        "action": "Swipe",
+        "begin": [
+            1000,
+            100,
+            1,
+            1
+        ],
+        "end": [
+            100,
+            100,
+            1,
+            1
+        ],
+        "post_delay": 500,
+        "next": [
+            "scanmission"
+        ]
+    },
+    "scanmission": {
+        "recognition": "OCR",
+        "expected": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+        ],
+        "action": "Click",
+        "index": -1,
+        "post_delay": 500,
+        "next": [
+            "entermission"
+        ]
+    },
+    "entermission": {
+        "recognition": "TemplateMatch",
+        "template": "fast battle.png",
+        "roi": [],
+        "action": "Click",
+        "next": [
+            "maximization"
+        ]
+    },
+    "maximization": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [],
+        "action": "Click",
+        "next": [
+            "launchbattle"
+        ]
+    },
+    "launchbattle": {
+        "recognition": "TemplateMatch",
+        "template": "launch battle.png",
+        "roi": [],
+        "action": "Click",
+        "post_delay": 4000,
+        "next": [
+            "completebattle"
+        ]
+    },
+    "completebattle": {
+        "recognition": "TemplateMatch",
+        "template": "battle finish.png",
+        "roi": [],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "returnHome"
+        ]
+    },
+    "returnHome": {
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
+        "action": "Click"
+    },
+    "chooseOwnmission": {
+        "recognition": "TemplateMatch",
+        "template": "ex mission.png",
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "findmission"
+        ]
+    }
+}

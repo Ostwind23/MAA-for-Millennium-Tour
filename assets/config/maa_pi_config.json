@@ -1,0 +1,21 @@
+{
+    "controller": {
+        "name": "桌面端",
+        "type": "Win32"
+    },
+    "win32": {
+        "hwnd": "0000000000070c38"
+    },
+    "resource": "B 服",
+    "task": [
+        {
+            "name": "选项任务",
+            "option": [
+                {
+                    "name": "任务选项1",
+                    "value": "文本1"
+                }
+            ]
+        }
+    ]
+}
