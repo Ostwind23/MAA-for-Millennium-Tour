@@ -57,7 +57,7 @@
             1,
             1
         ],
-        "post_delay": 3000
+        "post_delay": 5000
     },
     "Homeflag1": {
         "recognition": "TemplateMatch",
@@ -271,7 +271,7 @@
             145
         ],
         "action": "Click",
-        "post_delay": 1000,
+        "post_delay": 3000,
         "next": [
             "openDivisionlist"
         ]
@@ -287,7 +287,7 @@
             207
         ],
         "action": "Click",
-        "post_delay": 500,
+        "post_delay": 3000,
         "next": [
             "Division_restroom"
         ]
@@ -369,12 +369,14 @@
         "post_delay": 1000,
         "next": [
             "Sub_getGift",
+            "Sub_Getreward",
             "openExchangestore",
             "Homeflag4"
         ]
     },
     "Sub_getGift": {
         "is_sub": true,
+        "pre_delay": 500,
         "recognition": "TemplateMatch",
         "template": "Alert.png",
         "roi": [

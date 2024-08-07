@@ -66,16 +66,10 @@
     "scanmission": {
         "recognition": "OCR",
         "expected": [
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7"
+            "\\d"
         ],
         "action": "Click",
-        "index": -1,
+        "index": -2,
         "post_delay": 500,
         "next": [
             "entermission"
@@ -217,11 +211,10 @@
             "3",
             "4",
             "5",
-            "6",
-            "7"
+            "6"
         ],
         "action": "Click",
-        "index": -1,
+        "index": -2,
         "post_delay": 500,
         "next": [
             "enterGhostmission"
@@ -267,7 +260,23 @@
         "action": "Click",
         "post_wait_freezes": 1000,
         "next": [
-            "completeGhostbattle"
+            "completeGhostbattle",
+            "cancelforsupplyGhost"
+        ]
+    },
+    "cancelforsupplyGhost": {
+        "recognition": "TemplateMatch",
+        "template": "cancel.png",
+        "roi": [
+            301,
+            429,
+            287,
+            143
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "returnHome"
         ]
     },
     "completeGhostbattle": {
@@ -280,7 +289,7 @@
             142
         ],
         "action": "Click",
-        "post_delay": 500,
+        "post_delay": 3000,
         "next": [
             "returnHome"
         ]
