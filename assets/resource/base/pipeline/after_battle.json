@@ -178,8 +178,13 @@
     "openDailyTask": {
         "_doc": "从主菜单开始，日常任务链开端",
         "recognition": "TemplateMatch",
-        "template": "daily task.png",
-        "roi": [],
+        "template": "Alert.png",
+        "roi": [
+            25,
+            103,
+            72,
+            75
+        ],
         "action": "Click",
         "next": [
             "findaccessableTask"
@@ -196,9 +201,20 @@
     "dailyTaskaward": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [],
+        "roi": [
+            681,
+            1,
+            202,
+            60
+        ],
+        "pre_delay": 200,
         "action": "Click",
-        "target": [],
+        "target": [
+            1170,
+            424,
+            1,
+            1
+        ],
         "next": [
             "Sub_Getreward",
             "findaccessableTask"
@@ -207,9 +223,20 @@
     "weeklyTaskaward": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [],
+        "roi": [
+            884,
+            0,
+            196,
+            57
+        ],
+        "pre_delay": 1000,
         "action": "Click",
-        "target": [],
+        "target": [
+            1170,
+            424,
+            1,
+            1
+        ],
         "next": [
             "Sub_Getreward",
             "findaccessableTask"
@@ -236,7 +263,12 @@
     "startrolling": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [],
+        "roi": [
+            12,
+            170,
+            85,
+            67
+        ],
         "action": "Click",
         "next": [
             "sec_rolling"
@@ -255,7 +287,12 @@
     "accessbattlepass": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [],
+        "roi": [
+            963,
+            151,
+            317,
+            225
+        ],
         "action": "Click",
         "next": [
             "gainpassaward"
@@ -264,7 +301,12 @@
     "gainpassaward": {
         "recognition": "TemplateMatch",
         "template": "gainpassaward.png",
-        "roi": [],
+        "roi": [
+            180,
+            545,
+            289,
+            145
+        ],
         "action": "Click",
         "post_delay": 1000,
         "next": [

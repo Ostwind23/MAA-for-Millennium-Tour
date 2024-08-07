@@ -128,7 +128,8 @@
         ],
         "post_delay": 1000,
         "next": [
-            "openDivisionlist"
+            "openDivisionlist",
+            "Homeflag3"
         ]
     },
     "openDivisionlist": {
@@ -270,22 +271,10 @@
             145
         ],
         "action": "Click",
-        "post_delay": 500,
+        "post_delay": 1000,
         "next": [
-            "Division_back"
+            "openDivisionlist"
         ]
-    },
-    "Division_back": {
-        "recognition": "TemplateMatch",
-        "template": "back.png",
-        "roi": [
-            0,
-            0,
-            215,
-            140
-        ],
-        "action": "Click",
-        "post_delay": 500
     },
     "Sub_Divisionrest": {
         "is_sub": true,
@@ -318,6 +307,18 @@
             "Division_back"
         ]
     },
+    "Division_back": {
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 500
+    },
     "Homeflag3": {
         "recognition": "TemplateMatch",
         "template": "home.png",
@@ -328,7 +329,7 @@
             140
         ],
         "action": "Click",
-        "post_delay": 1000,
+        "post_delay": 2000,
         "next": [
             "openStore"
         ]
@@ -343,9 +344,10 @@
             171
         ],
         "action": "Click",
-        "post_delay": 1000,
+        "post_delay": 2000,
         "next": [
-            "openGiftstore"
+            "openGiftstore",
+            "openExchangestore"
         ]
     },
     "openGiftstore": {
@@ -384,8 +386,26 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "Sub_Getreward"
+            "Sub_buy",
+            "Sub_Getreward",
+            "Subreturn_back"
         ]
+    },
+    "Sub_buy": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "buy button.png",
+        "roi": [
+            675,
+            448,
+            291,
+            143
+        ],
+        "action": "Click",
+        "post_delay": 500
+    },
+    "Subreturn_back": {
+        "action": "DoNothing"
     },
     "openExchangestore": {
         "recognition": "TemplateMatch",
@@ -454,7 +474,6 @@
         ]
     },
     "StopTask": {
-        "recognition": "DirectHit",
         "action": "StopTask"
     }
 }
