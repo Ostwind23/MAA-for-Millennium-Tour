@@ -57,7 +57,7 @@
             1,
             1
         ],
-        "post_delay": 5000
+        "post_delay": 1000
     },
     "Homeflag1": {
         "recognition": "TemplateMatch",
@@ -152,7 +152,8 @@
         "next": [
             "Sub_Division_award",
             "Sub_Divisionchange",
-            "Sub_Divisionrest",
+            "reopenDivisionlist",
+            "Divisionrest",
             "Homeflag3"
         ]
     },
@@ -276,8 +277,28 @@
             "openDivisionlist"
         ]
     },
-    "Sub_Divisionrest": {
-        "is_sub": true,
+    "reopenDivisionlist": {
+        "recognition": "TemplateMatch",
+        "template": "waiting list.png",
+        "inverse": true,
+        "roi": [
+            809,
+            0,
+            269,
+            192
+        ],
+        "action": "Click",
+        "target": [
+            57,
+            98,
+            120,
+            34
+        ],
+        "next": [
+            "Divisionrest"
+        ]
+    },
+    "Divisionrest": {
         "recognition": "TemplateMatch",
         "template": "division rest.png",
         "roi": [
