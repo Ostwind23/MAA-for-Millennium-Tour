@@ -282,10 +282,10 @@
         "template": "waiting list.png",
         "inverse": true,
         "roi": [
-            640,
+            809,
             0,
-            640,
-            360
+            269,
+            192
         ],
         "action": "Click",
         "target": [
