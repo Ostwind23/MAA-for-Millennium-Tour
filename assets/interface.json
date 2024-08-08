@@ -35,37 +35,83 @@
             "entry": "Startup"
         },
         {
-            "name": "选项任务",
-            "entry": "MyTask2",
+            "name": "选择资源关+骚灵之境战斗",
+            "entry": "autochoose_resBattle",
             "option": [
-                "任务选项1"
+                "自动选择当天x2的关,如若没有x2则选择经验/本勒/技能书关（默认经验关）",
+                "关卡选择设置",
+                "骚灵之境关卡选择设置"
             ]
         },
         {
-            "name": "参数任务",
-            "entry": "MyTask3",
-            "option": [
-                "任务选项1"
-            ],
-            "param": {}
+            "name": "后半部分日常（自动打开游戏+投色子+关公告+神谕司+商店）",
+            "entry": "after_battle"
         }
     ],
     "option": {
-        "任务选项1": {
+        "自动选择当天x2的关,如若没有x2则选择经验/本勒/技能书关（默认经验关）": {
             "cases": [
                 {
-                    "name": "文本1",
+                    "name": "本勒关",
                     "param": {
-                        "OcrTask": {
-                            "text": "文本1"
+                        "chooseOwnmission": {
+                            "template": "money mission.png"
                         }
                     }
                 },
                 {
-                    "name": "文本2",
+                    "name": "经验关",
                     "param": {
-                        "OcrTask": {
-                            "text": "文本2"
+                        "chooseOwnmission": {
+                            "template": "exp mission.png"
+                        }
+                    }
+                },
+                {
+                    "name": "技能书关",
+                    "param": {
+                        "chooseOwnmission": {
+                            "template": "skill mission.png"
+                        }
+                    }
+                }
+            ]
+        },
+        "关卡选择设置": {
+            "cases": [
+                {
+                    "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
+                    "param": {
+                        "scanmission": {
+                            "index": -2
+                        }
+                    }
+                },
+                {
+                    "name": "选择最后一关",
+                    "param": {
+                        "scanmission": {
+                            "index": -1
+                        }
+                    }
+                }
+            ]
+        },
+        "骚灵之境关卡选择设置": {
+            "cases": [
+                {
+                    "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
+                    "param": {
+                        "scanGhostmission": {
+                            "index": -2
+                        }
+                    }
+                },
+                {
+                    "name": "选择最后一关",
+                    "param": {
+                        "scanGhostmission": {
+                            "index": -1
                         }
                     }
                 }
