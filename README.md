@@ -7,9 +7,4 @@
 
 第一次公测，仍需要大范围测试来辅助debug。烦请报备bug的侍主带上卡住时的游戏内截图和Maa终端的截图。多谢！
 
-感谢以下开发者对本项目作出的贡献（下面链接改成你自己的项目地址）:
-
-<a href="https://github.com/MaaXYZ/MaaFramework/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=MaaXYZ/MaaFramework&max=1000" />
-</a>
 
