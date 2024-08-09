@@ -1,0 +1,253 @@
+{
+    "openBattleforTower": {
+        "recognition": "TemplateMatch",
+        "template": "battle button.png",
+        "roi": [
+            1021,
+            476,
+            207,
+            244
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "enterStrategy"
+        ]
+    },
+    "enterStrategy": {
+        "recognition": "TemplateMatch",
+        "template": "strategy.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "enterTower"
+        ]
+    },
+    "enterTower": {
+        "recognition": "TemplateMatch",
+        "template": "Tower.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Towermainpage"
+        ]
+    },
+    "Towermainpage": {
+        "recognition": "TemplateMatch",
+        "template": "Towerbattle.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "SelectWitch1"
+        ]
+    },
+    "SelectWitch1": {
+        "recognition": "TemplateMatch",
+        "template": "lvlvzi.png",
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "SelectWitch2"
+        ]
+    },
+    "SelectWitch2": {
+        "recognition": "TemplateMatch",
+        "template": "keluoluo.png",
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "SelectWitch3"
+        ]
+    },
+    "SelectWitch3": {
+        "recognition": "TemplateMatch",
+        "template": "Angel.png",
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "SelectWitchDone"
+        ]
+    },
+    "SelectWitchDone": {
+        "recognition": "TemplateMatch",
+        "template": "confirmWitch.png",
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "SelectStartrace"
+        ]
+    },
+    "SelectStartrace": {
+        "next": [
+            "Sub_scaniffull""Sub_SelectStartrace",
+            "Sub_skipStartrace",
+            "InTower"
+        ]
+    },
+    "Sub_scaniffull": {
+        "is_sub": true,
+        "recognition": "OCR",
+        "expected": "32000",
+        "next": [
+            "HomeflagDoc"
+        ]
+    },
+    "Sub_SelectStartrace": {
+        "is_sub": true,
+        "action": "Click",
+        "target": [],
+        "post_delay": 500,
+        "next": [
+            "SelectStartrace2"
+        ]
+    },
+    "SelectStartrace2": {
+        "action": "Click",
+        "target": [],
+        "post_delay": 500,
+        "next": [
+            "SelectStartraceDone"
+        ]
+    },
+    "SelectStartraceDone": {
+        "recognition": "TemplateMatch",
+        "template": "next step.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 500
+    },
+    "Sub_skipStartrace": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "skip.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 500
+    },
+    "InTower": {
+        "recognition": "TemplateMatch",
+        "template": "InTower.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "InTowermap"
+        ]
+    },
+    "InTowermap": {
+        "recognition": "TemplateMatch",
+        "template": "start point.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "next": [
+            "InTowermapback"
+        ]
+    },
+    "InTowermapback": {
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "next": [
+            "StopTowerbattle"
+        ]
+    },
+    "StopTowerbattle": {
+        "recognition": "TemplateMatch",
+        "template": "stopTower.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "next": [
+            "StopTowerbattleConfirm"
+        ]
+    },
+    "StopTowerbattleConfirm": {
+        "recognition": "TemplateMatch",
+        "template": "stopTowerConfirm.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "next": [
+            "Honor1"
+        ]
+    },
+    "Honor1": {
+        "recognition": "TemplateMatch",
+        "template": "honor.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "next": [
+            "Honorexit"
+        ]
+    },
+    "Honorexit": {
+        "recognition": "TemplateMatch",
+        "template": "Towerexit.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "next": [
+            "Towermainpage"
+        ]
+    }
+}

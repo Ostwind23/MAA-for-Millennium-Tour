@@ -137,7 +137,7 @@
     },
     "cancelforsupply": {
         "recognition": "TemplateMatch",
-        "template": "cancel.png",
+        "template": "daily/cancel.png",
         "roi": [
             301,
             429,
@@ -282,7 +282,7 @@
     },
     "cancelforsupplyGhost": {
         "recognition": "TemplateMatch",
-        "template": "cancel.png",
+        "template": "daily/cancel.png",
         "roi": [
             301,
             429,

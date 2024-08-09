@@ -7,7 +7,7 @@
     "openGuild": {
         "_doc": "从主菜单开始，公会任务链开端",
         "recognition": "TemplateMatch",
-        "template": "guild.png",
+        "template": "daily/guild.png",
         "roi": [
             568,
             517,
@@ -22,7 +22,7 @@
     },
     "openGuildDonation": {
         "recognition": "TemplateMatch",
-        "template": "guild donation.png",
+        "template": "daily/guild donation.png",
         "roi": [
             574,
             562,
@@ -126,7 +126,7 @@
     "Sub_GuildReward": {
         "is_sub": true,
         "recognition": "TemplateMatch",
-        "template": "guild task.png",
+        "template": "daily/guild task.png",
         "roi": [
             925,
             102,
@@ -315,7 +315,7 @@
     },
     "gainpassaward": {
         "recognition": "TemplateMatch",
-        "template": "gainpassaward.png",
+        "template": "daily/gainpassaward.png",
         "roi": [
             180,
             545,
