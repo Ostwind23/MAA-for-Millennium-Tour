@@ -1,0 +1,100 @@
+{
+    "openDivisionforhotspring": {
+        "recognition": "TemplateMatch",
+        "template": "daily/division.png",
+        "roi": [
+            718,
+            559,
+            243,
+            161
+        ],
+        "action": "Click",
+        "target": [
+            768,
+            613,
+            143,
+            61
+        ],
+        "post_delay": 1000,
+        "next": [
+            "openhotspring"
+        ]
+    },
+    "openhotspring": {
+        "recognition": "TemplateMatch",
+        "template": "hotspring/hot spring icon.png",
+        "roi": [
+            1110,
+            571,
+            170,
+            149
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "choosehotspring"
+        ]
+    },
+    "choosehotspring": {
+        "recognition": "TemplateMatch",
+        "template": "hotspring/thermal room.png",
+        "roi": [
+            711,
+            228,
+            556,
+            191
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "hotspringCollecting"
+        ]
+    },
+    "hotspringCollecting": {
+        "next": [
+            "Sub_Findbubble",
+            "ifnotreach100%",
+            "reach100%"
+        ]
+    },
+    "Sub_Findbubble": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": [
+            "hotspring/exp bubble.png",
+            "hotspring/chest bubble.png",
+            "hotspring/gold bubble.png",
+            "hotspring/medicine bubble.png"
+        ],
+        "action": "Click",
+        "post_delay": 1000
+    },
+    "ifnotreach100%": {
+        "recognition": "OCR",
+        "expected": "100",
+        "roi": [
+            221,
+            580,
+            124,
+            61
+        ],
+        "inverse": true,
+        "post_delay": 1500,
+        "next": [
+            "hotspringCollecting"
+        ]
+    },
+    "reach100%": {
+        "recognition": "OCR",
+        "expected": "100",
+        "roi": [
+            221,
+            580,
+            124,
+            61
+        ],
+        "next": [
+            "HomeflagMedal"
+        ]
+    }
+}

@@ -338,7 +338,7 @@
             140
         ],
         "action": "Click",
-        "post_delay": 500
+        "post_delay": 2000
     },
     "Homeflag3": {
         "recognition": "TemplateMatch",
@@ -478,7 +478,84 @@
         "action": "Click",
         "post_delay": 500,
         "next": [
+            "Sub_BuyMedicine",
+            "Sub_BuyTicket",
             "Homeflag4"
+        ]
+    },
+    "Sub_BuyMedicine": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/medicine.png",
+        "roi": [
+            501,
+            130,
+            214,
+            216
+        ],
+        "action": "Click",
+        "next": [
+            "maxMedicine"
+        ]
+    },
+    "maxMedicine": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "action": "Click",
+        "next": [
+            "confirmbuyMedicine"
+        ]
+    },
+    "confirmbuyMedicine": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmMedicine.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_Getreward",
+            "Sub_BuyTicket",
+            "Homeflag4"
+        ]
+    },
+    "Sub_BuyTicket": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/ticket.png",
+        "roi": [
+            469,
+            383,
+            274,
+            208
+        ],
+        "action": "Click",
+        "next": [
+            "confirmbuyTicket"
+        ]
+    },
+    "confirmbuyTicket": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmMedicine.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_Getreward",
+            "collectFriendshippoint"
         ]
     },
     "Homeflag4": {
