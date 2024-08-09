@@ -9,34 +9,33 @@
             244
         ],
         "action": "Click",
-        "post_delay": 500,
+        "post_delay": 1000,
         "next": [
             "enterStrategy"
         ]
     },
     "enterStrategy": {
         "recognition": "TemplateMatch",
-        "template": "strategy.png",
+        "template": "tower/strategy.png",
         "roi": [
-            0,
-            0,
-            0,
-            0
+            192,
+            576,
+            144,
+            144
         ],
         "action": "Click",
-        "post_delay": 500,
         "next": [
             "enterTower"
         ]
     },
     "enterTower": {
         "recognition": "TemplateMatch",
-        "template": "Tower.png",
+        "template": "tower/Tower.png",
         "roi": [
-            0,
-            0,
-            0,
-            0
+            990,
+            140,
+            198,
+            189
         ],
         "action": "Click",
         "post_delay": 1000,
@@ -46,40 +45,57 @@
     },
     "Towermainpage": {
         "recognition": "TemplateMatch",
-        "template": "Towerbattle.png",
+        "template": "tower/Towerbattle.png",
         "roi": [
-            0,
-            0,
-            0,
-            0
+            974,
+            463,
+            306,
+            243
         ],
         "action": "Click",
         "post_delay": 1000,
         "next": [
+            "Sub_scaniffull",
             "SelectWitch1"
         ]
     },
     "SelectWitch1": {
         "recognition": "TemplateMatch",
-        "template": "lvlvzi.png",
+        "template": "tower/01.png",
+        "roi": [
+            42,
+            534,
+            279,
+            152
+        ],
         "action": "Click",
-        "post_delay": 500,
         "next": [
             "SelectWitch2"
         ]
     },
     "SelectWitch2": {
         "recognition": "TemplateMatch",
-        "template": "keluoluo.png",
+        "template": "tower/03.png",
+        "roi": [
+            610,
+            538,
+            288,
+            144
+        ],
         "action": "Click",
-        "post_delay": 500,
         "next": [
             "SelectWitch3"
         ]
     },
     "SelectWitch3": {
         "recognition": "TemplateMatch",
-        "template": "Angel.png",
+        "template": "tower/04.png",
+        "roi": [
+            895,
+            537,
+            293,
+            142
+        ],
         "action": "Click",
         "post_delay": 500,
         "next": [
@@ -88,7 +104,13 @@
     },
     "SelectWitchDone": {
         "recognition": "TemplateMatch",
-        "template": "confirmWitch.png",
+        "template": "tower/confirmWitch.png",
+        "roi": [
+            988,
+            575,
+            292,
+            145
+        ],
         "action": "Click",
         "post_delay": 500,
         "next": [
@@ -97,7 +119,7 @@
     },
     "SelectStartrace": {
         "next": [
-            "Sub_scaniffull""Sub_SelectStartrace",
+            "Sub_SelectStartrace",
             "Sub_skipStartrace",
             "InTower"
         ]
@@ -106,14 +128,33 @@
         "is_sub": true,
         "recognition": "OCR",
         "expected": "32000",
+        "roi": [
+            974,
+            175,
+            136,
+            42
+        ],
         "next": [
-            "HomeflagDoc"
+            "HomeflagMedal"
         ]
     },
     "Sub_SelectStartrace": {
         "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "tower/startrace.png",
+        "roi": [
+            7,
+            298,
+            148,
+            163
+        ],
         "action": "Click",
-        "target": [],
+        "target": [
+            338,
+            296,
+            1,
+            1
+        ],
         "post_delay": 500,
         "next": [
             "SelectStartrace2"
@@ -121,7 +162,12 @@
     },
     "SelectStartrace2": {
         "action": "Click",
-        "target": [],
+        "target": [
+            642,
+            302,
+            1,
+            1
+        ],
         "post_delay": 500,
         "next": [
             "SelectStartraceDone"
@@ -129,12 +175,12 @@
     },
     "SelectStartraceDone": {
         "recognition": "TemplateMatch",
-        "template": "next step.png",
+        "template": "tower/next step.png",
         "roi": [
-            0,
-            0,
-            0,
-            0
+            939,
+            569,
+            341,
+            151
         ],
         "action": "Click",
         "post_delay": 500
@@ -142,40 +188,27 @@
     "Sub_skipStartrace": {
         "is_sub": true,
         "recognition": "TemplateMatch",
-        "template": "skip.png",
+        "template": "tower/skip.png",
         "roi": [
+            1070,
             0,
-            0,
-            0,
-            0
+            210,
+            142
         ],
         "action": "Click",
         "post_delay": 500
     },
     "InTower": {
         "recognition": "TemplateMatch",
-        "template": "InTower.png",
+        "template": "tower/InTower.png",
         "roi": [
-            0,
-            0,
-            0,
-            0
+            576,
+            188,
+            267,
+            155
         ],
         "action": "Click",
         "post_delay": 500,
-        "next": [
-            "InTowermap"
-        ]
-    },
-    "InTowermap": {
-        "recognition": "TemplateMatch",
-        "template": "start point.png",
-        "roi": [
-            0,
-            0,
-            0,
-            0
-        ],
         "next": [
             "InTowermapback"
         ]
@@ -186,8 +219,8 @@
         "roi": [
             0,
             0,
-            0,
-            0
+            215,
+            140
         ],
         "action": "Click",
         "next": [
@@ -196,12 +229,12 @@
     },
     "StopTowerbattle": {
         "recognition": "TemplateMatch",
-        "template": "stopTower.png",
+        "template": "tower/stopTower.png",
         "roi": [
-            0,
-            0,
-            0,
-            0
+            749,
+            540,
+            268,
+            164
         ],
         "action": "Click",
         "next": [
@@ -210,12 +243,12 @@
     },
     "StopTowerbattleConfirm": {
         "recognition": "TemplateMatch",
-        "template": "stopTowerConfirm.png",
+        "template": "confirm.png",
         "roi": [
-            0,
-            0,
-            0,
-            0
+            690,
+            402,
+            288,
+            144
         ],
         "action": "Click",
         "next": [
@@ -224,26 +257,27 @@
     },
     "Honor1": {
         "recognition": "TemplateMatch",
-        "template": "honor.png",
+        "template": "tower/honor1.png",
         "roi": [
-            0,
-            0,
-            0,
-            0
+            560,
+            573,
+            158,
+            147
         ],
         "action": "Click",
+        "post_delay": 1000,
         "next": [
             "Honorexit"
         ]
     },
     "Honorexit": {
         "recognition": "TemplateMatch",
-        "template": "Towerexit.png",
+        "template": "tower/Towerexit.png",
         "roi": [
+            416,
             0,
-            0,
-            0,
-            0
+            446,
+            160
         ],
         "action": "Click",
         "next": [

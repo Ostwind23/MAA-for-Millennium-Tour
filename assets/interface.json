@@ -41,8 +41,12 @@
             "entry": "after_battle"
         },
         {
-            "name": "圣别之塔重复放弃刷积分（死循环！如若出现内存占用过大或者想停止的情况请关掉终端）",
-            "entry": "enterTower"
+            "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后）",
+            "entry": "openBattleforTower"
+        },
+        {
+            "name": "自动收取勋章",
+            "entry": "enterCollectMedal"
         }
     ],
     "option": {

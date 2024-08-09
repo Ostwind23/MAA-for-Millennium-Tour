@@ -1,0 +1,94 @@
+{
+    "enterCollectMedal": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            124,
+            378,
+            112,
+            64
+        ],
+        "action": "Click",
+        "next": [
+            "enterMedalSelection",
+            "HomeflagMedal"
+        ]
+    },
+    "enterMedalSelection": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            0,
+            82,
+            1270,
+            196
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_Findachievement",
+            "Sub_getachievement",
+            "backtoMedalSelection",
+            "HomeflagMedal"
+        ]
+    },
+    "Sub_Findachievement": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "medal/achievement icon.png",
+        "roi": [
+            707,
+            34,
+            156,
+            157
+        ],
+        "action": "Click"
+    },
+    "Sub_getachievement": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "medal/get achievement.png",
+        "roi": [
+            227,
+            426,
+            187,
+            127
+        ],
+        "action": "Click",
+        "target_offset": [
+            0,
+            200,
+            0,
+            0
+        ],
+        "pre_wait_freezes": 500
+    },
+    "backtoMedalSelection": {
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
+        "action": "Click",
+        "next": [
+            "enterMedalSelection"
+        ]
+    },
+    "HomeflagMedal": {
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 5000,
+        "next": [
+            "StopTask"
+        ]
+    }
+}
