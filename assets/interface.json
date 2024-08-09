@@ -20,13 +20,6 @@
             "path": [
                 "{PROJECT_DIR}/resource/base"
             ]
-        },
-        {
-            "name": "B 服",
-            "path": [
-                "{PROJECT_DIR}/resource/base",
-                "{PROJECT_DIR}/resource/bilibili"
-            ]
         }
     ],
     "task": [
@@ -46,6 +39,18 @@
         {
             "name": "后半部分日常（公会+交日常周常任务+第二次投色子+通行证）",
             "entry": "after_battle"
+        },
+        {
+            "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后）",
+            "entry": "openBattleforTower"
+        },
+        {
+            "name": "自动收取勋章",
+            "entry": "enterCollectMedal"
+        },
+        {
+            "name": "自动进入温泉点泡泡",
+            "entry": "openDivisionforhotspring"
         }
     ],
     "option": {

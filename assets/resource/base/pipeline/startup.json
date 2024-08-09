@@ -112,7 +112,7 @@
     },
     "openDivision": {
         "recognition": "TemplateMatch",
-        "template": "division.png",
+        "template": "daily/division.png",
         "roi": [
             718,
             559,
@@ -160,7 +160,7 @@
     "Sub_Division_award": {
         "is_sub": true,
         "recognition": "TemplateMatch",
-        "template": "division award.png",
+        "template": "daily/division award.png",
         "roi": [
             745,
             79,
@@ -201,7 +201,7 @@
     "Sub_Divisionchange": {
         "is_sub": true,
         "recognition": "TemplateMatch",
-        "template": "division change.png",
+        "template": "daily/division change.png",
         "roi": [
             745,
             79,
@@ -222,7 +222,7 @@
     },
     "Division_discharge": {
         "recognition": "TemplateMatch",
-        "template": "discharging.png",
+        "template": "daily/discharging.png",
         "roi": [
             0,
             575,
@@ -243,7 +243,7 @@
     },
     "Division_deploy": {
         "recognition": "TemplateMatch",
-        "template": "deploying.png",
+        "template": "daily/deploying.png",
         "roi": [
             140,
             578,
@@ -264,7 +264,7 @@
     },
     "Division_save": {
         "recognition": "TemplateMatch",
-        "template": "saving.png",
+        "template": "daily/saving.png",
         "roi": [
             964,
             575,
@@ -279,7 +279,7 @@
     },
     "reopenDivisionlist": {
         "recognition": "TemplateMatch",
-        "template": "waiting list.png",
+        "template": "daily/waiting list.png",
         "inverse": true,
         "roi": [
             809,
@@ -300,7 +300,7 @@
     },
     "Divisionrest": {
         "recognition": "TemplateMatch",
-        "template": "division rest.png",
+        "template": "daily/division rest.png",
         "roi": [
             745,
             79,
@@ -315,7 +315,7 @@
     },
     "Division_restroom": {
         "recognition": "TemplateMatch",
-        "template": "check in.png",
+        "template": "daily/check in.png",
         "roi": [
             995,
             576,
@@ -338,7 +338,7 @@
             140
         ],
         "action": "Click",
-        "post_delay": 500
+        "post_delay": 2000
     },
     "Homeflag3": {
         "recognition": "TemplateMatch",
@@ -357,7 +357,7 @@
     },
     "openStore": {
         "recognition": "TemplateMatch",
-        "template": "store.png",
+        "template": "daily/store.png",
         "roi": [
             869,
             549,
@@ -417,7 +417,7 @@
     "Sub_buy": {
         "is_sub": true,
         "recognition": "TemplateMatch",
-        "template": "buy button.png",
+        "template": "daily/buy button.png",
         "roi": [
             675,
             448,
@@ -468,7 +468,7 @@
     },
     "collectFriendshippoint": {
         "recognition": "TemplateMatch",
-        "template": "friendship point.png",
+        "template": "daily/friendship point.png",
         "roi": [
             956,
             24,
@@ -478,7 +478,84 @@
         "action": "Click",
         "post_delay": 500,
         "next": [
+            "Sub_BuyMedicine",
+            "Sub_BuyTicket",
             "Homeflag4"
+        ]
+    },
+    "Sub_BuyMedicine": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/medicine.png",
+        "roi": [
+            501,
+            130,
+            214,
+            216
+        ],
+        "action": "Click",
+        "next": [
+            "maxMedicine"
+        ]
+    },
+    "maxMedicine": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "action": "Click",
+        "next": [
+            "confirmbuyMedicine"
+        ]
+    },
+    "confirmbuyMedicine": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmMedicine.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_Getreward",
+            "Sub_BuyTicket",
+            "Homeflag4"
+        ]
+    },
+    "Sub_BuyTicket": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/ticket.png",
+        "roi": [
+            469,
+            383,
+            274,
+            208
+        ],
+        "action": "Click",
+        "next": [
+            "confirmbuyTicket"
+        ]
+    },
+    "confirmbuyTicket": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmMedicine.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_Getreward",
+            "collectFriendshippoint"
         ]
     },
     "Homeflag4": {
