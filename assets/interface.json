@@ -47,6 +47,10 @@
         {
             "name": "自动收取勋章",
             "entry": "enterCollectMedal"
+        },
+        {
+            "name": "自动进入温泉点泡泡",
+            "entry": "openDivisionforhotspring"
         }
     ],
     "option": {
