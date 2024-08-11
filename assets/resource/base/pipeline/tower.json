@@ -9,7 +9,7 @@
             244
         ],
         "action": "Click",
-        "post_delay": 1000,
+        "post_delay": 1500,
         "next": [
             "enterStrategy"
         ]
@@ -24,8 +24,10 @@
             144
         ],
         "action": "Click",
+        "post_delay": 1500,
         "next": [
-            "enterTower"
+            "enterTower",
+            "enterStrategy"
         ]
     },
     "enterTower": {
@@ -40,7 +42,9 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "Towermainpage"
+            "Sub_scaniffull",
+            "Towermainpage",
+            "enterTower"
         ]
     },
     "Towermainpage": {
@@ -55,7 +59,6 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "Sub_scaniffull",
             "SelectWitch1"
         ]
     },
