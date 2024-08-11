@@ -1,7 +1,7 @@
 {
     "controller": [
         {
-            "name": "安卓端",
+            "name": "安卓端(使用模拟器请选这个,务必记得分辨率调整为1280x720)",
             "type": "Adb"
         },
         {
@@ -16,7 +16,7 @@
     ],
     "resource": [
         {
-            "name": "官服",
+            "name": "官服(务必选这个)",
             "path": [
                 "{PROJECT_DIR}/resource/base"
             ]
@@ -41,7 +41,7 @@
             "entry": "after_battle"
         },
         {
-            "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后）",
+            "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后再选择此任务）",
             "entry": "openBattleforTower"
         },
         {
@@ -51,6 +51,13 @@
         {
             "name": "自动进入温泉点泡泡",
             "entry": "openDivisionforhotspring"
+        },
+        {
+            "name": "自动推进主线战斗关卡（需要点进自己要打的主线章；目前只支持多关纯战斗自动连战）",
+            "entry": "openDivisionforhotspring",
+            "option": [
+                "选择表界或里界"
+            ]
         }
     ],
     "option": {
@@ -117,6 +124,26 @@
                     "param": {
                         "scanGhostmission": {
                             "index": -1
+                        }
+                    }
+                }
+            ]
+        },
+        "选择表界或里界": {
+            "cases": [
+                {
+                    "name": "表界",
+                    "param": {
+                        "beginAutoPush": {
+                            "action": "DoNothing"
+                        }
+                    }
+                },
+                {
+                    "name": "里界",
+                    "param": {
+                        "beginAutoPush": {
+                            "action": "Click"
                         }
                     }
                 }
