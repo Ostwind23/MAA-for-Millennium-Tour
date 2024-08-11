@@ -176,8 +176,7 @@
         ],
         "post_delay": 1000,
         "next": [
-            "Sub_Getreward",
-            "Second_Division_openlist"
+            "Sub_Getreward"
         ]
     },
     "Second_Division_openlist": {
