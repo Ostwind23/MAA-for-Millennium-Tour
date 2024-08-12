@@ -272,10 +272,7 @@
             145
         ],
         "action": "Click",
-        "post_delay": 3000,
-        "next": [
-            "openDivisionlist"
-        ]
+        "post_delay": 3000
     },
     "reopenDivisionlist": {
         "recognition": "TemplateMatch",
@@ -295,7 +292,7 @@
             34
         ],
         "next": [
-            "Divisionrest"
+            "openDivisionlist"
         ]
     },
     "Divisionrest": {
@@ -340,7 +337,7 @@
         "action": "Click",
         "post_delay": 500,
         "next": [
-            "Division_back"
+            "Homeflag3"
         ]
     },
     "Division_back": {
