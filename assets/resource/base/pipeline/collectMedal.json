@@ -73,7 +73,8 @@
         ],
         "action": "Click",
         "next": [
-            "enterMedalSelection"
+            "enterMedalSelection",
+            "HomeflagMedal"
         ]
     },
     "HomeflagMedal": {
