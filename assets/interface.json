@@ -57,7 +57,7 @@
         },
         {
             "name": "自动推进主线战斗关卡（需要点进自己要打的主线章；目前只支持多关纯战斗自动连战）",
-            "entry": "openDivisionforhotspring",
+            "entry": "beginAutoPush",
             "option": [
                 "选择表界或里界"
             ]

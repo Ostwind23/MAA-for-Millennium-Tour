@@ -7,7 +7,7 @@
     "StartMillenniumTour": {
         "action": "StartApp",
         "package": "com.bilibili.qnzl.bili/com.yc.YCActivity",
-        "post_delay": 11000,
+        "post_wait_freezes": 5000,
         "next": [
             "Sub_StartGame"
         ]
@@ -18,13 +18,21 @@
             "开始游戏"
         ],
         "action": "Click",
-        "post_delay": 1000,
+        "post_wait_freezes": {
+            "time": 5000,
+            "target": [
+                640,
+                360,
+                640,
+                360
+            ]
+        },
         "next": [
             "StartGame"
         ]
     },
     "StartGame": {
-        "post_delay": 14000,
+        "post_delay": 1400,
         "next": [
             "rolling",
             "CloseAnnouncement",
