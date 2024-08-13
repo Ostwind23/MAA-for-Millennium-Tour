@@ -272,10 +272,7 @@
             145
         ],
         "action": "Click",
-        "post_delay": 3000,
-        "next": [
-            "openDivisionlist"
-        ]
+        "post_delay": 3000
     },
     "reopenDivisionlist": {
         "recognition": "TemplateMatch",
@@ -295,7 +292,7 @@
             34
         ],
         "next": [
-            "Divisionrest"
+            "openDivisionlist"
         ]
     },
     "Divisionrest": {
@@ -384,6 +381,7 @@
         "next": [
             "openGiftstore",
             "openExchangestore",
+            "BuySeed",
             "Homeflag4"
         ]
     },
@@ -408,6 +406,7 @@
             "Sub_getGift",
             "Sub_Getreward",
             "openExchangestore",
+            "BuySeed",
             "Homeflag4"
         ]
     },
@@ -496,6 +495,7 @@
         "next": [
             "Sub_BuyMedicine",
             "Sub_BuyTicket",
+            "BuySeed",
             "Homeflag4"
         ]
     },
@@ -538,6 +538,7 @@
             142
         ],
         "action": "Click",
+        "post_wait_freezes": 500,
         "next": [
             "Sub_Getreward",
             "Sub_BuyTicket",
@@ -549,10 +550,10 @@
         "recognition": "TemplateMatch",
         "template": "daily/ticket.png",
         "roi": [
-            469,
-            383,
-            274,
-            208
+            501,
+            130,
+            214,
+            216
         ],
         "action": "Click",
         "next": [
@@ -572,6 +573,97 @@
         "next": [
             "Sub_Getreward",
             "collectFriendshippoint"
+        ]
+    },
+    "BuySeed": {
+        "recognition": "TemplateMatch",
+        "template": "daily/dailystore.png",
+        "roi": [
+            1059,
+            579,
+            146,
+            141
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_Findupperseed",
+            "Sub_Finddownseed",
+            "Homeflag4"
+        ]
+    },
+    "Sub_Findupperseed": {
+        "is_sub": true,
+        "recognition": "OCR",
+        "expected": "种",
+        "roi": [
+            494,
+            135,
+            723,
+            48
+        ],
+        "action": "Click",
+        "next": [
+            "maxSeed"
+        ]
+    },
+    "Sub_Finddownseed": {
+        "is_sub": true,
+        "recognition": "OCR",
+        "expected": "种",
+        "roi": [
+            494,
+            377,
+            713,
+            51
+        ],
+        "action": "Click",
+        "next": [
+            "maxSeed"
+        ]
+    },
+    "maxSeed": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "action": "Click",
+        "next": [
+            "confirmbuySeed"
+        ]
+    },
+    "confirmbuySeed": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmMedicine.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "Click",
+        "post_wait_freezes": 500,
+        "next": [
+            "Sub_Getreward",
+            "Swipetootherside"
+        ]
+    },
+    "Swipetootherside": {
+        "action": "Swipe",
+        "begin": [
+            1207,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            600,
+            378,
+            1,
+            1
         ]
     },
     "Homeflag4": {
