@@ -293,9 +293,9 @@
     "Sub_sec_rolling": {
         "is_sub": true,
         "recognition": "TemplateMatch",
-        "template": "dice available.png",
+        "template": "Alert.png",
         "action": "Click",
-        "post_wait_freezes": 2500,
+        "post_wait_freezes": 3500,
         "next": [
             "Sub_Getreward",
             "Subreturn_back"
