@@ -25,7 +25,10 @@
     "task": [
         {
             "name": "前半部分日常（自动打开游戏+投色子+关公告+神谕司+商店）",
-            "entry": "Startup"
+            "entry": "Startup",
+            "option": [
+                "是否自动购买种子（不稳定）"
+            ]
         },
         {
             "name": "选择资源关+骚灵之境战斗",
@@ -144,6 +147,35 @@
                     "param": {
                         "beginAutoPush": {
                             "action": "Click"
+                        }
+                    }
+                }
+            ]
+        },
+        "是否自动购买种子（不稳定）": {
+            "cases": [
+                {
+                    "name": "是",
+                    "param": {
+                        "collectFriendshippoint": {
+                            "next": [
+                                "Sub_BuyMedicine",
+                                "Sub_BuyTicket",
+                                "BuySeed",
+                                "Homeflag4"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "否",
+                    "param": {
+                        "collectFriendshippoint": {
+                            "next": [
+                                "Sub_BuyMedicine",
+                                "Sub_BuyTicket",
+                                "Homeflag4"
+                            ]
                         }
                     }
                 }

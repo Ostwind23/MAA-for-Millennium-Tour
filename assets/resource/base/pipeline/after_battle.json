@@ -286,17 +286,19 @@
         ],
         "action": "Click",
         "next": [
-            "sec_rolling"
+            "Sub_sec_rolling",
+            "Homeflag5"
         ]
     },
-    "sec_rolling": {
+    "Sub_sec_rolling": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "dice available.png",
         "action": "Click",
-        "post_wait_freezes": 1000,
+        "post_wait_freezes": 2500,
         "next": [
             "Sub_Getreward",
-            "Homeflag5"
+            "Subreturn_back"
         ]
     },
     "accessbattlepass": {

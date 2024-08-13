@@ -18,6 +18,7 @@
             "开始游戏"
         ],
         "action": "Click",
+        "post_delay": 1000,
         "next": [
             "StartGame"
         ]
@@ -94,8 +95,37 @@
             56
         ],
         "next": [
+            "Collectmonthlycard",
             "Mainmenu1"
         ]
+    },
+    "Collectmonthlycard": {
+        "recognition": "TemplateMatch",
+        "template": "monthly card.png",
+        "roi": [
+            449,
+            483,
+            382,
+            146
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Sub_GetMonthlycard",
+            "Mainmenu1"
+        ]
+    },
+    "Sub_GetMonthlycard": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "getmonthlycard.png",
+        "roi": [
+            517,
+            94,
+            246,
+            143
+        ],
+        "action": "Click"
     },
     "Mainmenu1": {
         "recognition": "TemplateMatch",
@@ -132,6 +162,20 @@
             "Homeflag3"
         ]
     },
+    "ifDivisionNotneedaction": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "inverse": true,
+        "roi": [
+            0,
+            32,
+            284,
+            162
+        ],
+        "next": [
+            "Homeflag3"
+        ]
+    },
     "openDivisionlist": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
@@ -150,7 +194,13 @@
         ],
         "post_delay": 1000,
         "next": [
+            "DivisionJudginglist"
+        ]
+    },
+    "DivisionJudginglist": {
+        "next": [
             "Sub_Division_award",
+            "ifDivisionNotneedaction",
             "Sub_Divisionchange",
             "reopenDivisionlist",
             "Divisionrest",
@@ -283,13 +333,6 @@
             0,
             269,
             192
-        ],
-        "action": "Click",
-        "target": [
-            57,
-            98,
-            120,
-            34
         ],
         "next": [
             "openDivisionlist"
@@ -586,35 +629,32 @@
         ],
         "action": "Click",
         "next": [
-            "Sub_Findupperseed",
-            "Sub_Finddownseed",
+            "Sub_Findseed",
+            "Swipetootherside1",
             "Homeflag4"
         ]
     },
-    "Sub_Findupperseed": {
+    "Sub_Findseed": {
         "is_sub": true,
-        "recognition": "OCR",
-        "expected": "种",
+        "recognition": "TemplateMatch",
+        "template": [
+            "seed/apple.png",
+            "seed/berry.png",
+            "seed/butterfly.png",
+            "seed/grapes.png",
+            "seed/cabbage.png",
+            "seed/corn.png",
+            "seed/potato.png",
+            "seed/tomato.png",
+            "seed/truffle.png",
+            "seed/mushroom.png",
+            "seed/orange.png"
+        ],
         "roi": [
             494,
             135,
-            723,
-            48
-        ],
-        "action": "Click",
-        "next": [
-            "maxSeed"
-        ]
-    },
-    "Sub_Finddownseed": {
-        "is_sub": true,
-        "recognition": "OCR",
-        "expected": "种",
-        "roi": [
-            494,
-            377,
-            713,
-            51
+            623,
+            548
         ],
         "action": "Click",
         "next": [
@@ -648,10 +688,10 @@
         "post_wait_freezes": 500,
         "next": [
             "Sub_Getreward",
-            "Swipetootherside"
+            "Subreturn_back"
         ]
     },
-    "Swipetootherside": {
+    "Swipetootherside1": {
         "action": "Swipe",
         "begin": [
             1207,
@@ -664,6 +704,30 @@
             378,
             1,
             1
+        ],
+        "next": [
+            "Sub_Findseed",
+            "Swipetootherside2",
+            "Homeflag4"
+        ]
+    },
+    "Swipetootherside2": {
+        "action": "Swipe",
+        "begin": [
+            600,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            1207,
+            377,
+            1,
+            1
+        ],
+        "next": [
+            "Sub_Findseed",
+            "Homeflag4"
         ]
     },
     "Homeflag4": {
