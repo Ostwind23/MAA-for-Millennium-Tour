@@ -92,8 +92,21 @@
         ],
         "action": "Click",
         "next": [
+            "Sub_findnewenemy",
             "Duringbattle"
         ]
+    },
+    "Sub_findnewenemy": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "autopush/newenemy.png",
+        "roi": [
+            491,
+            584,
+            295,
+            136
+        ],
+        "action": "Click"
     },
     "Duringbattle": {
         "post_wait_freezes": {
@@ -103,6 +116,7 @@
         },
         "next": [
             "Sub_nextround",
+            "inbattleoutofsupply",
             "reachtoend"
         ]
     },
@@ -116,9 +130,33 @@
             289,
             167
         ],
+        "action": "Click"
+    },
+    "inbattleoutofsupply": {
+        "recognition": "TemplateMatch",
+        "template": "daily/cancel.png",
+        "roi": [
+            301,
+            429,
+            287,
+            143
+        ],
         "action": "Click",
+        "post_delay": 1000,
         "next": [
-            "Duringbattle"
+            "Clicktoback"
+        ]
+    },
+    "Clicktoback": {
+        "action": "Click",
+        "target": [
+            640,
+            360,
+            1,
+            1
+        ],
+        "next": [
+            "HomeflagMedal"
         ]
     },
     "reachtoend": {

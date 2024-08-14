@@ -14,7 +14,7 @@
             244
         ],
         "action": "Click",
-        "post_delay": 500,
+        "post_wait_freezes": 500,
         "next": [
             "openVault"
         ]
@@ -29,7 +29,7 @@
             162
         ],
         "action": "Click",
-        "post_delay": 500,
+        "post_wait_freezes": 500,
         "next": [
             "findx2",
             "chooseOwnmission"
@@ -39,7 +39,7 @@
         "recognition": "TemplateMatch",
         "template": "exp mission.png",
         "action": "Click",
-        "post_delay": 500,
+        "post_wait_freezes": 500,
         "next": [
             "findmission"
         ]
