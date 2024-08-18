@@ -136,6 +136,7 @@
             "threshold": 0.95
         },
         "next": [
+            "givelikes",
             "Matrixoneroundend"
         ]
     },
@@ -157,7 +158,6 @@
         ],
         "post_delay": 5000,
         "next": [
-            "givelikes",
             "Matrixmainpage"
         ]
     },
@@ -172,7 +172,7 @@
         ],
         "action": "Click",
         "next": [
-            "Matrixmainpage"
+            "Matrixoneroundend"
         ]
     }
 }
