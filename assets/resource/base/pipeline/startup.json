@@ -19,7 +19,7 @@
         ],
         "action": "Click",
         "post_wait_freezes": {
-            "time": 5000,
+            "time": 7000,
             "target": [
                 640,
                 360,
@@ -28,15 +28,23 @@
             ]
         },
         "next": [
+            "Duringloading",
+            "StartGame"
+        ]
+    },
+    "Duringloading": {
+        "post_wait_freezes": 3000,
+        "next": [
             "StartGame"
         ]
     },
     "StartGame": {
-        "post_delay": 1400,
+        "post_delay": 1500,
         "next": [
             "rolling",
             "CloseAnnouncement",
-            "Mainmenu1"
+            "Mainmenu1",
+            "Duringloading"
         ]
     },
     "rolling": {
@@ -722,13 +730,13 @@
     "Swipetootherside2": {
         "action": "Swipe",
         "begin": [
-            600,
+            1200,
             377,
             1,
             1
         ],
         "end": [
-            1207,
+            607,
             377,
             1,
             1
