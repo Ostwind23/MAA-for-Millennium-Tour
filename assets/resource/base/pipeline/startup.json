@@ -28,14 +28,20 @@
             ]
         },
         "next": [
-            "Duringloading",
+            "Sub_Duringloading",
             "StartGame"
         ]
     },
-    "Duringloading": {
-        "post_wait_freezes": 3000,
-        "next": [
-            "StartGame"
+    "Sub_Duringloading": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "loading.png",
+        "pre_delay": 2000,
+        "roi": [
+            907,
+            581,
+            245,
+            124
         ]
     },
     "StartGame": {
@@ -43,8 +49,7 @@
         "next": [
             "rolling",
             "CloseAnnouncement",
-            "Mainmenu1",
-            "Duringloading"
+            "Mainmenu1"
         ]
     },
     "rolling": {
