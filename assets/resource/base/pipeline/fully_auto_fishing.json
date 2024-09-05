@@ -1,0 +1,17 @@
+{
+    "Fully_Automatic_Fishing": {
+        "recognition": "TemplateMatch",
+        "template": "fishing/control button.png",
+        "roi": [
+            939,
+            377,
+            228,
+            230
+        ],
+        "action": "Custom",
+        "custom_action": "Autofishing",
+        "next": [
+            "Fully_Automatic_Fishing"
+        ]
+    }
+}
