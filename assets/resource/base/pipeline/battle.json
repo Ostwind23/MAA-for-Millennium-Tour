@@ -16,12 +16,29 @@
         "action": "Click",
         "post_wait_freezes": 1500,
         "next": [
-            "openVault"
+            "openVault",
+            "openVaultinOCR"
         ]
     },
     "openVault": {
         "recognition": "TemplateMatch",
         "template": "Vault.png",
+        "roi": [
+            586,
+            558,
+            314,
+            162
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1500,
+        "next": [
+            "findx2",
+            "chooseOwnmission"
+        ]
+    },
+    "openVaultinOCR": {
+        "recognition": "OCR",
+        "expected": "宝库之门",
         "roi": [
             586,
             558,

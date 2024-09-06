@@ -9,7 +9,7 @@
             244
         ],
         "action": "Click",
-        "post_delay": 1500,
+        "post_wait_freezes": 1500,
         "next": [
             "enterStrategy"
         ]
@@ -27,7 +27,23 @@
         "post_delay": 1500,
         "next": [
             "enterTower",
-            "enterStrategy"
+            "enterStrategyinOCR"
+        ]
+    },
+    "enterStrategyinOCR": {
+        "recognition": "OCR",
+        "expected": "多维策略",
+        "roi": [
+            192,
+            676,
+            244,
+            144
+        ],
+        "action": "Click",
+        "post_delay": 1500,
+        "next": [
+            "enterTower",
+            "enterStrategyinOCR"
         ]
     },
     "enterTower": {

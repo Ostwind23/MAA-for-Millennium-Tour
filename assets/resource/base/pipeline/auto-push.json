@@ -110,17 +110,16 @@
     },
     "Duringbattle": {
         "post_wait_freezes": {
-            "time": 3000,
-            "method": 3,
+            "time": 5000,
             "threshold": 0.95
         },
         "next": [
-            "Sub_nextround",
+            "nextround",
             "inbattleoutofsupply",
             "reachtoend"
         ]
     },
-    "Sub_nextround": {
+    "nextround": {
         "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "autopush/nextround.png",
@@ -130,7 +129,10 @@
             289,
             167
         ],
-        "action": "Click"
+        "action": "Click",
+        "next": [
+            "Duringbattle"
+        ]
     },
     "inbattleoutofsupply": {
         "recognition": "TemplateMatch",

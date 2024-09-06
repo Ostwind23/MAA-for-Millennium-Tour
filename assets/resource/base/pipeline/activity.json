@@ -1,0 +1,306 @@
+{
+    "StartActivity": {
+        "next": [
+            "openActivity"
+        ]
+    },
+    "openActivity": {
+        "recognition": "TemplateMatch",
+        "template": "act/activity.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Dailysigning",
+            "Activitybattleenter"
+        ]
+    },
+    "Dailysigning": {
+        "recognition": "TemplateMatch",
+        "template": "act/dailysigning.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Clicksigning"
+        ]
+    },
+    "Clicksigning": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Sub_Getreward",
+            "Closeactivity"
+        ]
+    },
+    "Closeactivity": {
+        "action": "Click",
+        "target": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "post_delay": 1000,
+        "next": [
+            "Activitybattleenter"
+        ]
+    },
+    "Activitybattleenter": {
+        "recognition": "TemplateMatch",
+        "template": "act/activitybattle.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "Activitybattlechoose"
+        ]
+    },
+    "Activitybattlechoose": {
+        "next": [
+            "Selectactivity",
+            "Activitybattlefind"
+        ]
+    },
+    "Selectactivity": {
+        "recognition": "OCR",
+        "expected": [
+            "第一日",
+            "第二日",
+            "第三日",
+            "第四日"
+        ],
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Activitybattlefind"
+        ]
+    },
+    "Activitybattlefind": {
+        "next": [
+            "Sub_Findbattle",
+            "Activitybattleclickin"
+        ]
+    },
+    "Sub_Findbattle": {
+        "is_sub": true,
+        "inverse": true,
+        "recognition": "OCR",
+        "expected": [
+            "评议高塔"
+        ],
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Swipe",
+        "begin": [
+            1207,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            600,
+            378,
+            1,
+            1
+        ],
+        "post_delay": 1000
+    },
+    "Activitybattleclickin": {
+        "recognition": "OCR",
+        "expected": [
+            "评议高塔"
+        ],
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "next": [
+            "Activityentermission"
+        ]
+    },
+    "Activityentermission": {
+        "recognition": "TemplateMatch",
+        "template": "fast battle.png",
+        "roi": [
+            715,
+            566,
+            275,
+            154
+        ],
+        "action": "Click",
+        "next": [
+            "Activitymaximization"
+        ]
+    },
+    "Activitymaximization": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            1106,
+            483,
+            165,
+            151
+        ],
+        "action": "Click",
+        "next": [
+            "Activitylaunchbattle"
+        ]
+    },
+    "minus2": {
+        "recognition": "TemplateMatch",
+        "template": "minus.png",
+        "roi": [
+            906,
+            483,
+            165,
+            151
+        ],
+        "times_limit": 2,
+        "action": "Click",
+        "runout_next": [
+            "Activitylaunchbattle"
+        ]
+    },
+    "Activitylaunchbattle": {
+        "recognition": "TemplateMatch",
+        "template": "launch battle.png",
+        "roi": [
+            904,
+            563,
+            297,
+            157
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "Activitycompletebattle",
+            "Activitycancelforsupply"
+        ]
+    },
+    "Activitycancelforsupply": {
+        "recognition": "TemplateMatch",
+        "template": "daily/cancel.png",
+        "roi": [
+            301,
+            429,
+            287,
+            143
+        ],
+        "action": "Click",
+        "next": [
+            "Activity_back"
+        ]
+    },
+    "Activitycompletebattle": {
+        "recognition": "TemplateMatch",
+        "template": "battle finish.png",
+        "roi": [
+            495,
+            570,
+            290,
+            142
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "Activity_back"
+        ]
+    },
+    "Activity_back": {
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 3000,
+        "next": [
+            "Activity_Getaward",
+            "HomeflagMedal"
+        ]
+    },
+    "Activity_Getdailyaward": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Activity_oneclickgetall"
+        ]
+    },
+    "Activity_oneclickgetall": {
+        "recognition": "TemplateMatch",
+        "template": "act/oneclickgetall.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_Getreward",
+            "HomeflagMedal"
+        ]
+    },
+    "Activity_Getaward": {
+        "recognition": "TemplateMatch",
+        "template": "act/getaward.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "next": [
+            "Activity_Getdailyaward"
+        ]
+    }
+}

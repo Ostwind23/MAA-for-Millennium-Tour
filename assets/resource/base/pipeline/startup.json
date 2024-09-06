@@ -9,7 +9,8 @@
         "package": "com.bilibili.qnzl.bili/com.yc.YCActivity",
         "post_wait_freezes": 5000,
         "next": [
-            "Sub_StartGame"
+            "Sub_StartGame",
+            "StartMillenniumTour"
         ]
     },
     "Sub_StartGame": {
@@ -18,21 +19,26 @@
             "开始游戏"
         ],
         "action": "Click",
-        "post_wait_freezes": {
-            "time": 5000,
-            "target": [
-                640,
-                360,
-                640,
-                360
-            ]
-        },
+        "post_delay": 7000,
         "next": [
+            "Sub_Duringloading",
             "StartGame"
         ]
     },
+    "Sub_Duringloading": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "loading.png",
+        "post_delay": 2000,
+        "roi": [
+            907,
+            581,
+            245,
+            124
+        ]
+    },
     "StartGame": {
-        "post_delay": 1400,
+        "post_delay": 1500,
         "next": [
             "rolling",
             "CloseAnnouncement",
@@ -722,13 +728,13 @@
     "Swipetootherside2": {
         "action": "Swipe",
         "begin": [
-            600,
+            1200,
             377,
             1,
             1
         ],
         "end": [
-            1207,
+            607,
             377,
             1,
             1

@@ -1,0 +1,15 @@
+{
+    "是否钓上鱼": {
+        "inverse": true,
+        "recognition": "TemplateMatch",
+        "template": "fishing/fishing button.png",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "action": "Click",
+        "post_delay": 200
+    }
+}
