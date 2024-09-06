@@ -2,7 +2,6 @@ from typing import Tuple
 import time
 import cv2
 import numpy as np
-import pyautogui
 from maa.context import SyncContext
 
 # python -m pip install maafw
@@ -16,7 +15,6 @@ from maa.custom_recognizer import CustomRecognizer
 from maa.custom_action import CustomAction
 
 import asyncio
-import sys
 import traceback
 import os
 
@@ -24,9 +22,10 @@ os.system('chcp 65001')
 
 start_time = time.time()
 LIGHT_SPEED = 5
-
+global_fishingpool = "1"
 
 async def main():
+    global global_fishingpool
     user_path = "./"
     Toolkit.init_option(user_path)
 
@@ -40,9 +39,12 @@ async def main():
         exit()
 
     # for demo, we just use the first device
+    print("请务必确保当前界面为钓台界面且未开始抛竿钓鱼\n")
     print("当前ADB设备有：\n")
     print(device_list)
-    devnum = input("请输入你的模拟器ADB设备的序号（从0号开始为第一个）")
+    devnum = input("请输入你的模拟器ADB设备的序号（从0号开始为第一个,不填写则默认为第一个）")
+    if devnum == "":
+        devnum = 0
     device = device_list[int(devnum)]
     controller = AdbController(
         adb_path=device.adb_path,
@@ -61,6 +63,7 @@ async def main():
     maa_inst.register_recognizer("MyRec", my_rec)
     maa_inst.register_action("MyAct", my_act)
     maa_inst.register_action("Autofishing", autofishing)
+    global_fishingpool = input("请输入你选择的钓鱼池序号：\n 1.森林 2.海滩 3.运河 4.冰原 \n")
     print("MAA框架初始化完成,准备开始执行自动钓鱼任务，请务必确保当前界面为钓台界面")
 
     await maa_inst.run_task("Fully_Automatic_Fishing")
@@ -92,8 +95,8 @@ class Autofishing(CustomAction):
         :param rec_detail: 识别的详细信息。{
         :return: 滑动是否成功。
         """
-        image = context.screencap()
-        cv2.imshow("ERROR", image)
+        # image = context.screencap()
+        global global_fishingpool
         step_start_fishing = context.run_task("点击钓鱼按钮",
             {
                 "点击钓鱼按钮": {
@@ -107,11 +110,15 @@ class Autofishing(CustomAction):
                 }
             }
         )
+        print("开始抛竿钓鱼")
         if step_start_fishing:
             while not self.ifgetfish(context):
-                self.wait_for_fish(context)
+                self.wait_for_fish(context, global_fishingpool)
                 self.fishing(context)
                 self.detect_and_click_circles(context)
+                time.sleep(1.5)
+            time.sleep(1)
+            context.click(500, 250)
             return True
         return False
 
@@ -119,46 +126,85 @@ class Autofishing(CustomAction):
         pass
 
     # 检测是否钓上鱼
-    def ifgetfish(self, context:SyncContext) -> bool:
+    def ifgetfish(self, context: SyncContext) -> bool:
         image = context.screencap()
-        flag,loc,detail = context.run_recognition(image, "是否钓上鱼",
+        flag, rec, detail = context.run_recognition(image, "是否钓上鱼",
         {
             "是否钓上鱼":{
             "recognition": "TemplateMatch",
-            "template": "fishing/getfish.png",
+            "template": "fishing/fishup.png",
             "roi":[
-                939,
-                377,
-                228,
-                230
+                168, 201, 215, 132
             ]
             }
         }
         )
+        print("钓上鱼了？", flag)
         return flag
 
     # 等待鱼咬饵并点击钓鱼按钮
-    def wait_for_fish(self, context:SyncContext):
+    def wait_for_fish(self, context:SyncContext, global_fishingpool):
+        print("等待鱼咬饵中...")
+        start_time = time.time()
         while True:
-            res = context.run_task("是否钓上鱼",
-                                   {
-                                       "是否钓上鱼": {
-                                           "inverse": True,
-                                           "recognition": "TemplateMatch",
-                                           "template": "fishing/getfish.png",
-                                           "roi": [
-                                                939,
-                                                377,
-                                                228,
-                                                230],
-                                           "action": "Click",
-                                           "post_delay": 100
-                                       }
-                                   }
-                                   )
-            if res:
+            if time.time() - start_time > 10:
+                print("等待超时，未检测到鱼咬饵")
                 break
-            time.sleep(0.5)
+            if global_fishingpool == "1" and "3":
+                res = context.run_task("是否鱼咬钩",
+                                       {
+                                           "是否鱼咬钩": {
+                                               "recognition": "ColorMatch",
+                                               "lower": [10, 55, 90],
+                                               "upper": [30, 105, 200],
+                                               "roi": [
+                                                    1061, 513, 126, 106],
+                                               "action": "Click",
+                                               "post_delay": 100
+                                           }
+                                       }
+                                       )
+                if res:
+                    break
+                time.sleep(0.1)
+            elif global_fishingpool == "2":
+                res = context.run_task("是否鱼咬钩",
+                                       {
+                                           "是否鱼咬钩": {
+                                               "recognition": "ColorMatch",
+                                               "lower": [12, 35, 40],
+                                               "upper": [26, 55, 100],
+                                               "roi": [
+                                                   1061, 513, 126, 106],
+                                               "action": "Click",
+                                               "post_delay": 100
+                                           }
+                                       }
+                                       )
+                if res:
+                    break
+                time.sleep(0.1)
+            elif global_fishingpool == "4":
+                res = context.run_task("是否鱼咬钩",
+                                       {
+                                           "是否鱼咬钩": {
+                                               "recognition": "ColorMatch",
+                                               "lower": [12, 30, 40],
+                                               "upper": [26, 55, 70],
+                                               "roi": [
+                                                   1061, 513, 126, 106],
+                                               "action": "Click",
+                                               "post_delay": 100
+                                           }
+                                       }
+                                       )
+                if res:
+                    break
+                time.sleep(0.1)
+            else:
+                print("未选择正确的钓鱼池")
+                return False
+        return True
 
     # def compare_histograms(self, imageA, imageB):
     #     histA = cv2.calcHist([imageA], [0], None, [256], [0, 256])
@@ -171,41 +217,40 @@ class Autofishing(CustomAction):
 
     # 控制摇杆
     def fishing(self, context:SyncContext):
+        print("正在和鱼拉扯...")
         while True:
             # 截图并识别小三角箭头的位置
             image = context.screencap()
             flag,arrow_position,detail = context.run_recognition(image, "三角箭头位置",
                                                      {
                                                          "三角箭头位置": {
-                                                             "recognition": "FeatureMatch",
-                                                             "template": "fishing/arrow.png",
-                                                             "detector": "AKAZE",
+                                                             "recognition": "ColorMatch",
+                                                             "lower": [160, 255, 180],
+                                                             "upper": [162, 255, 183],
+                                                             "count": 1,
                                                              "roi": [
-                                                                 839,
-                                                                 277,
-                                                                 328,
-                                                                 330
+                                                                 824, 261, 434, 438
                                                              ],
                                                          }
                                                      }
                                                      )
-            if not flag:
-                break
-
             # 计算摇杆需要移动的角度
-            arrow_x, arrow_y = arrow_position[0] + 0.5*arrow_position[2], arrow_position[1] + 0.5*arrow_position[3]
-            center_x, center_y = self.get_center_of_fishing_button(context)
+            # arrow_x, arrow_y = arrow_position[0] + 0.5*arrow_position[2], arrow_position[1] + 0.5*arrow_position[3]
+            arrow_x, arrow_y = arrow_position[0], arrow_position[1]
+            # center_x, center_y = self.get_center_of_fishing_button(context)
+            center_x = 1052
+            center_y = 492
             # if center_x is not None and center_y is not None:
             #     angle = np.arctan2(arrow_y - center_y, arrow_x - center_x)
             # else:
             #     return
 
             # 移动摇杆
-            pyautogui.mouseDown(arrow_x, arrow_y)
-
-            time.sleep(0.1)
+            context.swipe(center_x, int(arrow_x), center_y, int(arrow_y), 500)
+            print(f"摇杆移动到{arrow_x},{arrow_y}")
             if not flag:
                 break
+            continue
 
 
     # 获取钓鱼按钮中心位置的函数
@@ -289,6 +334,7 @@ class Autofishing(CustomAction):
         return None
 
     def detect_and_click_circles(self, context: SyncContext, light_speed=LIGHT_SPEED):
+        print("发现了QTE？")
         # 检测图标
         centers, icon_radius = self.detect_icons(context)
 
@@ -299,21 +345,27 @@ class Autofishing(CustomAction):
         screenshot = context.screencap()
         screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
 
+        start_time = time.time()
         for center in centers:
             # 检测光圈的当前半径
             current_radius = self.detect_circle_radius(screenshot_gray, center, icon_radius)
             if current_radius is None:
                 print(f"No circle detected around icon at {center}")
+                if time.time() - start_time > 5:
+                    break
                 continue
 
             # 计算光圈收缩到图标半径需要的时间
             shrink_time = ((current_radius - icon_radius) / light_speed)*0.001
+            print(f"shrink_time: {shrink_time}")
 
             # 等待光圈收缩到图标半径
             time.sleep(shrink_time)
 
             # 点击图标（这里用打印代替实际点击）
-            pyautogui.click(center)
+            print("当前检测得到的光圈半径为：", current_radius)
+            print("当前检测到QTE坐标为：", center[0], center[1])
+            context.click(int(center[0]), int(center[1]))
             print(f"Clicking at {center}")
 
 
