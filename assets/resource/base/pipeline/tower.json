@@ -1,4 +1,10 @@
 {
+    "consecration_tower": {
+        "next": [
+            "openBattleforTower",
+            "sub_return_home"
+        ]
+    },
     "openBattleforTower": {
         "recognition": "TemplateMatch",
         "template": "battle button.png",
@@ -8,6 +14,7 @@
             207,
             244
         ],
+        "pre_wait_freezes": 500,
         "action": "Click",
         "post_wait_freezes": 1500,
         "next": [
@@ -59,6 +66,7 @@
         "post_delay": 1000,
         "next": [
             "Sub_scaniffull",
+            "StopTowerbattle",
             "Towermainpage",
             "enterTower"
         ]
@@ -302,5 +310,17 @@
         "next": [
             "Towermainpage"
         ]
+    },
+    "sub_return_home": {
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "is_sub": true,
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
+        "action": "Click"
     }
 }
