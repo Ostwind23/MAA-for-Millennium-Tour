@@ -45,7 +45,7 @@
         },
         {
             "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后再选择此任务）",
-            "entry": "openBattleforTower"
+            "entry": "consecration_tower"
         },
         {
             "name": "自动收取勋章",
