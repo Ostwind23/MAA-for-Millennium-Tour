@@ -12,6 +12,9 @@
 ### [MFAWPF](https://github.com/SweetSmellFox/MFAWPF)
  由社区大佬[SweetSmellFox](https://github.com/SweetSmellFox)编写的基于WPF的GUI,通过内置的MAAframework来直接控制任务流程
  -下载`MMT-win-x86_64-with-GUI-vXXX.zip`
+ 如果第一次启动后发现找到ADB但是无法执行任务的情况，请尝试将解压目录下config/config.json
+ ![图4](image-4.png)
+ 中的index改为1后重启程序再尝试  
 # 【**使用方法**】
 具体教程请看贴吧精华帖[【自动化日常脚本】千年之旅MAA](https://tieba.baidu.com/p/9122503018?pn=1)    
 将压缩包解压到文件夹后，双击MaaPiCli.exe即可进入**MAA控制终端**    
