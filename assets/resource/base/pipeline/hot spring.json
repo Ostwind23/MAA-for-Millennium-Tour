@@ -65,7 +65,8 @@
             "hotspring/chest bubble.png",
             "hotspring/gold bubble.png",
             "hotspring/medicine bubble.png",
-            "hotspring/white background gold bubble.png"
+            "hotspring/white background gold bubble.png",
+            "hotspring/blue background medicine bubble.png"
         ],
         "action": "Click",
         "post_delay": 1500
