@@ -8,6 +8,10 @@
 4、自动收取勋章  
 5、自动进入温泉点泡泡  
 6、自动推进主线战斗关卡，需要先点进自己要打的主线章；目前只支持多关纯战斗自动连战  
+# 【**图形化界面**】
+### [MFAWPF](https://github.com/SweetSmellFox/MFAWPF)
+ 由社区大佬[SweetSmellFox](https://github.com/SweetSmellFox)编写的基于WPF的GUI,通过内置的MAAframework来直接控制任务流程
+ -下载`MMT-win-x86_64-with-GUI-vXXX.zip`
 # 【**使用方法**】
 具体教程请看贴吧精华帖[【自动化日常脚本】千年之旅MAA](https://tieba.baidu.com/p/9122503018?pn=1)    
 将压缩包解压到文件夹后，双击MaaPiCli.exe即可进入**MAA控制终端**    
