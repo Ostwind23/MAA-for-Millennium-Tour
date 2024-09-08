@@ -154,7 +154,7 @@
     "Sub_scaniffull": {
         "is_sub": true,
         "recognition": "OCR",
-        "expected": "32000",
+        "expected": "^(3200[1-9]|320[1-9]\\d|32[1-9]\\d{2}|3[3-9]\\d{3}|[4-9]\\d{4}|[1-9]\\d{5,})$",
         "roi": [
             974,
             175,
