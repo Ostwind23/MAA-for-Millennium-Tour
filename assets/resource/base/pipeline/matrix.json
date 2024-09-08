@@ -1,7 +1,14 @@
 {
+    "column_matrix": {
+        "next": [
+            "MatrixStartup",
+            "sub_return_home"
+        ]
+    },
     "MatrixStartup": {
         "next": [
-            "openBattleforMatrix"
+            "openBattleforMatrix",
+            "sub_return_home"
         ]
     },
     "openBattleforMatrix": {
@@ -13,6 +20,7 @@
             207,
             244
         ],
+        "pre_wait_freezes": 500,
         "action": "Click",
         "post_wait_freezes": 1500,
         "next": [
@@ -96,6 +104,7 @@
             143
         ],
         "action": "Click",
+        "post_delay": 1500,
         "next": [
             "Matrixmakesureautobattle",
             "launchmatrix"
@@ -144,10 +153,10 @@
         "recognition": "TemplateMatch",
         "template": "matrix/roundend.png",
         "roi": [
-            750,
-            16,
-            393,
-            176
+            691,
+            411,
+            88,
+            25
         ],
         "action": "Click",
         "target": [
