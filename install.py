@@ -6,8 +6,6 @@ import sys
 import json
 import os
 
-from win32ctypes import pywin32
-
 pipmain(['install', pywin32])
 
 from win32com.client import Dispatch
