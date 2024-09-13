@@ -82,7 +82,7 @@ jobs:
           
       - uses: actions/upload-artifact@v3
         with:
-          name: MMT-win-x86_64-with-gui
+          name: 律律子小助手-win-x86_64-with-gui
           path: "gui"     
 
   windows:
@@ -126,7 +126,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: MaaXXX-win-${{ matrix.arch }}
+          name: 律律子小助手-win-${{ matrix.arch }}
           path: "install"
 
   # ubuntu:
