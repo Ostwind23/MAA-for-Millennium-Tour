@@ -75,9 +75,6 @@ jobs:
       - name: gui resources          
         shell: bash
         run: |  
-           pip install pyinstaller
-           pip install pywin32
-           pip install winshell
            rm -f ./gui/*.zip
            cp -r ./assets/resource/* ./gui/Resource/
            cp -r ./assets/python ./gui/
