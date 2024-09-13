@@ -94,7 +94,7 @@ jobs:
            rm -f ./gui/*.zip
            cp -r ./assets/resource/* ./gui/Resource/
            cp -r ./assets/python ./gui/
-           python ./python/build.py
+           python ./python/install/build.py
            jq --arg version_name "千年之旅 律律子小助手" --arg version ${{ needs.meta.outputs.tag }} '. + {"version": {"name": $version_name, "version": $version}}' ./assets/interface.json > ./gui/interface.json
           
       - uses: actions/upload-artifact@v3
@@ -142,7 +142,7 @@ jobs:
         shell: bash
         run: |
           python ./install.py ${{ needs.meta.outputs.tag }}
-          python ./python/build.py
+          python ./install/python/build.py
 
       - uses: actions/upload-artifact@v3
         with:
