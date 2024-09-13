@@ -24,13 +24,19 @@ start_time = time.time()
 LIGHT_SPEED = 5
 global_fishingpool = "1"
 
+# 获取当前脚本所在目录
+current_dir = os.getcwd()
+
+# 构建绝对路径
+resource_path = os.path.join(current_dir, '..', 'resource', 'base')
+
 async def main():
     global global_fishingpool
     user_path = "./"
     Toolkit.init_option(user_path)
 
     resource = Resource()
-    await resource.load("../resource/base")
+    await resource.load(resource_path)
 
     device_list = await Toolkit.adb_devices()
     if not device_list:
@@ -42,9 +48,7 @@ async def main():
     print("请务必确保当前界面为钓台界面且未开始抛竿钓鱼\n")
     print("当前ADB设备有：\n")
     print(device_list)
-    devnum = input("请输入你的模拟器ADB设备的序号（从0号开始为第一个,不填写则默认为第一个）")
-    if devnum == "":
-        devnum = 0
+    devnum = input("请输入你的模拟器ADB设备的序号（从0号开始为第一个）")
     device = device_list[int(devnum)]
     controller = AdbController(
         adb_path=device.adb_path,
@@ -63,7 +67,7 @@ async def main():
     maa_inst.register_recognizer("MyRec", my_rec)
     maa_inst.register_action("MyAct", my_act)
     maa_inst.register_action("Autofishing", autofishing)
-    global_fishingpool = input("请输入你选择的钓鱼池序号：\n 1.森林 2.海滩 3.运河 4.冰原 \n")
+    global_fishingpool = input("请输入你选择的钓鱼池序号：\n 1.森林 2.海滩 3.运河 4.冰原")
     print("MAA框架初始化完成,准备开始执行自动钓鱼任务，请务必确保当前界面为钓台界面")
 
     await maa_inst.run_task("Fully_Automatic_Fishing")
@@ -147,7 +151,7 @@ class Autofishing(CustomAction):
         print("等待鱼咬饵中...")
         start_time = time.time()
         while True:
-            if time.time() - start_time > 10:
+            if time.time() - start_time > 15:
                 print("等待超时，未检测到鱼咬饵")
                 break
             if global_fishingpool == "1" and "3":
@@ -167,34 +171,28 @@ class Autofishing(CustomAction):
                 if res:
                     break
                 time.sleep(0.1)
-            elif global_fishingpool == "2":
+            elif global_fishingpool == "2" and "4":
                 res = context.run_task("是否鱼咬钩",
                                        {
                                            "是否鱼咬钩": {
-                                               "recognition": "ColorMatch",
-                                               "lower": [12, 35, 40],
-                                               "upper": [26, 55, 100],
-                                               "roi": [
-                                                   1061, 513, 126, 106],
-                                               "action": "Click",
-                                               "post_delay": 100
-                                           }
-                                       }
-                                       )
-                if res:
-                    break
-                time.sleep(0.1)
-            elif global_fishingpool == "4":
-                res = context.run_task("是否鱼咬钩",
-                                       {
-                                           "是否鱼咬钩": {
-                                               "recognition": "ColorMatch",
-                                               "lower": [12, 30, 40],
-                                               "upper": [26, 55, 70],
-                                               "roi": [
-                                                   1061, 513, 126, 106],
-                                               "action": "Click",
-                                               "post_delay": 100
+                                               "recognition": "TemplateMatch",
+                                                "template": [
+                                                    "fishing/awaitingfish.png",
+                                                    "fishing/forest awaitingfish.png"
+                                                ],
+                                                "roi": [
+                                                    483,
+                                                    0,
+                                                    256,
+                                                    134
+                                                ],
+                                                "action": "Click",
+                                                "target": [
+                                                    1110,
+                                                    547,
+                                                    30,
+                                                    30
+                                                ],
                                            }
                                        }
                                        )
@@ -289,9 +287,9 @@ class Autofishing(CustomAction):
         image_path = '../resource/base/image/fishing/icon.png'
         template = cv2.imread(image_path)
         if template is not None:
-            print("icon图片读取成功")
+            print("QTE icon图片读取成功")
         else:
-            print("icon图片读取失败")
+            print("QTE icon图片读取失败")
 
         # 转换为灰度图像
         screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
