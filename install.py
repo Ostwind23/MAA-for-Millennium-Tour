@@ -14,6 +14,7 @@ from configure import configure_ocr_model
 working_dir = Path(__file__).parent
 install_path = working_dir / Path("install")
 version = len(sys.argv) > 1 and sys.argv[1] or "v0.1.2"
+os.system('chcp 65001')
 
 
 def install_deps():
@@ -81,7 +82,7 @@ def install_chores():
 
 def create_shortcut():
     target = str(install_path / "python" / "Autofishing.exe")
-    shortcut_path = str(install_path / "低面板可用自动钓鱼程序.lnk")
+    shortcut_path = str(install_path / "低面板可用自动钓鱼.lnk")
     icon_path = str(install_path / "python" / "icon.ico")
     shell = Dispatch('WScript.Shell')
 
