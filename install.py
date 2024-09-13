@@ -82,7 +82,7 @@ def install_chores():
 
 def create_shortcut():
     target = str(install_path / "python" / "Autofishing.exe")
-    shortcut_path = str(install_path / "低面板可用自动钓鱼.lnk")
+    shortcut_path = str(install_path / "Autofishing.lnk")
     icon_path = str(install_path / "python" / "icon.ico")
     shell = Dispatch('WScript.Shell')
 
