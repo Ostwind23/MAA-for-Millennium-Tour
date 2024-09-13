@@ -4,7 +4,7 @@ import shutil
 import sys
 import json
 import os
-os.system(f'pip install {'pywin32'}')
+os.system(f"pip install {'pywin32'}")
 
 from win32com.client import Dispatch
 
