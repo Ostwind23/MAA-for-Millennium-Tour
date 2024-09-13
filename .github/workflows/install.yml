@@ -64,6 +64,15 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install pipreqs
+          pipreqs src --encoding=utf8 --savepath requirementstemp.txt
+          pip install -r requirements.txt
+          pip install -r requirementstemp.txt
+
       - name: Download Latest MFAWPF  
         uses: robinraju/release-downloader@v1.8  
         with:  
@@ -71,18 +80,26 @@ jobs:
              latest: true  
              out-file-path: gui  
              extract: true  
-  
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install pywin32
+          pip install winshell
+          pip install maa
       - name: gui resources          
         shell: bash
-        run: |  
+        run: |
+           chcp 65001  
            rm -f ./gui/*.zip
            cp -r ./assets/resource/* ./gui/Resource/
            cp -r ./assets/python ./gui/
+           python ./python/build.py
            jq --arg version_name "千年之旅 律律子小助手" --arg version ${{ needs.meta.outputs.tag }} '. + {"version": {"name": $version_name, "version": $version}}' ./assets/interface.json > ./gui/interface.json
           
       - uses: actions/upload-artifact@v3
         with:
-          name: 律律子小助手-win-x86_64-with-gui
+          name: MillenniumTour-Assistant-win-x86_64-with-gui
           path: "gui"     
 
   windows:
@@ -107,8 +124,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
-          pip install pywin32
-          pip install winshell
+          pip install pipreqs
+          pipreqs src --encoding=utf8 --savepath requirementstemp.txt
+          pip install -r requirements.txt
+          pip install -r requirementstemp.txt
     
       - name: Download MaaFramework
         uses: robinraju/release-downloader@v1.8
@@ -123,10 +142,11 @@ jobs:
         shell: bash
         run: |
           python ./install.py ${{ needs.meta.outputs.tag }}
+          python ./python/build.py
 
       - uses: actions/upload-artifact@v3
         with:
-          name: 律律子小助手-win-${{ matrix.arch }}
+          name: MillenniumTour-Assistant-win-${{ matrix.arch }}
           path: "install"
 
   # ubuntu:
