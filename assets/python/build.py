@@ -3,6 +3,26 @@ import os
 import site
 import shutil
 
+# 递归搜索指定文件
+def find_file(filename, search_path):
+    for root, dirs, files in os.walk(search_path):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+
+# 获取当前工作目录
+current_dir = os.getcwd()
+
+# 搜索当前目录下的 __main__.py 文件
+main_script_path = find_file('__main__.py', current_dir)
+
+# 如果当前目录下未找到，则切换到 assets/python 目录继续搜索
+if main_script_path is None:
+    assets_python_path = os.path.join(current_dir, 'assets', 'python')
+    main_script_path = find_file('__main__.py', assets_python_path)
+    if main_script_path is None:
+        raise FileNotFoundError("Can't find __main__.py through searching.")
+
 # 获取 site-packages 目录列表
 site_packages_paths = site.getsitepackages()
 
@@ -34,19 +54,28 @@ if maa_bin_path2 is None:
 # 构建 --add-data 参数
 add_data_param2 = f'{maa_bin_path2}{os.pathsep}MaaAgentBinary'
 
+print("Current working directory:", os.getcwd())
+print(f"Found __main__.py at: {main_script_path}")
+print(f"Found maa/bin at: {maa_bin_path}")
+print(f"Found MaaAgentBinary at: {maa_bin_path2}")
 
 # 运行 PyInstaller
 PyInstaller.__main__.run([
-    '__main__.py',
+    main_script_path,
     '--onefile',
     '--name=Autofishing',
-    f'--add-data={add_data_param}',
-    f'--add-data={add_data_param2}',
+    f'--add-data={maa_bin_path}{os.pathsep}maa/bin',
+    f'--add-data={maa_bin_path2}{os.pathsep}MaaAgentBinary',
     '--clean',
 ])
 
 current_dir = os.getcwd()
 src = os.path.join(current_dir, 'dist', 'Autofishing.exe')
 dst = os.path.join(current_dir, 'Autofishing.exe')
+
+# 检查目标文件是否存在并删除
+if os.path.exists(dst):
+    os.remove(dst)
+
 shutil.move(src, dst)
 print(f"[Autofishing.exe] moved from {src} to {dst}")
