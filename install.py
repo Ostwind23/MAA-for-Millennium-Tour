@@ -1,10 +1,15 @@
+from pip._internal import main as pipmain
 from pathlib import Path
 
 import shutil
 import sys
 import json
 import os
-import winshell
+
+from win32ctypes import pywin32
+
+pipmain(['install', pywin32])
+
 from win32com.client import Dispatch
 
 from configure import configure_ocr_model
