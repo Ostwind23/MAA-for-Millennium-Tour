@@ -45,7 +45,7 @@
         },
         {
             "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后再选择此任务）",
-            "entry": "openBattleforTower"
+            "entry": "consecration_tower"
         },
         {
             "name": "自动收取勋章",
@@ -65,6 +65,13 @@
         {
             "name": "自动阵列（死循环，会无限自动匹配战斗，请分配到所有任务之后）",
             "entry": "MatrixStartup"
+        },
+        {
+            "name": "自动识别钓鱼【暴力型，仅支持不需要拖拽也能把鱼钓上来的面板】（如需低面板自动化钓鱼请打开同目录下的低面板可用自动钓鱼程序",
+            "entry": "Start_autofishing",
+            "option": [
+                "请选择钓台"
+            ]
         }
     ],
     "option": {
@@ -180,6 +187,44 @@
                                 "Sub_BuyTicket",
                                 "Homeflag4"
                             ]
+                        }
+                    }
+                }
+            ]
+        },
+        "请选择钓台": {
+            "cases": [
+                {
+                    "name": "森林",
+                    "param": {
+                        "choosefishpool": {
+                            "expected": [
+                                "森林"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "海滩",
+                    "param": {
+                        "choosefishpool": {
+                            "expected": "海滩"
+                        }
+                    }
+                },
+                {
+                    "name": "运河",
+                    "param": {
+                        "choosefishpool": {
+                            "expected": "运河"
+                        }
+                    }
+                },
+                {
+                    "name": "冰原",
+                    "param": {
+                        "choosefishpool": {
+                            "expected": "冰原"
                         }
                     }
                 }

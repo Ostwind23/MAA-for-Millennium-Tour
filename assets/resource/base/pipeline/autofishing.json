@@ -35,7 +35,7 @@
             157
         ],
         "action": "Click",
-        "post_delay": 2000,
+        "post_delay": 4000,
         "next": [
             "choosefishpool"
         ]
@@ -43,10 +43,7 @@
     "choosefishpool": {
         "recognition": "OCR",
         "expected": [
-            "森林",
-            "海滩",
-            "运河",
-            "冰原"
+            "森林"
         ],
         "roi": [
             706,
@@ -71,39 +68,56 @@
         ],
         "action": "Click",
         "next": [
-            "Sub_awaitforfish",
-            "getfish"
+            "waiting"
         ]
     },
-    "Sub_awaitforfish": {
-        "is_sub": true,
+    "waiting": {
+        "post_delay": 100,
+        "next": [
+            "awaitforfish",
+            "waiting"
+        ]
+    },
+    "awaitforfish": {
         "recognition": "TemplateMatch",
-        "template": "fishing/awaitingfish.png",
+        "template": [
+            "fishing/awaitingfish.png",
+            "fishing/forest awaitingfish.png"
+        ],
         "roi": [
-            506,
+            483,
             0,
-            268,
-            138
-        ]
-    },
-    "getfish": {
-        "recognition": "TemplateMatch",
-        "template": "fishing/getfish.png",
-        "roi": [
-            1051,
-            573,
-            147,
-            130
+            256,
+            134
         ],
         "action": "Click",
-        "post_wait_freezes": 2000,
+        "target": [
+            1110,
+            547,
+            30,
+            30
+        ],
+        "post_wait_freezes": 1000,
         "next": [
-            "Waitingtopullupfish"
+            "pullfishup"
         ]
     },
-    "Waitingtopullupfish": {
-        "pre_wait_freezes": 500,
+    "pullfishup": {
+        "recognition": "TemplateMatch",
+        "template": "fishing/pullfishup.png",
+        "roi": [
+            165,
+            200,
+            220,
+            131
+        ],
         "action": "Click",
+        "target_offset": [
+            165,
+            500,
+            1,
+            1
+        ],
         "next": [
             "autofishing"
         ]

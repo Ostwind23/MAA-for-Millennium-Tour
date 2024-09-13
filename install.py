@@ -3,13 +3,16 @@ from pathlib import Path
 import shutil
 import sys
 import json
+import os
+import winshell
+from win32com.client import Dispatch
 
 from configure import configure_ocr_model
 
 
 working_dir = Path(__file__).parent
 install_path = working_dir / Path("install")
-version = len(sys.argv) > 1 and sys.argv[1] or "v0.0.1"
+version = len(sys.argv) > 1 and sys.argv[1] or "v0.1.2"
 
 
 def install_deps():
@@ -49,6 +52,11 @@ def install_resource():
         working_dir / "assets" / "interface.json",
         install_path,
     )
+    shutil.copytree(
+        working_dir / "assets" / "python",
+        install_path / "python",
+        dirs_exist_ok=True,
+    )
 
     with open(install_path / "interface.json", "r", encoding="utf-8") as f:
         interface = json.load(f)
@@ -70,9 +78,23 @@ def install_chores():
     )
 
 
+def create_shortcut():
+    target = str(install_path / "python" / "Autofishing.exe")
+    shortcut_path = str(install_path / "低面板可用自动钓鱼程序.lnk")
+    icon_path = str(install_path / "python" / "icon.ico")
+    shell = Dispatch('WScript.Shell')
+
+    shortcut = shell.CreateShortCut(shortcut_path)
+    shortcut.Targetpath = target
+    shortcut.IconLocation = icon_path
+    shortcut.WorkingDirectory = str(install_path / "python")  # 设置起始位置
+    shortcut.save()
+
+
 if __name__ == "__main__":
     install_deps()
     install_resource()
     install_chores()
+    create_shortcut()
 
     print(f"Install to {install_path} successfully.")
