@@ -64,15 +64,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pyinstaller
-          pip install pipreqs
-          pipreqs src --encoding=utf8 --savepath requirementstemp.txt
-          pip install -r requirements.txt
-          pip install -r requirementstemp.txt
-
       - name: Download Latest MFAWPF  
         uses: robinraju/release-downloader@v1.8  
         with:  
@@ -86,9 +77,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install pipreqs
+          pip install MaaAgentBinary
           pip install maafw
           pipreqs assets/python --encoding=utf8 --savepath requirementstemp.txt
-          pip install -r requirements.txt
           pip install -r requirementstemp.txt
 
       - name: gui resources          
@@ -129,9 +120,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
           pip install pipreqs
+          pip install MaaAgentBinary
           pip install maafw
           pipreqs assets/python --encoding=utf8 --savepath requirementstemp.txt
-          pip install -r requirements.txt
           pip install -r requirementstemp.txt
     
       - name: Download MaaFramework
