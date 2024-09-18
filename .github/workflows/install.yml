@@ -50,10 +50,9 @@ jobs:
       is_release: ${{ steps.set_tag.outputs.is_release }}
   gui:
     needs: meta
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     strategy:
       fail-fast: false
-      
     steps:
       - uses: actions/checkout@v3
         with:
@@ -64,13 +63,13 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Download Latest MFAWPF  
-        uses: robinraju/release-downloader@v1.8  
-        with:  
-             repository: SweetSmellFox/MFAWPF  
-             latest: true  
-             out-file-path: gui  
-             extract: true  
+      - name: Download Latest MFAWPF
+        uses: robinraju/release-downloader@v1.8
+        with:
+          repository: SweetSmellFox/MFAWPF
+          latest: true
+          out-file-path: gui
+          extract: true
 
       - name: Install dependencies
         run: |
@@ -82,24 +81,24 @@ jobs:
           pipreqs assets/python --encoding=utf8 --savepath requirementstemp.txt
           pip install -r requirementstemp.txt
 
-      - name: gui resources          
-        shell: bash
+      - name: gui resources
+        shell: pwsh
         run: |
-           echo "current dir:"
-           ls
-           echo "---------------"
-           rm -f ./gui/*.zip
-           cp -r ./assets/resource/* ./gui/Resource/
-           cp -r ./assets/python ./gui/python/
-           echo "gui:"
-           ls ./gui/
-           echo "---------------"
-           echo "gui/python:"
-           ls ./gui/python/
-           echo "---------------"
-           python ./gui/python/build.py
-           jq --arg version_name "千年之旅 律律子小助手" --arg version ${{ needs.meta.outputs.tag }} '. + {"version": {"name": $version_name, "version": $version}}' ./assets/interface.json > ./gui/interface.json
-          
+          Write-Output "current dir:"
+          Get-ChildItem
+          Write-Output "---------------"
+          Remove-Item -Force ./gui/*.zip
+          Copy-Item -Recurse ./assets/resource/* ./gui/Resource/
+          Copy-Item -Recurse ./assets/python ./gui/python/
+          Write-Output "gui:"
+          Get-ChildItem ./gui/
+          Write-Output "---------------"
+          Write-Output "gui/python:"
+          Get-ChildItem ./gui/python/
+          Write-Output "---------------"
+          python ./gui/python/build.py
+          (Get-Content ./assets/interface.json | ConvertFrom-Json) + @{version = @{name = "千年之旅 律律子小助手"; version = ${{ needs.meta.outputs.tag }}}} | ConvertTo-Json | Set-Content ./gui/interface.json
+
       - uses: actions/upload-artifact@v3
         with:
           name: MillenniumTour-Assistant-win-x86_64-with-gui
