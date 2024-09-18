@@ -71,10 +71,12 @@ PyInstaller.__main__.run([
 
 current_dir = os.getcwd()
 # 遍历current_dir目录，寻找Autofishing.exe文件
-for root, dirs,files in os.walk(current_dir):
+for root, dirs, files in os.walk(current_dir):
     if 'Autofishing.exe' in files:
         src = os.path.join(root, 'Autofishing.exe')
         break
+    else:
+        print("src Autofishing.exe not found")
 
 gui_flag = 0
 for root, dirs, _ in os.walk(current_dir, topdown=True):
