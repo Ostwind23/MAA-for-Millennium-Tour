@@ -85,7 +85,10 @@ jobs:
       - name: gui resources          
         shell: bash
         run: |
-           chcp 65001  
+           locale
+           locale -a
+           export LANG=en_US.UTF-8
+           export LC_ALL=en_US.UTF-8
            rm -f ./gui/*.zip
            cp -r ./assets/resource/* ./gui/Resource/
            cp -r ./assets/python ./gui/
