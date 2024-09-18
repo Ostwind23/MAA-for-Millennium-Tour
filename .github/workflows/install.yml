@@ -88,8 +88,8 @@ jobs:
           Get-ChildItem
           Write-Output "---------------"
           Remove-Item -Force ./gui/*.zip
-          Copy-Item -Recurse ./assets/resource/* ./gui/Resource/
-          Copy-Item -Recurse ./assets/python ./gui/python/
+          Copy-Item -Recurse -Force ./assets/resource/* ./gui/Resource/
+          Copy-Item -Recurse -Force ./assets/python ./gui/python/
           Write-Output "gui:"
           Get-ChildItem ./gui/
           Write-Output "---------------"
@@ -98,6 +98,7 @@ jobs:
           Write-Output "---------------"
           python ./gui/python/build.py
           (Get-Content ./assets/interface.json | ConvertFrom-Json) + @{version = @{name = "千年之旅 律律子小助手"; version = ${{ needs.meta.outputs.tag }}}} | ConvertTo-Json | Set-Content ./gui/interface.json
+          
 
       - uses: actions/upload-artifact@v3
         with:
