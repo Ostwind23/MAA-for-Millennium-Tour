@@ -84,12 +84,10 @@ for root, dirs, _ in os.walk(current_dir, topdown=True):
 
 if src and gui_flag == 1:
     dst = os.path.join(current_dir, 'gui', 'Autofishing.exe')
-    shutil.move(src, dst)
-    print(f"Found GUI. Moved {src} to {dst}")
+    print(f"Found GUI.")
 elif src:
     dst = os.path.join(current_dir, 'Autofishing.exe')
-    shutil.move(src, dst)
-    print(f"Didn't find GUI. Moved {src} to {dst}")
+    print(f"Didn't find GUI.")
 else:
     print("Autofishing.exe not found")
 
