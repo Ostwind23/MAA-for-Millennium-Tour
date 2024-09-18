@@ -63,6 +63,19 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install Chocolatey
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force; `
+          [System.Net.ServicePointManager]::SecurityProtocol = `
+          [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+        shell: powershell
+
+      - name: Install jq
+        run: |
+          choco install jq -y
+        shell: powershell
+
       - name: Download Latest MFAWPF
         uses: robinraju/release-downloader@v1.8
         with:
@@ -103,15 +116,9 @@ jobs:
           Get-ChildItem ./gui/python/
           Write-Output "---------------"
           python ./gui/python/build.py
-          # 读取并修改 JSON 文件
-          $interfaceJson = Get-Content ./assets/interface.json | ConvertFrom-Json
-          $versionInfo = @{
-              name = "千年之旅 律律子小助手"
-              version = "${{ needs.meta.outputs.tag }}"
-          }
-          $interfaceJson.version = $versionInfo
-          # 输出修改后的 JSON 文件
-          $interfaceJson | ConvertTo-Json -Depth 32 | Set-Content ./gui/interface.json          
+          $version_name = "千年之旅 律律子小助手"
+          $version = "${{ needs.meta.outputs.tag }}"
+          jq --arg version_name $version_name --arg version $version '. + {"version": {"name": $version_name, "version": $version}}' ./assets/interface.json > ./gui/interface.json       
 
       - uses: actions/upload-artifact@v3
         with:
