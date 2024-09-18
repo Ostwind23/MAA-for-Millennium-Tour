@@ -71,13 +71,13 @@ PyInstaller.__main__.run([
 
 current_dir = os.getcwd()
 # 遍历current_dir目录，寻找Autofishing.exe文件
-for root, files in os.walk(current_dir):
+for root, dirs,files in os.walk(current_dir):
     if 'Autofishing.exe' in files:
         src = os.path.join(root, 'Autofishing.exe')
         break
 
 gui_flag = 0
-for root, dirs in os.walk(current_dir):
+for root, dirs, _ in os.walk(current_dir, topdown=True):
     if 'gui' in dirs:
         gui_flag = 1
         break
@@ -87,7 +87,6 @@ if src and gui_flag == 1:
     shutil.move(src, dst)
     print(f"Found GUI. Moved {src} to {dst}")
 elif src:
-    src = os.path.join(current_dir, 'dist', 'Autofishing.exe')
     dst = os.path.join(current_dir, 'Autofishing.exe')
     shutil.move(src, dst)
     print(f"Didn't find GUI. Moved {src} to {dst}")
