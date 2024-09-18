@@ -27,8 +27,21 @@ global_fishingpool = "1"
 # 获取当前脚本所在目录
 current_dir = os.getcwd()
 
+gui_flag = 0
+for root, dirs in os.walk(current_dir):
+    if 'Resource' in dirs:
+        gui_flag = 1
+        break
+
+
 # 构建绝对路径
-resource_path = os.path.join(current_dir, '..', 'resource', 'base')
+if gui_flag == 0:
+    resource_path = os.path.join(current_dir, '..', 'resource', 'base')
+elif gui_flag == 1:
+    resource_path = os.path.join(current_dir, '..', 'Resource', 'base')
+else:
+    print("未找到资源文件夹")
+    input("按回车键退出...")
 
 async def main():
     global global_fishingpool

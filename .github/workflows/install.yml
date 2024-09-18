@@ -85,12 +85,18 @@ jobs:
       - name: gui resources          
         shell: bash
         run: |
+           echo "current dir:"
            ls
+           echo "---------------"
            rm -f ./gui/*.zip
            cp -r ./assets/resource/* ./gui/Resource/
            cp -r ./assets/python ./gui/python/
+           echo "gui:"
            ls ./gui/
+           echo "---------------"
+           echo "gui/python:"
            ls ./gui/python/
+           echo "---------------"
            python ./gui/python/build.py
            jq --arg version_name "千年之旅 律律子小助手" --arg version ${{ needs.meta.outputs.tag }} '. + {"version": {"name": $version_name, "version": $version}}' ./assets/interface.json > ./gui/interface.json
           
