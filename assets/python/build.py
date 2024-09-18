@@ -73,13 +73,15 @@ current_dir = os.getcwd()
 print(f"Current working directory: {current_dir}")
 
 # 遍历current_dir目录，寻找Autofishing.exe文件
+exe_flag = 0
 for root, dirs, files in os.walk(current_dir):
     if 'Autofishing.exe' in files:
         src = os.path.join(root, 'Autofishing.exe')
         print(f"Found Autofishing.exe at: {src}")
+        exe_flag = 1
         break
-    else:
-        print("src Autofishing.exe not found")
+if exe_flag == 0:
+    print("Autofishing.exe not found")
 
 gui_flag = 0
 for root, dirs, _ in os.walk(current_dir, topdown=True):

@@ -103,14 +103,15 @@ jobs:
           Get-ChildItem ./gui/python/
           Write-Output "---------------"
           python ./gui/python/build.py
+          # 读取并修改 JSON 文件
           $interfaceJson = Get-Content ./assets/interface.json | ConvertFrom-Json
-          if (-not $interfaceJson.PSObject.Properties.Match('version')) {
-              $interfaceJson | Add-Member -MemberType NoteProperty -Name version -Value @{name = "千年之旅 律律子小助手"; version = "${{ needs.meta.outputs.tag }}"}
-          } else {
-              $interfaceJson.version = @{name = "千年之旅 律律子小助手"; version = "${{ needs.meta.outputs.tag }}"}
+          $versionInfo = @{
+              name = "千年之旅 律律子小助手"
+              version = "${{ needs.meta.outputs.tag }}"
           }
-          $interfaceJson | ConvertTo-Json | Set-Content ./gui/interface.json
-          
+          $interfaceJson.version = $versionInfo
+          # 输出修改后的 JSON 文件
+          $interfaceJson | ConvertTo-Json -Depth 32 | Set-Content ./gui/interface.json          
 
       - uses: actions/upload-artifact@v3
         with:
