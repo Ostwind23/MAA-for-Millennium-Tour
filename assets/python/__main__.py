@@ -28,7 +28,7 @@ global_fishingpool = "1"
 current_dir = os.getcwd()
 
 gui_flag = 0
-for root, dirs in os.walk(current_dir):
+for root, dirs, _ in os.walk(current_dir):
     if 'Resource' in dirs:
         gui_flag = 1
         break
