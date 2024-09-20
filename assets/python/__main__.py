@@ -36,9 +36,9 @@ for root, dirs, _ in os.walk(current_dir):
 
 # 构建绝对路径
 if gui_flag == 0:
-    resource_path = os.path.join(current_dir, '..', 'resource', 'base')
+    resource_path = os.path.join(current_dir, 'resource', 'base') # 删去了返回上一级,因为已经把Autofishing.exe挪出来
 elif gui_flag == 1:
-    resource_path = os.path.join(current_dir, '..', 'Resource', 'base')
+    resource_path = os.path.join(current_dir, 'Resource', 'base')
 else:
     print("未找到资源文件夹")
     input("按回车键退出...")
