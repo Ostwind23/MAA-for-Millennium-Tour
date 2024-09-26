@@ -72,6 +72,10 @@
             "option": [
                 "请选择钓台"
             ]
+        },
+        {
+            "name": "钓台入口自动钓鱼【适配公会钓鱼比赛】",
+            "entry": "autofishing"
         }
     ],
     "option": {

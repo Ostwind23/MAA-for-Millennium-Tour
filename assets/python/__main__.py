@@ -110,7 +110,7 @@ class Autofishing(CustomAction):
         :param custom_param: 自定义参数
         :param box: 识别到的区域。
         :param rec_detail: 识别的详细信息。{
-        :return: 滑动是否成功。
+        :return: 任务执行是否成功。
         """
         # image = context.screencap()
         global global_fishingpool
