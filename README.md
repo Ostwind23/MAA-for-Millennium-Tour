@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD033 MD041 -->
 # 【**这是什么**】
-全称为千年之旅MAA-for-Millennium-Tour，是一款基于MaaFramework的自动化脚本，适配模拟器运行千年之旅的环境，可以有效解放双手，避免重复性劳作
+全称为千年之旅MAA-for-Millennium-Tour，亦可称 千年之旅 律律子小助手 。是一款基于MaaFramework的自动化脚本，适配模拟器运行千年之旅的环境，可以有效解放双手，避免重复性劳作
 # 【**支持功能**】
 1、自动化日常，包括前半部分日常（自动打开游戏+投色子+关公告+神谕司+商店）与后半部分日常（公会+交日常周常任务+第二次投色子+通行证）  
 2、自动化日常战斗，包括选择x2资源关与骚灵之境  
@@ -11,13 +11,14 @@
 # 【**图形化界面**】
 ### [MFAWPF](https://github.com/SweetSmellFox/MFAWPF)
  由社区大佬[SweetSmellFox](https://github.com/SweetSmellFox)编写的基于WPF的GUI,通过内置的MAAframework来直接控制任务流程
+ ![GUI](https://github.com/user-attachments/assets/50c6a5b9-a004-4b2f-b2a9-376bcb585507)  
  -下载`MMT-win-x86_64-with-GUI-vXXX.zip`
  如果第一次启动后发现找到ADB但是无法执行任务的情况，请尝试将解压目录下config/config.json
  ![图4](image-4.png)
  中的index改为1后重启程序再尝试  
 # 【**使用方法**】
 具体教程请看贴吧精华帖[【自动化日常脚本】千年之旅MAA](https://tieba.baidu.com/p/9122503018?pn=1)    
-将压缩包解压到文件夹后，双击MaaPiCli.exe即可进入**MAA控制终端**    
+将对应的压缩包解压到文件夹后，双击MFAWPF.exe（如若下载的是图形化界面版本包）或MaaPiCli.exe即可进入**MAA控制终端**    
 请将模拟器的**分辨率**设置为**1280x720**，并确保开启**root权限**  
 初次使用请根据贴吧教程设置好模拟器与Resource资源（即官服），然后根据任务描述添加自己的任务链  
 不同任务的要求不同，请务必根据任务后的描述来合理设置任务顺序  
@@ -44,3 +45,10 @@
 # 【**特别鸣谢**】
 感谢MaaFramework的作者与贡献者们，提供了如此优秀的框架，解答了我的疑惑，让我可以为千年之旅社区做出贡献。
 [MaaFramework-基于图像识别的自动化黑盒测试框架](https://github.com/MaaXYZ/MaaFramework)
+### 开发者
+
+感谢以下开发者对 千年之旅 律律子小助手 作出的贡献：
+
+<a href="https://github.com/Ostwind23/MAA-for-Millennium-Tour/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Ostwind23/MAA-for-Millennium-Tour" />
+</a>  
