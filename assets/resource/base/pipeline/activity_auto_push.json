@@ -1,0 +1,22 @@
+{
+    "Activityautopush": {
+        "next": [
+            "start_activityautopushing"
+        ]
+    },
+    "start_activityautopushing": {
+        "recognition": "TemplateMatch",
+        "template": "autopush/startbattle.png",
+        "roi": [
+            928,
+            571,
+            352,
+            149
+        ],
+        "next": [
+            "makesureautobattle",
+            "outofsupply",
+            "launchautopush"
+        ]
+    }
+}
