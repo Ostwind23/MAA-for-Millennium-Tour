@@ -87,7 +87,7 @@
             "cases": [
                 {
                     "name": "本勒关",
-                    "param": {
+                    "pipeline_override": {
                         "chooseOwnmission": {
                             "template": "money mission.png"
                         }
@@ -95,7 +95,7 @@
                 },
                 {
                     "name": "经验关",
-                    "param": {
+                    "pipeline_override": {
                         "chooseOwnmission": {
                             "template": "exp mission.png"
                         }
@@ -103,7 +103,7 @@
                 },
                 {
                     "name": "技能书关",
-                    "param": {
+                    "pipeline_override": {
                         "chooseOwnmission": {
                             "template": "skill mission.png"
                         }
@@ -115,7 +115,7 @@
             "cases": [
                 {
                     "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
-                    "param": {
+                    "pipeline_override": {
                         "scanmission": {
                             "index": -2
                         }
@@ -123,7 +123,7 @@
                 },
                 {
                     "name": "选择最后一关",
-                    "param": {
+                    "pipeline_override": {
                         "scanmission": {
                             "index": -1
                         }
@@ -135,7 +135,7 @@
             "cases": [
                 {
                     "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
-                    "param": {
+                    "pipeline_override": {
                         "scanGhostmission": {
                             "index": -2
                         }
@@ -143,7 +143,7 @@
                 },
                 {
                     "name": "选择最后一关",
-                    "param": {
+                    "pipeline_override": {
                         "scanGhostmission": {
                             "index": -1
                         }
@@ -155,7 +155,7 @@
             "cases": [
                 {
                     "name": "表界",
-                    "param": {
+                    "pipeline_override": {
                         "beginAutoPush": {
                             "action": "DoNothing"
                         }
@@ -163,7 +163,7 @@
                 },
                 {
                     "name": "里界",
-                    "param": {
+                    "pipeline_override": {
                         "beginAutoPush": {
                             "action": "Click"
                         }
@@ -175,7 +175,7 @@
             "cases": [
                 {
                     "name": "是",
-                    "param": {
+                    "pipeline_override": {
                         "collectFriendshippoint": {
                             "next": [
                                 "Sub_BuyMedicine",
@@ -188,7 +188,7 @@
                 },
                 {
                     "name": "否",
-                    "param": {
+                    "pipeline_override": {
                         "collectFriendshippoint": {
                             "next": [
                                 "Sub_BuyMedicine",
@@ -204,7 +204,7 @@
             "cases": [
                 {
                     "name": "森林",
-                    "param": {
+                    "pipeline_override": {
                         "choosefishpool": {
                             "expected": [
                                 "森林"
@@ -214,7 +214,7 @@
                 },
                 {
                     "name": "海滩",
-                    "param": {
+                    "pipeline_override": {
                         "choosefishpool": {
                             "expected": [
                                 "海滩"
@@ -224,7 +224,7 @@
                 },
                 {
                     "name": "运河",
-                    "param": {
+                    "pipeline_override": {
                         "choosefishpool": {
                             "expected": [
                                 "运河"
@@ -234,7 +234,7 @@
                 },
                 {
                     "name": "冰原",
-                    "param": {
+                    "pipeline_override": {
                         "choosefishpool": {
                             "expected": [
                                 "冰原"
