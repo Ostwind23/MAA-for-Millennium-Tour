@@ -216,7 +216,9 @@
                     "name": "海滩",
                     "param": {
                         "choosefishpool": {
-                            "expected": "海滩"
+                            "expected": [
+                                "海滩"
+                            ]
                         }
                     }
                 },
@@ -224,7 +226,9 @@
                     "name": "运河",
                     "param": {
                         "choosefishpool": {
-                            "expected": "运河"
+                            "expected": [
+                                "运河"
+                            ]
                         }
                     }
                 },
@@ -232,7 +236,9 @@
                     "name": "冰原",
                     "param": {
                         "choosefishpool": {
-                            "expected": "冰原"
+                            "expected": [
+                                "冰原"
+                            ]
                         }
                     }
                 }
