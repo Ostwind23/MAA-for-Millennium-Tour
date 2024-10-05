@@ -19,6 +19,9 @@
 # 【**使用方法**】
 具体教程请看贴吧精华帖[【自动化日常脚本】千年之旅MAA](https://tieba.baidu.com/p/9122503018?pn=1)    
 将对应的压缩包解压到文件夹后，双击MFAWPF.exe（如若下载的是图形化界面版本包）或MaaPiCli.exe即可进入**MAA控制终端**    
+![在Release处下载最新版本的包](https://github.com/user-attachments/assets/95888dbc-b6a5-491e-8c6e-cbdc0d9f8467)  
+![各包介绍,Source code是源代码,非开发人员不用管](https://github.com/user-attachments/assets/51f15eb7-fb13-4709-bc20-42d43e012631)  
+注意下载的包的后缀。带有with-gui后缀的包即是接入了图形化界面的包。  
 请将模拟器的**分辨率**设置为**1280x720**，并确保开启**root权限**  
 初次使用请根据贴吧教程设置好模拟器与Resource资源（即官服），然后根据任务描述添加自己的任务链  
 不同任务的要求不同，请务必根据任务后的描述来合理设置任务顺序  
