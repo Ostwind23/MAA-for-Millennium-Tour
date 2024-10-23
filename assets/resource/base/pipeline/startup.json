@@ -214,8 +214,8 @@
     },
     "DivisionJudginglist": {
         "next": [
-            "Sub_Division_award",
             "ifDivisionNotneedaction",
+            "Sub_Division_award",
             "Sub_Divisionchange",
             "reopenDivisionlist",
             "Divisionrest",
@@ -239,7 +239,7 @@
             435,
             107
         ],
-        "post_delay": 1000,
+        "post_wait_freezes": 1000,
         "next": [
             "Sub_Getreward",
             "Subreturn_back"
