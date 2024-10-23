@@ -87,9 +87,6 @@
             140
         ],
         "action": "Click",
-        "post_delay": 5000,
-        "next": [
-            "StopTask"
-        ]
+        "post_delay": 5000
     }
 }
