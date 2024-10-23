@@ -1,7 +1,7 @@
 {
     "enterCollectMedal": {
-        "recognition": "TemplateMatch",
-        "template": "Alert.png",
+        "recognition": "OCR",
+        "expected": "勋章",
         "roi": [
             124,
             378,
@@ -9,6 +9,7 @@
             64
         ],
         "action": "Click",
+        "post_wait_freezes": 500,
         "next": [
             "enterMedalSelection",
             "HomeflagMedal"
@@ -24,6 +25,7 @@
             196
         ],
         "action": "Click",
+        "post_wait_freezes": 500,
         "next": [
             "Sub_Findachievement",
             "Sub_getachievement",
@@ -41,7 +43,8 @@
             156,
             157
         ],
-        "action": "Click"
+        "action": "Click",
+        "post_wait_freezes": 500
     },
     "Sub_getachievement": {
         "is_sub": true,
@@ -60,7 +63,7 @@
             0,
             0
         ],
-        "pre_wait_freezes": 500
+        "pre_wait_freezes": 200
     },
     "backtoMedalSelection": {
         "recognition": "TemplateMatch",
@@ -72,6 +75,7 @@
             140
         ],
         "action": "Click",
+        "post_wait_freezes": 300,
         "next": [
             "enterMedalSelection",
             "HomeflagMedal"
@@ -87,6 +91,6 @@
             140
         ],
         "action": "Click",
-        "post_delay": 5000
+        "post_delay": 1000
     }
 }

@@ -195,7 +195,8 @@
         ],
         "action": "Click",
         "next": [
-            "findaccessableTask"
+            "findaccessableTask",
+            "end_after_battle"
         ]
     },
     "findaccessableTask": {
@@ -331,5 +332,8 @@
             "Sub_Getreward",
             "Homeflag5"
         ]
+    },
+    "end_after_battle": {
+        "action": "StopTask"
     }
 }
