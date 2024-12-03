@@ -253,8 +253,8 @@
             1,
             1
         ],
-        "pre_wait_freezes": 500,
-        "post_wait_freezes": 500,
+        "pre_delay": 1000,
+        "post_wait_freezes": 3000,
         "next": [
             "Sub_Getreward",
             "findaccessableTask"
@@ -274,7 +274,8 @@
         "post_delay": 5000,
         "next": [
             "startrolling",
-            "accessbattlepass"
+            "accessbattlepass",
+            "end_after_battle"
         ]
     },
     "startrolling": {

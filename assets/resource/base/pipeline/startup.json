@@ -21,6 +21,7 @@
         "action": "Click",
         "post_delay": 7000,
         "next": [
+            "Sub_StartGame",
             "Sub_Duringloading",
             "StartGame"
         ]
@@ -57,8 +58,8 @@
     },
     "Sub_Getreward": {
         "is_sub": true,
-        "recognition": "TemplateMatch",
-        "template": "get item.png",
+        "recognition": "OCR",
+        "expected": "获得物品",
         "roi": [
             514,
             141,

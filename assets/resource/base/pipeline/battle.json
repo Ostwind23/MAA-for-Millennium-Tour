@@ -5,8 +5,8 @@
         ]
     },
     "openBattle": {
-        "recognition": "TemplateMatch",
-        "template": "battle button.png",
+        "recognition": "OCR",
+        "expected": "出击",
         "roi": [
             1021,
             476,
@@ -14,7 +14,7 @@
             244
         ],
         "action": "Click",
-        "post_wait_freezes": 1500,
+        "post_wait_freezes": 1000,
         "next": [
             "openVault",
             "openVaultinOCR"
