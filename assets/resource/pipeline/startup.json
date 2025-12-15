@@ -1,0 +1,763 @@
+{
+    "Startup": {
+        "next": [
+            "StartMillenniumTour"
+        ]
+    },
+    "StartMillenniumTour": {
+        "action": "StartApp",
+        "package": "com.bilibili.qnzl.bili/com.yc.YCActivity",
+        "post_wait_freezes": 5000,
+        "next": [
+            "Sub_StartGame",
+            "StartMillenniumTour"
+        ]
+    },
+    "Sub_StartGame": {
+        "recognition": "OCR",
+        "expected": [
+            "开始游戏"
+        ],
+        "action": "Click",
+        "post_delay": 7000,
+        "next": [
+            "Sub_StartGame",
+            "Sub_Duringloading",
+            "StartGame"
+        ]
+    },
+    "Sub_Duringloading": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "loading.png",
+        "post_delay": 3000,
+        "roi": [
+            907,
+            581,
+            245,
+            124
+        ]
+    },
+    "StartGame": {
+        "post_delay": 1500,
+        "next": [
+            "rolling",
+            "CloseAnnouncement",
+            "Mainmenu1"
+        ]
+    },
+    "rolling": {
+        "recognition": "TemplateMatch",
+        "template": "dice available.png",
+        "action": "Click",
+        "post_delay": 8000,
+        "next": [
+            "Sub_Getreward",
+            "Homeflag1"
+        ]
+    },
+    "Sub_Getreward": {
+        "is_sub": true,
+        "recognition": "OCR",
+        "expected": "获得物品",
+        "roi": [
+            514,
+            141,
+            242,
+            145
+        ],
+        "pre_wait_freezes": 500,
+        "action": "Click",
+        "target": [
+            161,
+            510,
+            1,
+            1
+        ],
+        "post_delay": 1000
+    },
+    "Homeflag1": {
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 5000,
+        "next": [
+            "CloseAnnouncement",
+            "Mainmenu1"
+        ]
+    },
+    "CloseAnnouncement": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "announcement.png"
+        ],
+        "roi": [
+            1118,
+            2,
+            162,
+            156
+        ],
+        "action": "Click",
+        "target": [
+            1208,
+            52,
+            62,
+            56
+        ],
+        "next": [
+            "Collectmonthlycard",
+            "Mainmenu1"
+        ]
+    },
+    "Collectmonthlycard": {
+        "recognition": "TemplateMatch",
+        "template": "monthly card.png",
+        "roi": [
+            449,
+            483,
+            382,
+            146
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Sub_GetMonthlycard",
+            "Mainmenu1"
+        ]
+    },
+    "Sub_GetMonthlycard": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "getmonthlycard.png",
+        "roi": [
+            517,
+            94,
+            246,
+            143
+        ],
+        "action": "Click"
+    },
+    "Mainmenu1": {
+        "recognition": "TemplateMatch",
+        "template": "summon.png",
+        "roi": [
+            0,
+            530,
+            250,
+            190
+        ],
+        "next": [
+            "openDivision"
+        ]
+    },
+    "openDivision": {
+        "recognition": "TemplateMatch",
+        "template": "daily/division.png",
+        "roi": [
+            718,
+            559,
+            243,
+            161
+        ],
+        "action": "Click",
+        "target": [
+            768,
+            613,
+            143,
+            61
+        ],
+        "post_delay": 1000,
+        "next": [
+            "openDivisionlist",
+            "Homeflag3"
+        ]
+    },
+    "ifDivisionNotneedaction": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "inverse": true,
+        "roi": [
+            0,
+            32,
+            284,
+            162
+        ],
+        "next": [
+            "Homeflag3"
+        ]
+    },
+    "openDivisionlist": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            0,
+            32,
+            284,
+            162
+        ],
+        "action": "Click",
+        "target": [
+            57,
+            98,
+            120,
+            34
+        ],
+        "post_delay": 1000,
+        "next": [
+            "DivisionJudginglist"
+        ]
+    },
+    "DivisionJudginglist": {
+        "next": [
+            "ifDivisionNotneedaction",
+            "Sub_Division_award",
+            "Sub_Divisionchange",
+            "reopenDivisionlist",
+            "Divisionrest",
+            "Homeflag3"
+        ]
+    },
+    "Sub_Division_award": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/division award.png",
+        "roi": [
+            745,
+            79,
+            535,
+            207
+        ],
+        "action": "Click",
+        "target": [
+            843,
+            129,
+            435,
+            107
+        ],
+        "post_wait_freezes": 1000,
+        "next": [
+            "Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
+    "Second_Division_openlist": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            0,
+            32,
+            284,
+            162
+        ],
+        "action": "Click",
+        "target": [
+            57,
+            98,
+            120,
+            34
+        ],
+        "post_delay": 1000
+    },
+    "Sub_Divisionchange": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/division change.png",
+        "roi": [
+            745,
+            79,
+            535,
+            207
+        ],
+        "action": "Click",
+        "target": [
+            843,
+            129,
+            435,
+            107
+        ],
+        "post_delay": 1000,
+        "next": [
+            "Division_discharge"
+        ]
+    },
+    "Division_discharge": {
+        "recognition": "TemplateMatch",
+        "template": "daily/discharging.png",
+        "roi": [
+            0,
+            575,
+            274,
+            145
+        ],
+        "action": "Click",
+        "target": [
+            3,
+            638,
+            174,
+            45
+        ],
+        "post_delay": 1000,
+        "next": [
+            "Division_deploy"
+        ]
+    },
+    "Division_deploy": {
+        "recognition": "TemplateMatch",
+        "template": "daily/deploying.png",
+        "roi": [
+            140,
+            578,
+            274,
+            142
+        ],
+        "action": "Click",
+        "target": [
+            190,
+            640,
+            174,
+            42
+        ],
+        "post_delay": 500,
+        "next": [
+            "Division_save"
+        ]
+    },
+    "Division_save": {
+        "recognition": "TemplateMatch",
+        "template": "daily/saving.png",
+        "roi": [
+            964,
+            575,
+            289,
+            145
+        ],
+        "action": "Click",
+        "post_delay": 3000
+    },
+    "reopenDivisionlist": {
+        "recognition": "TemplateMatch",
+        "template": "daily/waiting list.png",
+        "inverse": true,
+        "roi": [
+            809,
+            0,
+            269,
+            192
+        ],
+        "next": [
+            "openDivisionlist"
+        ]
+    },
+    "Divisionrest": {
+        "recognition": "TemplateMatch",
+        "template": "daily/division rest.png",
+        "roi": [
+            745,
+            79,
+            535,
+            207
+        ],
+        "action": "Click",
+        "post_delay": 3000,
+        "next": [
+            "Division_restroomdischarge"
+        ]
+    },
+    "Division_restroomdischarge": {
+        "recognition": "TemplateMatch",
+        "template": "daily/discharging.png",
+        "roi": [
+            795,
+            576,
+            278,
+            144
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Division_restroom"
+        ]
+    },
+    "Division_restroom": {
+        "recognition": "TemplateMatch",
+        "template": "daily/check in.png",
+        "roi": [
+            995,
+            576,
+            278,
+            144
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "Homeflag3"
+        ]
+    },
+    "Division_back": {
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 2000
+    },
+    "Homeflag3": {
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 2000,
+        "next": [
+            "openStore"
+        ]
+    },
+    "openStore": {
+        "recognition": "TemplateMatch",
+        "template": "daily/store.png",
+        "roi": [
+            869,
+            549,
+            218,
+            171
+        ],
+        "action": "Click",
+        "post_delay": 2000,
+        "next": [
+            "openGiftstore",
+            "openExchangestore",
+            "BuySeed",
+            "Homeflag4"
+        ]
+    },
+    "openGiftstore": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            478,
+            643,
+            206,
+            77
+        ],
+        "action": "Click",
+        "target": [
+            587,
+            688,
+            1,
+            1
+        ],
+        "post_delay": 1000,
+        "next": [
+            "Sub_getGift",
+            "Sub_Getreward",
+            "openExchangestore",
+            "BuySeed",
+            "Homeflag4"
+        ]
+    },
+    "Sub_getGift": {
+        "is_sub": true,
+        "pre_delay": 500,
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            504,
+            79,
+            257,
+            197
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Sub_buy",
+            "Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
+    "Sub_buy": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/buy button.png",
+        "roi": [
+            675,
+            448,
+            291,
+            143
+        ],
+        "action": "Click",
+        "post_delay": 500
+    },
+    "Subreturn_back": {
+        "action": "DoNothing"
+    },
+    "openExchangestore": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            835,
+            555,
+            296,
+            165
+        ],
+        "action": "Click",
+        "target": [
+            991,
+            691,
+            1,
+            1
+        ],
+        "post_delay": 1000,
+        "next": [
+            "openFriendshipstore"
+        ]
+    },
+    "openFriendshipstore": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            242,
+            412,
+            295,
+            174
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "collectFriendshippoint"
+        ]
+    },
+    "collectFriendshippoint": {
+        "recognition": "TemplateMatch",
+        "template": "daily/friendship point.png",
+        "roi": [
+            956,
+            24,
+            244,
+            129
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "Sub_BuyMedicine",
+            "Sub_BuyTicket",
+            "BuySeed",
+            "Homeflag4"
+        ]
+    },
+    "Sub_BuyMedicine": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/medicine.png",
+        "roi": [
+            501,
+            130,
+            214,
+            216
+        ],
+        "action": "Click",
+        "next": [
+            "maxMedicine"
+        ]
+    },
+    "maxMedicine": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "action": "Click",
+        "next": [
+            "confirmbuyMedicine"
+        ]
+    },
+    "confirmbuyMedicine": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmMedicine.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "Click",
+        "post_wait_freezes": 500,
+        "next": [
+            "Sub_Getreward",
+            "Sub_BuyTicket",
+            "Homeflag4"
+        ]
+    },
+    "Sub_BuyTicket": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "daily/ticket.png",
+        "roi": [
+            501,
+            130,
+            214,
+            216
+        ],
+        "action": "Click",
+        "next": [
+            "confirmbuyTicket"
+        ]
+    },
+    "confirmbuyTicket": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmMedicine.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "Click",
+        "post_wait_freezes": 500,
+        "next": [
+            "Sub_Getreward",
+            "collectFriendshippoint"
+        ]
+    },
+    "BuySeed": {
+        "recognition": "TemplateMatch",
+        "template": "daily/dailystore.png",
+        "roi": [
+            1059,
+            579,
+            146,
+            141
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_Findseed",
+            "Swipetootherside1",
+            "Homeflag4"
+        ]
+    },
+    "Sub_Findseed": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": [
+            "seed/apple.png",
+            "seed/berry.png",
+            "seed/butterfly.png",
+            "seed/grapes.png",
+            "seed/cabbage.png",
+            "seed/corn.png",
+            "seed/potato.png",
+            "seed/tomato.png",
+            "seed/truffle.png",
+            "seed/mushroom.png",
+            "seed/orange.png",
+            "seed/earthworm.png"
+        ],
+        "roi": [
+            494,
+            135,
+            623,
+            548
+        ],
+        "action": "Click",
+        "next": [
+            "maxSeed"
+        ]
+    },
+    "maxSeed": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "action": "Click",
+        "next": [
+            "confirmbuySeed"
+        ]
+    },
+    "confirmbuySeed": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmMedicine.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "Click",
+        "post_wait_freezes": 500,
+        "next": [
+            "Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
+    "Swipetootherside1": {
+        "action": "Swipe",
+        "begin": [
+            1207,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            600,
+            378,
+            1,
+            1
+        ],
+        "next": [
+            "Sub_Findseed",
+            "Swipetootherside2",
+            "Homeflag4"
+        ]
+    },
+    "Swipetootherside2": {
+        "action": "Swipe",
+        "begin": [
+            1200,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            607,
+            377,
+            1,
+            1
+        ],
+        "next": [
+            "Sub_Findseed",
+            "Homeflag4"
+        ]
+    },
+    "Homeflag4": {
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 1000
+    }
+}

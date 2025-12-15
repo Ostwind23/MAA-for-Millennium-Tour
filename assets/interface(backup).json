@@ -1,0 +1,248 @@
+{
+    "controller": [
+        {
+            "name": "安卓端(使用模拟器请选这个,务必记得分辨率调整为1280x720)",
+            "type": "Adb"
+        },
+        {
+            "name": "桌面端",
+            "type": "Win32",
+            "win32": {
+                "method": "Search",
+                "class_name": ".*",
+                "window_name": "Visual Studio"
+            }
+        }
+    ],
+    "resource": [
+        {
+            "name": "官服(务必选这个)",
+            "path": [
+                "{PROJECT_DIR}/resource/base"
+            ]
+        }
+    ],
+    "task": [
+        {
+            "name": "前半部分日常（自动打开游戏+投色子+关公告+神谕司+商店）",
+            "entry": "Startup",
+            "option": [
+                "是否自动购买种子与蚯蚓（不一定能买全）"
+            ]
+        },
+        {
+            "name": "选择资源关+骚灵之境战斗",
+            "entry": "autochoose_resBattle",
+            "option": [
+                "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）",
+                "资源关关卡选择设置",
+                "骚灵之境关卡选择设置"
+            ]
+        },
+        {
+            "name": "后半部分日常（公会+交日常周常任务+第二次投色子+通行证）",
+            "entry": "after_battle"
+        },
+        {
+            "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后再选择此任务）",
+            "entry": "consecration_tower"
+        },
+        {
+            "name": "自动收取勋章",
+            "entry": "enterCollectMedal"
+        },
+        {
+            "name": "自动进入温泉点泡泡",
+            "entry": "openDivisionforhotspring"
+        },
+        {
+            "name": "自动推进主线战斗关卡（需要点进自己要打的主线章；目前只支持多关纯战斗自动连战）",
+            "entry": "beginAutoPush",
+            "option": [
+                "选择表界或里界"
+            ]
+        },
+        {
+            "name": "自动阵列（死循环，会无限自动匹配战斗，请分配到所有任务之后）",
+            "entry": "MatrixStartup"
+        },
+        {
+            "name": "自动识别钓鱼【暴力型，仅支持不需要拖拽也能把鱼钓上来的面板】（如需低面板自动化钓鱼请打开同目录下的低面板可用自动钓鱼程序",
+            "entry": "Start_autofishing",
+            "option": [
+                "请选择钓台"
+            ]
+        },
+        {
+            "name": "钓台入口自动钓鱼【适配公会钓鱼比赛】",
+            "entry": "autofishing"
+        },
+        {
+            "name": "自动推图（自动主线的功能抽离,打开活动的战斗关卡,点进去到编队预备出击界面即可单独启动此任务以自动推进活动图）",
+            "entry": "Activityautopush"
+        }
+    ],
+    "option": {
+        "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）": {
+            "cases": [
+                {
+                    "name": "本勒关",
+                    "pipeline_override": {
+                        "chooseOwnmission": {
+                            "template": "money mission.png"
+                        }
+                    }
+                },
+                {
+                    "name": "经验关",
+                    "pipeline_override": {
+                        "chooseOwnmission": {
+                            "template": "exp mission.png"
+                        }
+                    }
+                },
+                {
+                    "name": "技能书关",
+                    "pipeline_override": {
+                        "chooseOwnmission": {
+                            "template": "skill mission.png"
+                        }
+                    }
+                }
+            ]
+        },
+        "资源关关卡选择设置": {
+            "cases": [
+                {
+                    "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
+                    "pipeline_override": {
+                        "scanmission": {
+                            "index": -2
+                        }
+                    }
+                },
+                {
+                    "name": "选择最后一关",
+                    "pipeline_override": {
+                        "scanmission": {
+                            "index": -1
+                        }
+                    }
+                }
+            ]
+        },
+        "骚灵之境关卡选择设置": {
+            "cases": [
+                {
+                    "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
+                    "pipeline_override": {
+                        "scanGhostmission": {
+                            "index": -2
+                        }
+                    }
+                },
+                {
+                    "name": "选择最后一关",
+                    "pipeline_override": {
+                        "scanGhostmission": {
+                            "index": -1
+                        }
+                    }
+                }
+            ]
+        },
+        "选择表界或里界": {
+            "cases": [
+                {
+                    "name": "表界",
+                    "pipeline_override": {
+                        "beginAutoPush": {
+                            "action": "DoNothing"
+                        }
+                    }
+                },
+                {
+                    "name": "里界",
+                    "pipeline_override": {
+                        "beginAutoPush": {
+                            "action": "Click"
+                        }
+                    }
+                }
+            ]
+        },
+        "是否自动购买种子与蚯蚓（不一定能买全）": {
+            "cases": [
+                {
+                    "name": "是",
+                    "pipeline_override": {
+                        "collectFriendshippoint": {
+                            "next": [
+                                "Sub_BuyMedicine",
+                                "Sub_BuyTicket",
+                                "BuySeed",
+                                "Homeflag4"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "否",
+                    "pipeline_override": {
+                        "collectFriendshippoint": {
+                            "next": [
+                                "Sub_BuyMedicine",
+                                "Sub_BuyTicket",
+                                "Homeflag4"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "请选择钓台": {
+            "cases": [
+                {
+                    "name": "森林",
+                    "pipeline_override": {
+                        "choosefishpool": {
+                            "expected": [
+                                "森林"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "海滩",
+                    "pipeline_override": {
+                        "choosefishpool": {
+                            "expected": [
+                                "海滩"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "运河",
+                    "pipeline_override": {
+                        "choosefishpool": {
+                            "expected": [
+                                "运河"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "冰原",
+                    "pipeline_override": {
+                        "choosefishpool": {
+                            "expected": [
+                                "冰原"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

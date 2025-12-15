@@ -1,117 +1,57 @@
 <!-- markdownlint-disable MD033 MD041 -->
-<p align="center">
-  <img alt="LOGO" src="https://cdn.jsdelivr.net/gh/MaaAssistantArknights/design@main/logo/maa-logo_512x512.png" width="256" height="256" />
-</p>
+# 【**这是什么**】
+全称为千年之旅MAA-for-Millennium-Tour，亦可称 千年之旅 律律子小助手 。是一款基于MaaFramework的自动化脚本，适配模拟器运行千年之旅的环境，可以有效解放双手，避免重复性劳作
+# 【**支持功能**】
+1、自动化日常，包括前半部分日常（自动打开游戏+投色子+关公告+神谕司+商店）与后半部分日常（公会+交日常周常任务+第二次投色子+通行证）  
+2、自动化日常战斗，包括选择x2资源关与骚灵之境  
+3、自动刷圣别之塔，采用重复放弃的方式多次刷分  
+4、自动收取勋章  
+5、自动进入温泉点泡泡  
+6、自动推进主线战斗关卡，需要先点进自己要打的主线章；目前只支持多关纯战斗自动连战  
+# 【**图形化界面**】
+### [MFAWPF](https://github.com/SweetSmellFox/MFAWPF)
+ 由社区大佬[SweetSmellFox](https://github.com/SweetSmellFox)编写的基于WPF的GUI,通过内置的MAAframework来直接控制任务流程
+ ![GUI](https://github.com/user-attachments/assets/50c6a5b9-a004-4b2f-b2a9-376bcb585507)  
+ -下载`MMT-win-x86_64-with-GUI-vXXX.zip`
+ 如果第一次启动后发现找到ADB但是无法执行任务的情况，请尝试将解压目录下config/config.json
+ ![图4](image-4.png)
+ 中的index改为1后重启程序再尝试  
+# 【**使用方法**】
+具体教程请看贴吧精华帖[【自动化日常脚本】千年之旅MAA](https://tieba.baidu.com/p/9122503018?pn=1)    
+将对应的压缩包解压到文件夹后，双击MFAWPF.exe（如若下载的是图形化界面版本包）或MaaPiCli.exe即可进入**MAA控制终端**    
+![在Release处下载最新版本的包](https://github.com/user-attachments/assets/95888dbc-b6a5-491e-8c6e-cbdc0d9f8467)  
+![各包介绍,Source code是源代码,非开发人员不用管](https://github.com/user-attachments/assets/51f15eb7-fb13-4709-bc20-42d43e012631)  
+注意下载的包的后缀。带有with-gui后缀的包即是接入了图形化界面的包。  
+请将模拟器的**分辨率**设置为**1280x720**，并确保开启**root权限**  
+初次使用请根据贴吧教程设置好模拟器与Resource资源（即官服），然后根据任务描述添加自己的任务链  
+不同任务的要求不同，请务必根据任务后的描述来合理设置任务顺序  
+# 【**注意事项**】
+1、在更换使用环境后，请再次设置好模拟器与Resource资源，否则可能导致脚本无法正常运行  
+2、请不要在模拟器上进行任何操作，例如切换画面等，否则可能导致脚本无法正常读取图像信息，导致无法正常运行    
+3、请不要关闭脚本，否则可能导致脚本无法正常运行  
+4、MuMu模拟器用户请在模拟器设置的最后一页关闭 **“后台保活”** 功能，否则可能导致脚本无法正常运行  
+5、遇到问题后，如若是提示缺失某些运行库或者DLL文件，请先尝试自行搜索该DLL文件棣属于哪个运行库，并安装该运行库  
+# 【**协助Debug**】
+在开发过程中，每个功能在上传前都会经过实际封包测试，但由于用户的环境以及使用场景与我存在差别，因此对于某些场合我可能并未考虑到，例如神谕司日常部分，有人可能是每天上一次线领奖换人休息，有人可能是上午上一次单单领奖，晚上再换人。不同的情况需要对逻辑链进行相应的优化完善，因此请大家遵循以下的步骤来协助我Debug：  
+1、确保模拟器分辨率为1280x720，并开启root权限，关闭了“后台保活”功能    
+2、预先查看过上面的精华帖，确保自己没有遇到与帖子里相同的情况或依然无法解决  
+3、遇到无法自动检测模拟器的情况，请打开模拟器的安装目录，寻找adb.exe文件，将该文件所在路径手动填入MAA控制终端中选择模拟器时的Manual input的Path（图1），将127.0.0.1:模拟器端口填入Address（图2），然后回车手动添加模拟器  
+![图1](image.png)    
+![图2.1](image-1.png)  
+![图2.2](image-2.png)  
+4、倘若还是无法解决问题，或者模拟器的任务出现了异常中断，请先前往上面的精华帖，**将终端错误截图与此时执行到哪个任务部分、卡在哪里的截图发帖**，然后参考图3，把目录下config文件夹里的maa_config.json右键用记事本打开，把里面save_draw那一行false改成true，之后再次运行maa运行任务，发现任务异常中断且终端上显示某某Task Failed后关闭maa，这个时候在目录下的debug文件夹里会生成对应的识别数据（一个叫vision的文件夹，里面装着全部的图片识别结果）和maa.log。把整个debug文件夹压缩，发到2523559001@qq.com，我在下班后会尽我所能帮忙分析并解决问题。      
+![图3](image-3.png)  
+在一次发送后，将debug文件夹下的vision文件夹删除，以释放空间和防止下一次debug时上一次的图片影响到本次的debug。  
+# 【**更新日志**】
+详细情况请查看Github的Action部分，以下只记录大更新内容
+【】
+# 【**特别鸣谢**】
+感谢MaaFramework的作者与贡献者们，提供了如此优秀的框架，解答了我的疑惑，让我可以为千年之旅社区做出贡献。
+[MaaFramework-基于图像识别的自动化黑盒测试框架](https://github.com/MaaXYZ/MaaFramework)
+### 开发者
 
-<div align="center">
+感谢以下开发者对 千年之旅 律律子小助手 作出的贡献：
 
-# MaaPracticeBoilerplate
-
-</div>
-
-本仓库为 [MaaFramework](https://github.com/MaaXYZ/MaaFramework) 所提供的项目模板，开发者可基于此模板直接创建自己的 MaaXXX 项目。
-
-> **MaaFramework** 是基于图像识别技术、运用 [MAA](https://github.com/MaaAssistantArknights/MaaAssistantArknights) 开发经验去芜存菁、完全重写的新一代自动化黑盒测试框架。
-> 低代码的同时仍拥有高扩展性，旨在打造一款丰富、领先、且实用的开源库，助力开发者轻松编写出更好的黑盒测试程序，并推广普及。
-
-## 即刻开始
-
-- [📄 快速开始](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/1.1-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B.md)
-- [🎞️ 视频教程](https://www.bilibili.com/video/BV1yr421E7MW)
-
-## 如何开发
-
-0. 使用右上角 `Use this template` - `Create a new repository` 来基于本模板创建您自己的项目。
-
-1. 克隆本项目（地址请修改为您基于本模板创建的新项目地址）。
-
-    ```bash
-    git clone https://github.com/MaaXYZ/MaaPracticeBoilerplate.git
-    ```
-
-2. 下载 MaaFramework 的 [Release 包](https://github.com/MaaXYZ/MaaFramework/releases)，解压到 `deps` 文件夹中。
-
-3. 下载 OCR（文字识别）资源文件 [ppocr_v5.zip](https://download.maafw.xyz/MaaCommonAssets/OCR/ppocr_v5/ppocr_v5-zh_cn.zip) 解压到 `assets/resource/model/ocr/` 目录下，确保路径如下：
-
-    ```tree
-    assets/resource/model/ocr/
-    ├── det.onnx
-    ├── keys.txt
-    └── rec.onnx
-    ```
-
-    _请注意，您不需要将 OCR 资源文件上传到您的代码仓库中。`.gitignore` 已经忽略了 `assets/resource/model/ocr/` 目录，且 GitHub workflow 在发布版本时会自动配置这些资源文件。_
-
-4. 进行开发工作，按您的业务需求修改 `assets` 中的资源文件，请参考 [MaaFramework 相关文档](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/1.1-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B.md#%E8%B5%84%E6%BA%90%E5%87%86%E5%A4%87)。
-
-5. 完成开发后，上传您的代码并发布版本。
-
-    ```bash
-    # 配置 git 信息（仅第一次需要，后续不用再配置）
-    git config user.name "您的 GitHub 昵称"
-    git config user.email "您的 GitHub 邮箱"
-    
-    # 提交修改
-    git add .
-    git commit -m "XX 新功能"
-    git push origin HEAD -u
-    ```
-
-6. 发布您的版本
-
-    需要**先**修改仓库设置 `Settings` - `Actions` - `General` - `Read and write permissions` - `Save`
-
-    ```bash
-    # CI 检测到 tag 会自动进行发版
-    git tag v1.0.0
-    git push origin v1.0.0
-    ```
-
-7. 更多操作，请参考 [个性化配置](./docs/zh_cn/个性化配置.md)（可选）
-
-## 生态共建
-
-MAA 正计划建设为一类项目，而非舟的单一软件。
-
-若您的项目依赖于 MaaFramework，我们欢迎您将它命名为 MaaXXX, MXA, MAX 等等。当然，这是许可而不是限制，您也可以自由选择其他与 MAA 无关的名字，完全取决于您自己的想法！
-
-同时，我们也非常欢迎您提出 PR，在 [社区项目列表](https://github.com/MaaXYZ/MaaFramework#%E7%A4%BE%E5%8C%BA%E9%A1%B9%E7%9B%AE) 中添加上您的项目！
-
-## FAQ
-
-### 0. 我是第一次使用 git，这是什么？视频演示中那个黑框框命令行哪来的？
-
-黑框框是 git bash，几乎任何现代软件的开发都离不开 git，建议先参考 [菜鸟教程](https://www.runoob.com/git/git-install-setup.html) 或搜索一些视频，学习完 git 后再来进行后续开发工作。
-
-### 1. 我是第一次使用 Python，在命令行输入 `python ./configure.py` 或 `python -m pip install MaaFW` 之后没有反应？没有报错，也没有提示成功，什么都没有
-
-Win10 或者 Win11 系统自带了一份 "Python"，但它其实只是一个安装器，是没法用的。  
-你需要做的是关闭它或者删除它的环境变量，然后自己去 Python 官网下载并安装一份 Python。  
-[参考方法](https://www.bilibili.com/read/cv24692025/)
-
-### 2. 使用 MaaDebugger 或 MaaPicli 时弹窗报错，应用程序错误：应用程序无法正常启动
-
-![缺少运行库](https://github.com/user-attachments/assets/942df84b-f47d-4bb5-98b5-ab5d44bc7c2a)
-
-一般是电脑缺少某些运行库，请安装一下 [vc_redist](https://aka.ms/vs/17/release/vc_redist.x64.exe) 。
-
-### 3. 我在这个仓库里提了 Issue 很久没人回复
-
-这里是《项目模板》仓库，它仅仅是一个模板，一般很少会修改，开发者也较少关注。  
-在此仓库请仅提问模板相关问题，其他问题最好前往对应的仓库提出，如果有 log，最好也带上它（`debug/maa.log` 文件）
-
-- MaaFW 本身及 MaaPiCli 的问题：[MaaFramework/issues](https://github.com/MaaXYZ/MaaFramework/issues)
-- MaaDebugger 的问题：[MaaDebugger/issues](https://github.com/MaaXYZ/MaaDebugger/issues)
-- 不知道算是哪里的、其他疑问等：[讨论区](https://github.com/MaaXYZ/MaaFramework/discussions)
-
-### 4. OCR 文字识别一直没有识别结果，报错 "Failed to load det or rec", "ocrer_ is null"
-
-**请仔细阅读文档**，你无视了前面步骤的报错。我不想解释了，请再把本文档仔细阅读一遍！
-
-## 鸣谢
-
-本项目由 **[MaaFramework](https://github.com/MaaXYZ/MaaFramework)** 强力驱动！
-
-感谢以下开发者对本项目作出的贡献（下面链接改成你自己的项目地址）:
-
-[![Contributors](https://contrib.rocks/image?repo=MaaXYZ/MaaFramework&max=1000)](https://github.com/MaaXYZ/MaaFramework/graphs/contributors)
+<a href="https://github.com/Ostwind23/MAA-for-Millennium-Tour/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Ostwind23/MAA-for-Millennium-Tour" />
+</a>  

@@ -1,0 +1,187 @@
+{
+    "column_matrix": {
+        "next": [
+            "MatrixStartup",
+            "sub_return_home"
+        ]
+    },
+    "MatrixStartup": {
+        "next": [
+            "openBattleforMatrix",
+            "sub_return_home"
+        ]
+    },
+    "openBattleforMatrix": {
+        "recognition": "TemplateMatch",
+        "template": "battle button.png",
+        "roi": [
+            1021,
+            476,
+            207,
+            244
+        ],
+        "pre_wait_freezes": 500,
+        "action": "Click",
+        "post_wait_freezes": 1500,
+        "next": [
+            "enterStrategyforMatrix"
+        ]
+    },
+    "enterStrategyforMatrix": {
+        "recognition": "TemplateMatch",
+        "template": "tower/strategy.png",
+        "roi": [
+            192,
+            576,
+            144,
+            144
+        ],
+        "action": "Click",
+        "post_delay": 1500,
+        "next": [
+            "enterMatrix",
+            "enterStrategyforMatrix"
+        ]
+    },
+    "enterMatrix": {
+        "recognition": "TemplateMatch",
+        "template": "matrix/Matrix.png",
+        "roi": [
+            888,
+            444,
+            197,
+            188
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Matrixmainpage",
+            "enterMatrix"
+        ]
+    },
+    "Matrixmainpage": {
+        "recognition": "TemplateMatch",
+        "template": "matrix/matchbattle.png",
+        "roi": [
+            790,
+            549,
+            338,
+            167
+        ],
+        "action": "Click",
+        "next": [
+            "Matrixmatching"
+        ]
+    },
+    "Matrixmatching": {
+        "next": [
+            "Duringmatching",
+            "findoppoent",
+            "Matrixmainpage"
+        ]
+    },
+    "Duringmatching": {
+        "recognition": "TemplateMatch",
+        "template": "matrix/matching.png",
+        "roi": [
+            387,
+            233,
+            502,
+            184
+        ],
+        "post_delay": 3000,
+        "next": [
+            "Matrixmatching"
+        ]
+    },
+    "findoppoent": {
+        "recognition": "TemplateMatch",
+        "template": "matrix/opponentfound.png",
+        "roi": [
+            982,
+            292,
+            289,
+            143
+        ],
+        "action": "Click",
+        "post_delay": 1500,
+        "next": [
+            "Matrixmakesureautobattle",
+            "launchmatrix"
+        ]
+    },
+    "Matrixmakesureautobattle": {
+        "recognition": "TemplateMatch",
+        "template": "autopush/autobattlebutton.png",
+        "roi": [
+            583,
+            0,
+            117,
+            118
+        ],
+        "action": "Click",
+        "next": [
+            "launchmatrix"
+        ]
+    },
+    "launchmatrix": {
+        "recognition": "TemplateMatch",
+        "template": "autopush/startbattle.png",
+        "roi": [
+            928,
+            571,
+            352,
+            149
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_findnewenemy",
+            "Duringmatrixbattle"
+        ]
+    },
+    "Duringmatrixbattle": {
+        "post_wait_freezes": {
+            "time": 5000,
+            "threshold": 0.95
+        },
+        "next": [
+            "givelikes",
+            "Matrixoneroundend"
+        ]
+    },
+    "Matrixoneroundend": {
+        "recognition": "TemplateMatch",
+        "template": "matrix/roundend.png",
+        "roi": [
+            691,
+            411,
+            88,
+            25
+        ],
+        "action": "Click",
+        "target": [
+            331,
+            621,
+            1,
+            1
+        ],
+        "post_delay": 5000,
+        "next": [
+            "Matrixmainpage"
+        ]
+    },
+    "givelikes": {
+        "recognition": "TemplateMatch",
+        "template": "matrix/givelikes.png",
+        "roi": [
+            862,
+            251,
+            172,
+            148
+        ],
+        "action": "Click",
+        "next": [
+            "Matrixoneroundend"
+        ]
+    }
+}

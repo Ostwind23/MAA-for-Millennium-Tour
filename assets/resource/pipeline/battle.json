@@ -1,0 +1,341 @@
+{
+    "autochoose_resBattle": {
+        "next": [
+            "openBattle"
+        ]
+    },
+    "openBattle": {
+        "recognition": "OCR",
+        "expected": "出击",
+        "roi": [
+            1021,
+            476,
+            207,
+            244
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "openVault",
+            "openVaultinOCR"
+        ]
+    },
+    "openVault": {
+        "recognition": "TemplateMatch",
+        "template": "Vault.png",
+        "roi": [
+            586,
+            558,
+            314,
+            162
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1500,
+        "next": [
+            "findx2",
+            "chooseOwnmission"
+        ]
+    },
+    "openVaultinOCR": {
+        "recognition": "OCR",
+        "expected": "宝库之门",
+        "roi": [
+            586,
+            558,
+            314,
+            162
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1500,
+        "next": [
+            "findx2",
+            "chooseOwnmission"
+        ]
+    },
+    "chooseOwnmission": {
+        "recognition": "TemplateMatch",
+        "template": "exp mission.png",
+        "action": "Click",
+        "post_wait_freezes": 1500,
+        "next": [
+            "findmission"
+        ]
+    },
+    "findx2": {
+        "recognition": "TemplateMatch",
+        "template": "x2.png",
+        "action": "Click",
+        "post_delay": 3000,
+        "next": [
+            "findmission"
+        ]
+    },
+    "findmission": {
+        "action": "Swipe",
+        "begin": [
+            1000,
+            100,
+            1,
+            1
+        ],
+        "end": [
+            100,
+            100,
+            1,
+            1
+        ],
+        "duration": 1000,
+        "post_delay": 500,
+        "next": [
+            "scanmission"
+        ]
+    },
+    "scanmission": {
+        "recognition": "OCR",
+        "expected": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7"
+        ],
+        "action": "Click",
+        "index": -2,
+        "post_delay": 500,
+        "next": [
+            "entermission"
+        ]
+    },
+    "entermission": {
+        "recognition": "TemplateMatch",
+        "template": "fast battle.png",
+        "roi": [
+            715,
+            566,
+            275,
+            154
+        ],
+        "action": "Click",
+        "next": [
+            "maximization"
+        ]
+    },
+    "maximization": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            1106,
+            483,
+            165,
+            151
+        ],
+        "action": "Click",
+        "next": [
+            "launchbattle"
+        ]
+    },
+    "launchbattle": {
+        "recognition": "TemplateMatch",
+        "template": "launch battle.png",
+        "roi": [
+            904,
+            563,
+            297,
+            157
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "completebattle",
+            "cancelforsupply"
+        ]
+    },
+    "cancelforsupply": {
+        "recognition": "TemplateMatch",
+        "template": "daily/cancel.png",
+        "roi": [
+            301,
+            429,
+            287,
+            143
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "x2_back"
+        ]
+    },
+    "completebattle": {
+        "recognition": "TemplateMatch",
+        "template": "battle finish.png",
+        "roi": [
+            495,
+            570,
+            290,
+            142
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "x2_back"
+        ]
+    },
+    "x2_back": {
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 3000,
+        "next": [
+            "SwipetoGhost"
+        ]
+    },
+    "SwipetoGhost": {
+        "action": "Swipe",
+        "begin": [
+            1243,
+            132,
+            1,
+            1
+        ],
+        "end": [
+            100,
+            132,
+            1,
+            1
+        ],
+        "post_delay": 500,
+        "next": [
+            "findGhost"
+        ]
+    },
+    "findGhost": {
+        "recognition": "TemplateMatch",
+        "template": "ghost.png",
+        "roi": [
+            544,
+            532,
+            154,
+            153
+        ],
+        "action": "Click",
+        "target_offset": [
+            50,
+            0,
+            0,
+            0
+        ],
+        "next": [
+            "scanGhostmission"
+        ]
+    },
+    "scanGhostmission": {
+        "recognition": "OCR",
+        "expected": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+        ],
+        "action": "Click",
+        "index": -2,
+        "post_delay": 500,
+        "next": [
+            "enterGhostmission"
+        ]
+    },
+    "enterGhostmission": {
+        "recognition": "TemplateMatch",
+        "template": "fast battle.png",
+        "roi": [
+            715,
+            566,
+            275,
+            154
+        ],
+        "action": "Click",
+        "next": [
+            "Ghostmaximization"
+        ]
+    },
+    "Ghostmaximization": {
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            1106,
+            483,
+            165,
+            151
+        ],
+        "action": "Click",
+        "next": [
+            "launchGhostbattle"
+        ]
+    },
+    "launchGhostbattle": {
+        "recognition": "TemplateMatch",
+        "template": "launch battle.png",
+        "roi": [
+            904,
+            563,
+            297,
+            157
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "completeGhostbattle",
+            "cancelforsupplyGhost"
+        ]
+    },
+    "cancelforsupplyGhost": {
+        "recognition": "TemplateMatch",
+        "template": "daily/cancel.png",
+        "roi": [
+            301,
+            429,
+            287,
+            143
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "returnHome"
+        ]
+    },
+    "completeGhostbattle": {
+        "recognition": "TemplateMatch",
+        "template": "battle finish.png",
+        "roi": [
+            495,
+            570,
+            290,
+            142
+        ],
+        "action": "Click",
+        "post_delay": 3000,
+        "next": [
+            "returnHome"
+        ]
+    },
+    "returnHome": {
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
+        "action": "Click"
+    }
+}

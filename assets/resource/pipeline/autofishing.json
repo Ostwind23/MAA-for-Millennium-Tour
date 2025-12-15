@@ -1,0 +1,125 @@
+{
+    "Start_autofishing": {
+        "next": [
+            "openDivisionforfishing"
+        ]
+    },
+    "openDivisionforfishing": {
+        "recognition": "TemplateMatch",
+        "template": "daily/division.png",
+        "roi": [
+            718,
+            559,
+            243,
+            161
+        ],
+        "action": "Click",
+        "target": [
+            768,
+            613,
+            143,
+            61
+        ],
+        "post_delay": 1000,
+        "next": [
+            "openfishing"
+        ]
+    },
+    "openfishing": {
+        "recognition": "TemplateMatch",
+        "template": "fishing/fishing icon.png",
+        "roi": [
+            1074,
+            563,
+            160,
+            157
+        ],
+        "action": "Click",
+        "post_delay": 4000,
+        "next": [
+            "choosefishpool"
+        ]
+    },
+    "choosefishpool": {
+        "recognition": "OCR",
+        "expected": [
+            "森林"
+        ],
+        "roi": [
+            706,
+            84,
+            574,
+            575
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "autofishing"
+        ]
+    },
+    "autofishing": {
+        "recognition": "TemplateMatch",
+        "template": "fishing/control button.png",
+        "roi": [
+            939,
+            377,
+            228,
+            230
+        ],
+        "action": "Click",
+        "next": [
+            "waiting"
+        ]
+    },
+    "waiting": {
+        "post_delay": 100,
+        "next": [
+            "awaitforfish",
+            "waiting"
+        ]
+    },
+    "awaitforfish": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "fishing/awaitingfish.png",
+            "fishing/forest awaitingfish.png"
+        ],
+        "roi": [
+            483,
+            0,
+            256,
+            134
+        ],
+        "action": "Click",
+        "target": [
+            1110,
+            547,
+            30,
+            30
+        ],
+        "post_wait_freezes": 1000,
+        "next": [
+            "pullfishup"
+        ]
+    },
+    "pullfishup": {
+        "recognition": "TemplateMatch",
+        "template": "fishing/pullfishup.png",
+        "roi": [
+            165,
+            200,
+            220,
+            131
+        ],
+        "action": "Click",
+        "target_offset": [
+            165,
+            500,
+            1,
+            1
+        ],
+        "next": [
+            "autofishing"
+        ]
+    }
+}

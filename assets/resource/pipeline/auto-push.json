@@ -1,0 +1,186 @@
+{
+    "beginAutoPush": {
+        "_doc": "在具体的章节界面打开，根据此处的action设置选择普通模式或者困难模式",
+        "recognition": "TemplateMatch",
+        "template": "autopush/hardmode.png",
+        "roi": [
+            23,
+            526,
+            224,
+            182
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "openChapterlist"
+        ]
+    },
+    "openChapterlist": {
+        "recognition": "TemplateMatch",
+        "template": "autopush/chapterlist.png",
+        "roi": [
+            1089,
+            167,
+            168,
+            157
+        ],
+        "action": "Click",
+        "next": [
+            "findnewestbattle"
+        ]
+    },
+    "findnewestbattle": {
+        "recognition": "TemplateMatch",
+        "template": "autopush/newestpass.png",
+        "roi": [
+            806,
+            47,
+            183,
+            144
+        ],
+        "action": "Click",
+        "target": [
+            926,
+            327,
+            1,
+            1
+        ],
+        "post_delay": 1500,
+        "next": [
+            "makesureautobattle",
+            "outofsupply",
+            "launchautopush"
+        ]
+    },
+    "makesureautobattle": {
+        "recognition": "TemplateMatch",
+        "template": "autopush/autobattlebutton.png",
+        "roi": [
+            583,
+            0,
+            117,
+            118
+        ],
+        "action": "Click",
+        "next": [
+            "launchautopush"
+        ]
+    },
+    "outofsupply": {
+        "recognition": "TemplateMatch",
+        "template": "daily/cancel.png",
+        "roi": [
+            301,
+            429,
+            287,
+            143
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "HomeflagMedal"
+        ]
+    },
+    "launchautopush": {
+        "recognition": "TemplateMatch",
+        "template": "autopush/startbattle.png",
+        "roi": [
+            928,
+            571,
+            352,
+            149
+        ],
+        "action": "Click",
+        "next": [
+            "Sub_findnewenemy",
+            "Duringbattle"
+        ]
+    },
+    "Sub_findnewenemy": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "autopush/newenemy.png",
+        "roi": [
+            491,
+            584,
+            295,
+            136
+        ],
+        "action": "Click"
+    },
+    "Duringbattle": {
+        "post_wait_freezes": {
+            "time": 5000,
+            "threshold": 0.95
+        },
+        "next": [
+            "nextround",
+            "inbattleoutofsupply",
+            "reachtoend"
+        ]
+    },
+    "nextround": {
+        "is_sub": true,
+        "recognition": "TemplateMatch",
+        "template": "autopush/nextround.png",
+        "roi": [
+            117,
+            553,
+            289,
+            167
+        ],
+        "action": "Click",
+        "next": [
+            "Duringbattle"
+        ]
+    },
+    "inbattleoutofsupply": {
+        "recognition": "TemplateMatch",
+        "template": "daily/cancel.png",
+        "roi": [
+            301,
+            429,
+            287,
+            143
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Clicktoback"
+        ]
+    },
+    "Clicktoback": {
+        "action": "Click",
+        "target": [
+            640,
+            360,
+            1,
+            1
+        ],
+        "next": [
+            "HomeflagMedal"
+        ]
+    },
+    "reachtoend": {
+        "inverse": true,
+        "recognition": "TemplateMatch",
+        "template": "autopush/nextround.png",
+        "roi": [
+            117,
+            553,
+            289,
+            167
+        ],
+        "action": "Click",
+        "target": [
+            137,
+            553,
+            1,
+            1
+        ],
+        "post_delay": 1000,
+        "next": [
+            "HomeflagMedal"
+        ]
+    }
+}
