@@ -1,0 +1,103 @@
+{
+  "Newrolling": {
+    "next": [
+      "OpenRollingPanel"
+    ],
+    "on_error": [
+      "EndRolling"
+    ]
+  },
+  "OpenRollingPanel": {
+    "_doc": "在主界面点开投骰子界面的按钮",
+    "recognition": "TemplateMatch",
+    "template": "骰子入口.png",
+    "roi": [958,0,133,110],
+    "action": "Click",
+    "post_delay": 3000,
+    "next": [
+      "DoRolling"
+    ]
+  },
+  "DoRolling": {
+    "_doc": "检测并点击投骰子",
+    "recognition": "TemplateMatch",
+    "template": "dice available.png",
+    "action": "Click",
+    "rate_limit": 300,
+    "timeout": 10000,
+    "post_delay": 6000,
+    "on_error": [
+      "BackToHome"
+    ],
+    "next": [
+      "ClaimRollingReward",
+      "OutofDice",
+      "DoRolling"
+    ]
+  },
+  "ClaimRollingReward": {
+    "_doc": "领取奖励",
+    "recognition": "OCR",
+    "expected": "获得物品",
+    "roi": [
+      514,
+      141,
+      242,
+      145
+    ],
+    "pre_wait_freezes": 500,
+    "action": "Click",
+    "target": [
+      161,
+      510,
+      1,
+      1
+    ],
+    "post_delay": 1000,
+    "next": [
+      "DoRolling"
+    ]
+  },
+  "OutofDice": {
+    "_doc": "检测到骰子用完",
+    "recognition": "OCR",
+    "expected": "暂无",
+    "roi": [1058,551,176,147],
+    "pre_wait_freezes": 500,
+    "next": [
+      "BackToHome"
+    ]
+  },
+  "BackToHome": {
+    "_doc": "回到主界面",
+    "recognition": "TemplateMatch",
+    "template": "home.png",
+    "roi": [
+      74,
+      0,
+      202,
+      140
+    ],
+    "action": "Click",
+    "post_delay": 2000,
+    "next": [
+      "EndOnHome",
+      "EndRolling"
+    ]
+  },
+  "EndOnHome": {
+    "_doc": "检测到主界面元素后结束任务",
+    "recognition": "TemplateMatch",
+    "template": "summon.png",
+    "roi": [
+      0,
+      530,
+      250,
+      190
+    ],
+    "action": "StopTask"
+  },
+  "EndRolling": {
+    "action": "StopTask"
+  }
+}

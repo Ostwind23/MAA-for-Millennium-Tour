@@ -52,12 +52,13 @@
     },
     "hotspringCollecting": {
         "next": [
-            "[JumpBack]Sub_Findbubble",
+            "Sub_Findbubble",
             "ifnotreach100%",
             "reach100%"
         ]
     },
     "Sub_Findbubble": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": [
             "hotspring/exp bubble.png",

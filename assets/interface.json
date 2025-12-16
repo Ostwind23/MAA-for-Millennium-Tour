@@ -4,22 +4,24 @@
     // 文档：https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/3.3-ProjectInterfaceV2%E5%8D%8F%E8%AE%AE.md
     // 示例：https://github.com/MaaXYZ/MaaFramework/blob/main/sample/interface.json
     "interface_version": 2,
-    "name": "MaaXXX",
-    "description": "这是一个使用 MaaFramework 创建的新项目。",
-    "contact": "QQ群: 123456789",
+    "name": "MAA-for-Millennium-Tour",
+    "description": "千年之旅 MAA-for-Millennium-Tour 律律子小助手",
+    "contact": "2523559001@qq.com",
     "license": "MIT",
-    "welcome": "首次使用！欢迎使用 MAA!",
+    "welcome": "欢迎使用律律子小助手！\n本项目由 风暴鸟 维护，基于 MaaFramework 开发。\n如有任何问题请前往项目主页查看文档或提交 Issue。",
     // 填写项目地址和版本号可实现自动更新功能
-    "github": "https://github.com/MaaXYZ/MaaPracticeBoilerplate",
-    "version": "1.0.0",
+    "github": "https://github.com/Ostwind23/MAA-for-Millennium-Tour",
+    "version": "2.0.0",
     // Mirror酱为第三方分发服务，新项目默认关闭
     // 若有需要请联系 Mirror酱 开通，直接自行开启是无法使用的
     // "mirrorchyan_rid": "MaaXXX",
     // "mirrorchyan_multiplatform": true,
     "controller": [
         {
-            "name": "安卓端",
+            "name": "模拟器",
+            "label": "模拟器",
             "type": "Adb",
+            "description": "V2 协议支持分辨率缩放：MaaFramework 会将截图缩放到短边 720 进行识别与点击坐标换算，因此不强制 1280x720；但建议保持比例为 16:9 以获得更稳定的识别效果。",
             "display_short_side": 720 // 默认缩放分辨率的短边长度
         },
         {
@@ -28,26 +30,15 @@
             "win32": {
                 "class_regex": ".*",
                 "window_regex": "Visual Studio"
-            },
-            // 截图及控制方式，请根据项目实际情况修改
-            // 文档: https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/2.4-%E6%8E%A7%E5%88%B6%E6%96%B9%E5%BC%8F%E8%AF%B4%E6%98%8E.md
-            "screencap": "PrintWindow", // 截图方式
-            "mouse": "PostMessageWithCursorPos", // 鼠标控制方式
-            "keyboard": "PostMessageWithCursorPos" // 键盘控制方式
+            }
         }
     ],
     "resource": [
         {
             "name": "官服",
+            "label": "官服(务必选这个)",
             "path": [
-                "{PROJECT_DIR}/resource"
-            ]
-        },
-        {
-            "name": "B 服",
-            "path": [
-                "{PROJECT_DIR}/resource",
-                "{PROJECT_DIR}/resource_bilibili"
+                "resource"
             ]
         }
     ],
@@ -60,45 +51,233 @@
     // },
     "task": [
         {
-            "name": "普通任务",
-            "entry": "MyTask1"
+            "name": "Newrolling",
+            "entry": "Newrolling"
         },
         {
-            "name": "选项任务",
-            "entry": "MyTask2",
+            "name": "前半部分日常（自动打开游戏+投色子+关公告+神谕司+商店）",
+            "entry": "Startup",
             "option": [
-                "任务选项1"
+                "是否自动购买种子与蚯蚓（不一定能买全）"
             ]
         },
         {
-            "name": "参数任务",
-            "entry": "MyTask3",
+            "name": "选择资源关+骚灵之境战斗",
+            "entry": "autochoose_resBattle",
             "option": [
-                "任务选项1"
-            ],
-            "pipeline_override": {}
+                "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）",
+                "资源关关卡选择设置",
+                "骚灵之境关卡选择设置"
+            ]
         },
         {
-            "name": "带Custom的任务",
-            "entry": "MyTask4"
+            "name": "后半部分日常（公会+交日常周常任务+第二次投色子+通行证）",
+            "entry": "after_battle"
+        },
+        {
+            "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后再选择此任务）",
+            "entry": "consecration_tower"
+        },
+        {
+            "name": "自动收取勋章",
+            "entry": "enterCollectMedal"
+        },
+        {
+            "name": "自动进入温泉点泡泡",
+            "entry": "openDivisionforhotspring"
+        },
+        {
+            "name": "自动推进主线战斗关卡（需要点进自己要打的主线章；目前只支持多关纯战斗自动连战）",
+            "entry": "beginAutoPush",
+            "option": [
+                "选择表界或里界"
+            ]
+        },
+        {
+            "name": "自动阵列（死循环，会无限自动匹配战斗，请分配到所有任务之后）",
+            "entry": "MatrixStartup"
+        },
+        {
+            "name": "自动识别钓鱼【暴力型，仅支持不需要拖拽也能把鱼钓上来的面板】（如需低面板自动化钓鱼请打开同目录下的低面板可用自动钓鱼程序",
+            "entry": "Start_autofishing",
+            "option": [
+                "请选择钓台"
+            ]
+        },
+        {
+            "name": "钓台入口自动钓鱼【适配公会钓鱼比赛】",
+            "entry": "autofishing"
+        },
+        {
+            "name": "自动推图（自动主线的功能抽离,打开活动的战斗关卡,点进去到编队预备出击界面即可单独启动此任务以自动推进活动图）",
+            "entry": "Activityautopush"
         }
     ],
     "option": {
-        "任务选项1": {
+        "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）": {
+            "type": "select",
             "cases": [
                 {
-                    "name": "文本1",
+                    "name": "本勒关",
                     "pipeline_override": {
-                        "OcrTask": {
-                            "text": "文本1"
+                        "chooseOwnmission": {
+                            "template": "money mission.png"
                         }
                     }
                 },
                 {
-                    "name": "文本2",
+                    "name": "经验关",
                     "pipeline_override": {
-                        "OcrTask": {
-                            "text": "文本2"
+                        "chooseOwnmission": {
+                            "template": "exp mission.png"
+                        }
+                    }
+                },
+                {
+                    "name": "技能书关",
+                    "pipeline_override": {
+                        "chooseOwnmission": {
+                            "template": "skill mission.png"
+                        }
+                    }
+                }
+            ]
+        },
+        "资源关关卡选择设置": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
+                    "pipeline_override": {
+                        "scanmission": {
+                            "index": -2
+                        }
+                    }
+                },
+                {
+                    "name": "选择最后一关",
+                    "pipeline_override": {
+                        "scanmission": {
+                            "index": -1
+                        }
+                    }
+                }
+            ]
+        },
+        "骚灵之境关卡选择设置": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
+                    "pipeline_override": {
+                        "scanGhostmission": {
+                            "index": -2
+                        }
+                    }
+                },
+                {
+                    "name": "选择最后一关",
+                    "pipeline_override": {
+                        "scanGhostmission": {
+                            "index": -1
+                        }
+                    }
+                }
+            ]
+        },
+        "选择表界或里界": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "表界",
+                    "pipeline_override": {
+                        "beginAutoPush": {
+                            "action": "DoNothing"
+                        }
+                    }
+                },
+                {
+                    "name": "里界",
+                    "pipeline_override": {
+                        "beginAutoPush": {
+                            "action": "Click"
+                        }
+                    }
+                }
+            ]
+        },
+        "是否自动购买种子与蚯蚓（不一定能买全）": {
+            "type": "switch",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "是",
+                    "pipeline_override": {
+                        "collectFriendshippoint": {
+                            "next": [
+                                "Sub_BuyMedicine",
+                                "Sub_BuyTicket",
+                                "BuySeed",
+                                "Homeflag4"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "否",
+                    "pipeline_override": {
+                        "collectFriendshippoint": {
+                            "next": [
+                                "Sub_BuyMedicine",
+                                "Sub_BuyTicket",
+                                "Homeflag4"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "请选择钓台": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "森林",
+                    "pipeline_override": {
+                        "choosefishpool": {
+                            "expected": [
+                                "森林"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "海滩",
+                    "pipeline_override": {
+                        "choosefishpool": {
+                            "expected": [
+                                "海滩"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "运河",
+                    "pipeline_override": {
+                        "choosefishpool": {
+                            "expected": [
+                                "运河"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "冰原",
+                    "pipeline_override": {
+                        "choosefishpool": {
+                            "expected": [
+                                "冰原"
+                            ]
                         }
                     }
                 }

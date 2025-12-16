@@ -16,17 +16,18 @@
     "Sub_StartGame": {
         "recognition": "OCR",
         "expected": [
-            "进入游戏"
+            "开始游戏"
         ],
         "action": "Click",
         "post_delay": 7000,
         "next": [
             "Sub_StartGame",
-            "[JumpBack]Sub_Duringloading",
+            "Sub_Duringloading",
             "StartGame"
         ]
     },
     "Sub_Duringloading": {
+        "is_sub": true,
         "recognition": "OCR",
         "expected": "加载中",
         "post_delay": 3000,
@@ -51,11 +52,12 @@
         "action": "Click",
         "post_delay": 8000,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "Homeflag1"
         ]
     },
     "Sub_Getreward": {
+        "is_sub": true,
         "recognition": "OCR",
         "expected": "获得物品",
         "roi": [
@@ -119,11 +121,12 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "[JumpBack]Sub_GetMonthlycard",
+            "Sub_GetMonthlycard",
             "Mainmenu1"
         ]
     },
     "Sub_GetMonthlycard": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "getmonthlycard.png",
         "roi": [
@@ -207,14 +210,15 @@
     "DivisionJudginglist": {
         "next": [
             "ifDivisionNotneedaction",
-            "[JumpBack]Sub_Division_award",
-            "[JumpBack]Sub_Divisionchange",
+            "Sub_Division_award",
+            "Sub_Divisionchange",
             "reopenDivisionlist",
             "Divisionrest",
             "Homeflag3"
         ]
     },
     "Sub_Division_award": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "daily/division award.png",
         "roi": [
@@ -232,7 +236,7 @@
         ],
         "post_wait_freezes": 1000,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "Subreturn_back"
         ]
     },
@@ -255,6 +259,7 @@
         "post_delay": 1000
     },
     "Sub_Divisionchange": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "daily/division change.png",
         "roi": [
@@ -451,14 +456,15 @@
         ],
         "post_delay": 1000,
         "next": [
-            "[JumpBack]Sub_getGift",
-            "[JumpBack]Sub_Getreward",
+            "Sub_getGift",
+            "Sub_Getreward",
             "openExchangestore",
             "BuySeed",
             "Homeflag4"
         ]
     },
     "Sub_getGift": {
+        "is_sub": true,
         "pre_delay": 500,
         "recognition": "TemplateMatch",
         "template": "Alert.png",
@@ -471,12 +477,13 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "[JumpBack]Sub_buy",
-            "[JumpBack]Sub_Getreward",
+            "Sub_buy",
+            "Sub_Getreward",
             "Subreturn_back"
         ]
     },
     "Sub_buy": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "daily/buy button.png",
         "roi": [
@@ -539,13 +546,14 @@
         "action": "Click",
         "post_delay": 500,
         "next": [
-            "[JumpBack]Sub_BuyMedicine",
-            "[JumpBack]Sub_BuyTicket",
+            "Sub_BuyMedicine",
+            "Sub_BuyTicket",
             "BuySeed",
             "Homeflag4"
         ]
     },
     "Sub_BuyMedicine": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "daily/medicine.png",
         "roi": [
@@ -585,12 +593,13 @@
         "action": "Click",
         "post_wait_freezes": 500,
         "next": [
-            "[JumpBack]Sub_Getreward",
-            "[JumpBack]Sub_BuyTicket",
+            "Sub_Getreward",
+            "Sub_BuyTicket",
             "Homeflag4"
         ]
     },
     "Sub_BuyTicket": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "daily/ticket.png",
         "roi": [
@@ -616,7 +625,7 @@
         "action": "Click",
         "post_wait_freezes": 500,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "collectFriendshippoint"
         ]
     },
@@ -631,12 +640,13 @@
         ],
         "action": "Click",
         "next": [
-            "[JumpBack]Sub_Findseed",
+            "Sub_Findseed",
             "Swipetootherside1",
             "Homeflag4"
         ]
     },
     "Sub_Findseed": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": [
             "seed/apple.png",
@@ -689,7 +699,7 @@
         "action": "Click",
         "post_wait_freezes": 500,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "Subreturn_back"
         ]
     },
@@ -708,7 +718,7 @@
             1
         ],
         "next": [
-            "[JumpBack]Sub_Findseed",
+            "Sub_Findseed",
             "Swipetootherside2",
             "Homeflag4"
         ]
@@ -728,7 +738,7 @@
             1
         ],
         "next": [
-            "[JumpBack]Sub_Findseed",
+            "Sub_Findseed",
             "Homeflag4"
         ]
     },

@@ -27,13 +27,14 @@
         "action": "Click",
         "post_wait_freezes": 500,
         "next": [
-            "[JumpBack]Sub_Findachievement",
-            "[JumpBack]Sub_getachievement",
+            "Sub_Findachievement",
+            "Sub_getachievement",
             "backtoMedalSelection",
             "HomeflagMedal"
         ]
     },
     "Sub_Findachievement": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "medal/achievement icon.png",
         "roi": [
@@ -46,6 +47,7 @@
         "post_wait_freezes": 500
     },
     "Sub_getachievement": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "medal/get achievement.png",
         "roi": [

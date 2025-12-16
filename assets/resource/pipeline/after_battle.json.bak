@@ -58,7 +58,7 @@
         ],
         "post_wait_freezes": 300,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "GuildDonation",
             "StopDonation"
         ]
@@ -118,13 +118,14 @@
             53
         ],
         "next": [
-            "[JumpBack]Sub_GuildReward",
-            "[JumpBack]Sub_Getreward",
+            "Sub_GuildReward",
+            "Sub_Getreward",
             "openGuildTask",
             "Homeflag2"
         ]
     },
     "Sub_GuildReward": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "daily/guild task.png",
         "roi": [
@@ -159,8 +160,8 @@
             50
         ],
         "next": [
-            "[JumpBack]Sub_GuildReward",
-            "[JumpBack]Sub_Getreward",
+            "Sub_GuildReward",
+            "Sub_Getreward",
             "openGuildTask",
             "Homeflag2"
         ]
@@ -225,7 +226,7 @@
         ],
         "post_wait_freezes": 500,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "findaccessableTask"
         ]
     },
@@ -255,7 +256,7 @@
         "pre_delay": 1000,
         "post_wait_freezes": 3000,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "findaccessableTask"
         ]
     },
@@ -288,17 +289,18 @@
         ],
         "action": "Click",
         "next": [
-            "[JumpBack]Sub_sec_rolling",
+            "Sub_sec_rolling",
             "Homeflag5"
         ]
     },
     "Sub_sec_rolling": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "Alert.png",
         "action": "Click",
         "post_wait_freezes": 3500,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "Subreturn_back"
         ]
     },
@@ -328,7 +330,7 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "[JumpBack]Sub_Getreward",
+            "Sub_Getreward",
             "Homeflag5"
         ]
     },

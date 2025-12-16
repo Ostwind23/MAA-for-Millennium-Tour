@@ -2,13 +2,13 @@
     "column_matrix": {
         "next": [
             "MatrixStartup",
-            "[JumpBack]sub_return_home"
+            "sub_return_home"
         ]
     },
     "MatrixStartup": {
         "next": [
             "openBattleforMatrix",
-            "[JumpBack]sub_return_home"
+            "sub_return_home"
         ]
     },
     "openBattleforMatrix": {
@@ -135,7 +135,7 @@
         ],
         "action": "Click",
         "next": [
-            "[JumpBack]Sub_findnewenemy",
+            "Sub_findnewenemy",
             "Duringmatrixbattle"
         ]
     },

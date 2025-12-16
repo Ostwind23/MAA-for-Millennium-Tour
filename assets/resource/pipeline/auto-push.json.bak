@@ -92,11 +92,12 @@
         ],
         "action": "Click",
         "next": [
-            "[JumpBack]Sub_findnewenemy",
+            "Sub_findnewenemy",
             "Duringbattle"
         ]
     },
     "Sub_findnewenemy": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "autopush/newenemy.png",
         "roi": [
@@ -113,12 +114,13 @@
             "threshold": 0.95
         },
         "next": [
-            "[JumpBack]nextround",
+            "nextround",
             "inbattleoutofsupply",
             "reachtoend"
         ]
     },
     "nextround": {
+        "is_sub": true,
         "recognition": "TemplateMatch",
         "template": "autopush/nextround.png",
         "roi": [
