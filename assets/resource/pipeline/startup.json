@@ -1,121 +1,145 @@
 {
     "Startup": {
+        "doc": "启动总调度节点，挂载全局 JumpBack 看门人",
+        "timeout": 60000,
+        "post_wait_freezes": 300,
         "next": [
+            "Mainmenu1",
+            "Sub_StartGame",
+            "[JumpBack]GameLoading",
+            "[JumpBack]ClosePage",
+            "[JumpBack]BackButton",
+            "[JumpBack]HomeButton",
+            "[JumpBack]VictoryReturn",
+            "[JumpBack]Sub_Getreward",
             "StartMillenniumTour"
         ]
     },
+
     "StartMillenniumTour": {
+        "doc": "启动游戏，max_hit:1 避免重复拉起",
         "action": "StartApp",
         "package": "com.yingche.qnzl/com.inchigame.elf.YCActivity",
         "post_wait_freezes": 5000,
+        "max_hit": 1,
         "next": [
             "Sub_StartGame",
+            "Mainmenu1",
+            "[JumpBack]GameLoading",
+            "[JumpBack]ClosePage",
+            "[JumpBack]Sub_Getreward",
+            "StartGame",
             "StartMillenniumTour"
         ]
     },
-    "Sub_StartGame": {
+
+    "GameLoading": {
+        "doc": "识别加载中/加载转圈，等待加载完成",
         "recognition": "OCR",
-        "expected": [
-            "进入游戏"
-        ],
-        "action": "Click",
-        "post_delay": 7000,
-        "next": [
-            "Sub_StartGame",
-            "[JumpBack]Sub_Duringloading",
-            "StartGame"
-        ]
+        "expected": "%",
+        "roi": [907, 581, 245, 124],
+        "post_delay": 3000
     },
-    "Sub_Duringloading": {
+
+    "ClosePage": {
+        "doc": "通用关闭按钮（公告/签到/详情页等）",
+        "recognition": "TemplateMatch",
+        "template": ["announcement.png"],
+        "roi": [855,2,420,219],
+        "action": "Click",
+        "post_delay": 1000
+    },
+
+    "BackButton": {
+        "doc": "返回上一级按钮",
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [0, 0, 215, 140],
+        "action": "Click",
+        "post_delay": 1000
+    },
+
+    "HomeButton": {
+        "doc": "返回主界面按钮（home图标）",
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [74, 0, 202, 140],
+        "action": "Click",
+        "post_delay": 2000
+    },
+
+    "VictoryReturn": {
+        "doc": "战斗胜利界面，点击继续",
         "recognition": "OCR",
-        "expected": "加载中",
-        "post_delay": 3000,
-        "roi": [
-            907,
-            581,
-            245,
-            124
+        "expected": "战斗胜利",
+        "roi": [400, 50, 500, 150],
+        "action": "Click",
+        "post_delay": 1000
+    },
+
+    "Sub_StartGame": {
+        "doc": "点击「进入游戏」按钮",
+        "recognition": "OCR",
+        "expected": ["进入游戏"],
+        "action": "Click",
+        "post_delay": 5000,
+        "on_error": [
+            "StopGame"
+        ],
+        "next": [
+            "CloseAnnouncement",
+            "Collectmonthlycard",
+            "StartGame",
+            "[JumpBack]GameLoading",
+            "[JumpBack]ClosePage",
+            "Sub_StartGame"
         ]
     },
     "StartGame": {
+        "doc": "启动后的分发节点，识别主界面后处理公告/月卡并进入日常任务",
+        "recognition": "TemplateMatch",
+        "template": "summon.png",
+        "roi": [0,524,332,197],
         "post_delay": 1500,
         "next": [
-            "rolling",
             "CloseAnnouncement",
-            "Mainmenu1"
+            "Collectmonthlycard",
+            "Mainmenu1",
+            "[JumpBack]ClosePage",
+            "[JumpBack]Sub_Getreward"
         ]
     },
-    "rolling": {
-        "recognition": "TemplateMatch",
-        "template": "dice available.png",
-        "action": "Click",
-        "post_delay": 8000,
-        "next": [
-            "[JumpBack]Sub_Getreward",
-            "Homeflag1"
-        ]
-    },
+
     "Sub_Getreward": {
+        "doc": "[复用]通用「获得物品」弹窗处理",
         "recognition": "OCR",
         "expected": "获得物品",
-        "roi": [
-            514,
-            141,
-            242,
-            145
-        ],
+        "roi": [514, 141, 242, 145],
         "pre_wait_freezes": 500,
         "action": "Click",
-        "target": [
-            161,
-            510,
-            1,
-            1
-        ],
+        "target": [161, 510, 1, 1],
         "post_delay": 1000
     },
-    "Homeflag1": {
-        "recognition": "TemplateMatch",
-        "template": "home.png",
-        "roi": [
-            74,
-            0,
-            202,
-            140
-        ],
-        "action": "Click",
-        "post_delay": 5000,
-        "next": [
-            "CloseAnnouncement",
-            "Mainmenu1"
-        ]
-    },
+
     "CloseAnnouncement": {
+        "doc": "关闭公告弹窗",
         "recognition": "TemplateMatch",
-        "template": [
-            "announcement.png"
-        ],
-        "roi": [
-            900,
-            2,
-            300,
-            300
-        ],
+        "template": ["announcement.png"],
+        "roi": [900, 2, 300, 300],
         "action": "Click",
         "next": [
             "Collectmonthlycard",
-            "Mainmenu1"
+            "Mainmenu1",
+            "[JumpBack]ClosePage",
+            "[JumpBack]Sub_Getreward"
         ]
     },
+
     "Collectmonthlycard": {
+        "doc": "月卡领取",
         "recognition": "TemplateMatch",
         "template": "monthly card.png",
-        "roi": [
-            449,
-            483,
-            382,
-            146
-        ],
+        "roi": [449, 483, 382, 146],
         "action": "Click",
         "post_delay": 1000,
         "next": [
@@ -123,625 +147,19 @@
             "Mainmenu1"
         ]
     },
+
     "Sub_GetMonthlycard": {
+        "doc": "月卡奖励确认",
         "recognition": "TemplateMatch",
         "template": "getmonthlycard.png",
-        "roi": [
-            517,
-            94,
-            246,
-            143
-        ],
+        "roi": [517, 94, 246, 143],
         "action": "Click"
     },
+
     "Mainmenu1": {
+        "doc": "主界面识别锚点（召唤按钮），进入日常任务",
         "recognition": "TemplateMatch",
         "template": "summon.png",
-        "roi": [
-            0,
-            530,
-            250,
-            190
-        ],
-        "next": [
-            "openDivision"
-        ]
-    },
-    "openDivision": {
-        "recognition": "TemplateMatch",
-        "template": "daily/division.png",
-        "roi": [
-            718,
-            559,
-            243,
-            161
-        ],
-        "action": "Click",
-        "target": [
-            768,
-            613,
-            143,
-            61
-        ],
-        "post_delay": 1000,
-        "next": [
-            "openDivisionlist",
-            "Homeflag3"
-        ]
-    },
-    "ifDivisionNotneedaction": {
-        "recognition": "TemplateMatch",
-        "template": "Alert.png",
-        "inverse": true,
-        "roi": [
-            0,
-            32,
-            284,
-            162
-        ],
-        "next": [
-            "Homeflag3"
-        ]
-    },
-    "openDivisionlist": {
-        "recognition": "TemplateMatch",
-        "template": "Alert.png",
-        "roi": [
-            0,
-            32,
-            284,
-            162
-        ],
-        "action": "Click",
-        "target": [
-            57,
-            98,
-            120,
-            34
-        ],
-        "post_delay": 1000,
-        "next": [
-            "DivisionJudginglist"
-        ]
-    },
-    "DivisionJudginglist": {
-        "next": [
-            "ifDivisionNotneedaction",
-            "[JumpBack]Sub_Division_award",
-            "[JumpBack]Sub_Divisionchange",
-            "reopenDivisionlist",
-            "Divisionrest",
-            "Homeflag3"
-        ]
-    },
-    "Sub_Division_award": {
-        "recognition": "TemplateMatch",
-        "template": "daily/division award.png",
-        "roi": [
-            745,
-            79,
-            535,
-            207
-        ],
-        "action": "Click",
-        "target": [
-            843,
-            129,
-            435,
-            107
-        ],
-        "post_wait_freezes": 1000,
-        "next": [
-            "[JumpBack]Sub_Getreward",
-            "Subreturn_back"
-        ]
-    },
-    "Second_Division_openlist": {
-        "recognition": "TemplateMatch",
-        "template": "Alert.png",
-        "roi": [
-            0,
-            32,
-            284,
-            162
-        ],
-        "action": "Click",
-        "target": [
-            57,
-            98,
-            120,
-            34
-        ],
-        "post_delay": 1000
-    },
-    "Sub_Divisionchange": {
-        "recognition": "TemplateMatch",
-        "template": "daily/division change.png",
-        "roi": [
-            745,
-            79,
-            535,
-            207
-        ],
-        "action": "Click",
-        "target": [
-            843,
-            129,
-            435,
-            107
-        ],
-        "post_delay": 1000,
-        "next": [
-            "Division_discharge"
-        ]
-    },
-    "Division_discharge": {
-        "recognition": "TemplateMatch",
-        "template": "daily/discharging.png",
-        "roi": [
-            0,
-            575,
-            274,
-            145
-        ],
-        "action": "Click",
-        "target": [
-            3,
-            638,
-            174,
-            45
-        ],
-        "post_delay": 1000,
-        "next": [
-            "Division_deploy"
-        ]
-    },
-    "Division_deploy": {
-        "recognition": "TemplateMatch",
-        "template": "daily/deploying.png",
-        "roi": [
-            140,
-            578,
-            274,
-            142
-        ],
-        "action": "Click",
-        "target": [
-            190,
-            640,
-            174,
-            42
-        ],
-        "post_delay": 500,
-        "next": [
-            "Division_save"
-        ]
-    },
-    "Division_save": {
-        "recognition": "TemplateMatch",
-        "template": "daily/saving.png",
-        "roi": [
-            964,
-            575,
-            289,
-            145
-        ],
-        "action": "Click",
-        "post_delay": 3000
-    },
-    "reopenDivisionlist": {
-        "recognition": "TemplateMatch",
-        "template": "daily/waiting list.png",
-        "inverse": true,
-        "roi": [
-            809,
-            0,
-            269,
-            192
-        ],
-        "next": [
-            "openDivisionlist"
-        ]
-    },
-    "Divisionrest": {
-        "recognition": "TemplateMatch",
-        "template": "daily/division rest.png",
-        "roi": [
-            745,
-            79,
-            535,
-            207
-        ],
-        "action": "Click",
-        "post_delay": 3000,
-        "next": [
-            "Division_restroomdischarge"
-        ]
-    },
-    "Division_restroomdischarge": {
-        "recognition": "TemplateMatch",
-        "template": "daily/discharging.png",
-        "roi": [
-            795,
-            576,
-            278,
-            144
-        ],
-        "action": "Click",
-        "post_delay": 1000,
-        "next": [
-            "Division_restroom"
-        ]
-    },
-    "Division_restroom": {
-        "recognition": "TemplateMatch",
-        "template": "daily/check in.png",
-        "roi": [
-            995,
-            576,
-            278,
-            144
-        ],
-        "action": "Click",
-        "post_delay": 500,
-        "next": [
-            "Homeflag3"
-        ]
-    },
-    "Division_back": {
-        "recognition": "TemplateMatch",
-        "template": "back.png",
-        "roi": [
-            0,
-            0,
-            215,
-            140
-        ],
-        "action": "Click",
-        "post_delay": 2000
-    },
-    "Homeflag3": {
-        "recognition": "TemplateMatch",
-        "template": "home.png",
-        "roi": [
-            74,
-            0,
-            202,
-            140
-        ],
-        "action": "Click",
-        "post_delay": 2000,
-        "next": [
-            "openStore"
-        ]
-    },
-    "openStore": {
-        "recognition": "TemplateMatch",
-        "template": "daily/store.png",
-        "roi": [
-            869,
-            549,
-            218,
-            171
-        ],
-        "action": "Click",
-        "post_delay": 2000,
-        "next": [
-            "openGiftstore",
-            "openExchangestore",
-            "BuySeed",
-            "Homeflag4"
-        ]
-    },
-    "openGiftstore": {
-        "recognition": "TemplateMatch",
-        "template": "Alert.png",
-        "roi": [
-            478,
-            643,
-            206,
-            77
-        ],
-        "action": "Click",
-        "target": [
-            587,
-            688,
-            1,
-            1
-        ],
-        "post_delay": 1000,
-        "next": [
-            "[JumpBack]Sub_getGift",
-            "[JumpBack]Sub_Getreward",
-            "openExchangestore",
-            "BuySeed",
-            "Homeflag4"
-        ]
-    },
-    "Sub_getGift": {
-        "pre_delay": 500,
-        "recognition": "TemplateMatch",
-        "template": "Alert.png",
-        "roi": [
-            504,
-            79,
-            257,
-            197
-        ],
-        "action": "Click",
-        "post_delay": 1000,
-        "next": [
-            "[JumpBack]Sub_buy",
-            "[JumpBack]Sub_Getreward",
-            "Subreturn_back"
-        ]
-    },
-    "Sub_buy": {
-        "recognition": "TemplateMatch",
-        "template": "daily/buy button.png",
-        "roi": [
-            675,
-            448,
-            291,
-            143
-        ],
-        "action": "Click",
-        "post_delay": 500
-    },
-    "Subreturn_back": {
-        "action": "DoNothing"
-    },
-    "openExchangestore": {
-        "recognition": "TemplateMatch",
-        "template": "Alert.png",
-        "roi": [
-            835,
-            555,
-            296,
-            165
-        ],
-        "action": "Click",
-        "target": [
-            991,
-            691,
-            1,
-            1
-        ],
-        "post_delay": 1000,
-        "next": [
-            "openFriendshipstore"
-        ]
-    },
-    "openFriendshipstore": {
-        "recognition": "TemplateMatch",
-        "template": "Alert.png",
-        "roi": [
-            242,
-            412,
-            295,
-            174
-        ],
-        "action": "Click",
-        "post_delay": 500,
-        "next": [
-            "collectFriendshippoint"
-        ]
-    },
-    "collectFriendshippoint": {
-        "recognition": "TemplateMatch",
-        "template": "daily/friendship point.png",
-        "roi": [
-            956,
-            24,
-            244,
-            129
-        ],
-        "action": "Click",
-        "post_delay": 500,
-        "next": [
-            "[JumpBack]Sub_BuyMedicine",
-            "[JumpBack]Sub_BuyTicket",
-            "BuySeed",
-            "Homeflag4"
-        ]
-    },
-    "Sub_BuyMedicine": {
-        "recognition": "TemplateMatch",
-        "template": "daily/medicine.png",
-        "roi": [
-            501,
-            130,
-            214,
-            216
-        ],
-        "action": "Click",
-        "next": [
-            "maxMedicine"
-        ]
-    },
-    "maxMedicine": {
-        "recognition": "TemplateMatch",
-        "template": "maximize.png",
-        "roi": [
-            708,
-            413,
-            170,
-            150
-        ],
-        "action": "Click",
-        "next": [
-            "confirmbuyMedicine"
-        ]
-    },
-    "confirmbuyMedicine": {
-        "recognition": "TemplateMatch",
-        "template": "daily/confirmMedicine.png",
-        "roi": [
-            736,
-            505,
-            290,
-            142
-        ],
-        "action": "Click",
-        "post_wait_freezes": 500,
-        "next": [
-            "[JumpBack]Sub_Getreward",
-            "[JumpBack]Sub_BuyTicket",
-            "Homeflag4"
-        ]
-    },
-    "Sub_BuyTicket": {
-        "recognition": "TemplateMatch",
-        "template": "daily/ticket.png",
-        "roi": [
-            501,
-            130,
-            214,
-            216
-        ],
-        "action": "Click",
-        "next": [
-            "confirmbuyTicket"
-        ]
-    },
-    "confirmbuyTicket": {
-        "recognition": "TemplateMatch",
-        "template": "daily/confirmMedicine.png",
-        "roi": [
-            736,
-            505,
-            290,
-            142
-        ],
-        "action": "Click",
-        "post_wait_freezes": 500,
-        "next": [
-            "[JumpBack]Sub_Getreward",
-            "collectFriendshippoint"
-        ]
-    },
-    "BuySeed": {
-        "recognition": "TemplateMatch",
-        "template": "daily/dailystore.png",
-        "roi": [
-            1059,
-            579,
-            146,
-            141
-        ],
-        "action": "Click",
-        "next": [
-            "[JumpBack]Sub_Findseed",
-            "Swipetootherside1",
-            "Homeflag4"
-        ]
-    },
-    "Sub_Findseed": {
-        "recognition": "TemplateMatch",
-        "template": [
-            "seed/apple.png",
-            "seed/berry.png",
-            "seed/butterfly.png",
-            "seed/grapes.png",
-            "seed/cabbage.png",
-            "seed/corn.png",
-            "seed/potato.png",
-            "seed/tomato.png",
-            "seed/truffle.png",
-            "seed/mushroom.png",
-            "seed/orange.png",
-            "seed/earthworm.png"
-        ],
-        "roi": [
-            494,
-            135,
-            623,
-            548
-        ],
-        "action": "Click",
-        "next": [
-            "maxSeed"
-        ]
-    },
-    "maxSeed": {
-        "recognition": "TemplateMatch",
-        "template": "maximize.png",
-        "roi": [
-            708,
-            413,
-            170,
-            150
-        ],
-        "action": "Click",
-        "next": [
-            "confirmbuySeed"
-        ]
-    },
-    "confirmbuySeed": {
-        "recognition": "TemplateMatch",
-        "template": "daily/confirmMedicine.png",
-        "roi": [
-            736,
-            505,
-            290,
-            142
-        ],
-        "action": "Click",
-        "post_wait_freezes": 500,
-        "next": [
-            "[JumpBack]Sub_Getreward",
-            "Subreturn_back"
-        ]
-    },
-    "Swipetootherside1": {
-        "action": "Swipe",
-        "begin": [
-            1207,
-            377,
-            1,
-            1
-        ],
-        "end": [
-            600,
-            378,
-            1,
-            1
-        ],
-        "next": [
-            "[JumpBack]Sub_Findseed",
-            "Swipetootherside2",
-            "Homeflag4"
-        ]
-    },
-    "Swipetootherside2": {
-        "action": "Swipe",
-        "begin": [
-            1200,
-            377,
-            1,
-            1
-        ],
-        "end": [
-            607,
-            377,
-            1,
-            1
-        ],
-        "next": [
-            "[JumpBack]Sub_Findseed",
-            "Homeflag4"
-        ]
-    },
-    "Homeflag4": {
-        "recognition": "TemplateMatch",
-        "template": "home.png",
-        "roi": [
-            74,
-            0,
-            202,
-            140
-        ],
-        "action": "Click",
-        "post_delay": 1000
+        "roi": [0, 530, 250, 190]
     }
 }

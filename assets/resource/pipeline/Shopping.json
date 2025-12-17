@@ -1,0 +1,179 @@
+{
+    "Task_Store": {
+        "doc": "【任务】商店购买",
+        "next": [
+            "openStore"
+        ]
+    },
+
+    "openStore": {
+        "recognition": "TemplateMatch",
+        "template": "daily/store.png",
+        "roi": [869, 549, 218, 171],
+        "action": "Click",
+        "post_delay": 2000,
+        "next": [
+            "openGiftstore",
+            "openDailystore",
+            "BuySeed",
+            "Homeflag4",
+            "[JumpBack]ClosePage",
+            "[JumpBack]Sub_Getreward"
+        ]
+    },
+
+    "openGiftstore": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [478, 643, 206, 77],
+        "action": "Click",
+        "target": [587, 688, 1, 1],
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]Sub_getGift",
+            "[JumpBack]Sub_Getreward",
+            "openDailystore",
+            "BuySeed",
+            "Homeflag4"
+        ]
+    },
+
+    "Sub_getGift": {
+        "pre_delay": 500,
+        "recognition": "OCR",
+        "expected": "免费",
+        "roi": [180,83,324,344],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]Sub_buy",
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
+
+    "Sub_buy": {
+        "recognition": "TemplateMatch",
+        "template": "daily/buy button.png",
+        "roi": [675, 448, 291, 143],
+        "action": "Click",
+        "post_delay": 500
+    },
+
+    "Subreturn_back": {
+        "action": "DoNothing"
+    },
+
+    "openDailystore": {
+        "recognition": "OCR",
+        "expected": "日常商店",
+        "roi": [880,612,400,107],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "buy_Stamina_Divisionstore"
+        ]
+    },
+
+    "buy_Stamina_Divisionstore": {
+        "recognition": "OCR",
+        "expected": ["中型星魂精髓", "大型星魂精髓"],
+        "roi": [222,124,1058,517],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "[JumpBack]maxPurchase",
+            "buy_Stamina_Divisionstore",
+            "buy_Fertilizer_Divisionstore"
+        ]
+    },
+
+    "maxPurchase": {
+        "doc": "[复用]点击后购买最大数量逻辑",
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [708, 413, 170, 150],
+        "action": "Click",
+        "next": [
+            "confirmPurchase"
+        ]
+    },
+
+    "confirmPurchase": {
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmPurchase.png",
+        "roi": [736, 505, 290, 142],
+        "action": "Click",
+        "post_wait_freezes": 500,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
+
+    "buy_Fertilizer_Divisionstore": {
+        "doc": "购买三种肥料",
+        "recognition": "OCR",
+        "expected": ["肥料"],
+        "roi": [222,124,1058,517],
+        "action": "Click",
+        "next": [
+            "[JumpBack]maxPurchase",
+            "Homeflag4"
+        ]
+    },
+
+    "Findseed": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "seed/龙鳞果.png",
+            "seed/青海莓.png",
+            "seed/千蝶菇.png",
+            "seed/黄金葡萄.png",
+            "seed/连叶卷心菜.png",
+            "seed/拇指玉米.png",
+            "seed/月牙马铃薯.png",
+            "seed/火焰大番茄.png",
+            "seed/黑松露.png",
+            "seed/龟甲菇.png",
+            "seed/天谕橙.png",
+            "seed/绿翠绒.png"
+        ],
+        "roi": [494, 135, 623, 548],
+        "action": "Click",
+        "next": [
+            "[JumpBack]maxPurchase",
+            "Homeflag4"
+        ]
+    },
+
+    "Swipetootherside1": {
+        "action": "Swipe",
+        "begin": [1207, 377, 1, 1],
+        "end": [600, 378, 1, 1],
+        "next": [
+            "Findseed",
+            "Swipetootherside2",
+            "Homeflag4"
+        ]
+    },
+
+    "Swipetootherside2": {
+        "action": "Swipe",
+        "begin": [1200, 377, 1, 1],
+        "end": [607, 377, 1, 1],
+        "next": [
+            "Findseed",
+            "Homeflag4"
+        ]
+    },
+
+    "Homeflag4": {
+        "doc": "商店任务结束，返回主界面",
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [74, 0, 202, 140],
+        "action": "Click",
+        "post_delay": 1000
+    }
+}

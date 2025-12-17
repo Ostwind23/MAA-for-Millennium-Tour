@@ -51,15 +51,12 @@
     // },
     "task": [
         {
-            "name": "Newrolling",
-            "entry": "Newrolling"
+            "name": "启动游戏",
+            "entry": "Startup"
         },
         {
-            "name": "前半部分日常（自动打开游戏+投色子+关公告+神谕司+商店）",
-            "entry": "Startup",
-            "option": [
-                "是否自动购买种子与蚯蚓（不一定能买全）"
-            ]
+            "name": "投骰子",
+            "entry": "rolling"
         },
         {
             "name": "选择资源关+骚灵之境战斗",

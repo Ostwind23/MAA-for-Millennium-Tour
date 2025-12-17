@@ -1,0 +1,17 @@
+
+{
+   "StopGame":{
+        "action": "StopApp",
+        "package": "com.yingche.qnzl/com.inchigame.elf.YCActivity",
+        "next":[
+            "RestartGame"
+        ]
+    },
+    "RestartGame":{
+        "action": "StartApp",
+        "package": "com.yingche.qnzl/com.inchigame.elf.YCActivity",
+        "next":[
+            "Startup"
+        ]
+    }
+}
