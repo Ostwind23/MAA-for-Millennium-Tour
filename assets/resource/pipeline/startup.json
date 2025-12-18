@@ -45,7 +45,6 @@
         "doc": "通用关闭按钮（公告/签到/详情页等）",
         "recognition": "TemplateMatch",
         "template": ["announcement.png"],
-        "roi": [855,2,420,219],
         "action": "Click",
         "post_delay": 1000
     },

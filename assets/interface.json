@@ -59,6 +59,14 @@
             "entry": "rolling"
         },
         {
+            "name": "商店",
+            "description": "默认自动购买每日免费体力、日常商店的两管体力药",
+            "entry": "Task_Store",
+            "option": [
+                /"是否自动购买种子与蚯蚓（不一定能买全）"
+            ]
+        },
+        {
             "name": "选择资源关+骚灵之境战斗",
             "entry": "autochoose_resBattle",
             "option": [
