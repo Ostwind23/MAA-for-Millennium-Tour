@@ -112,7 +112,7 @@
     "Sub_Getreward": {
         "doc": "[复用]通用「获得物品」弹窗处理",
         "recognition": "OCR",
-        "expected": "获得物品",
+        "expected": ["获得物品", "获得道具"],
         "roi": [514, 141, 242, 145],
         "pre_wait_freezes": 500,
         "action": "Click",

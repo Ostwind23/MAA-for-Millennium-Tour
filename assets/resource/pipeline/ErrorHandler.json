@@ -2,14 +2,14 @@
 {
     "EmergencyHandler":{
         "next": [
-            "[JumpBack]AnnouncementExists",
+            "[JumpBack]ExtraAnnouncementExists",
             "[JumpBack]Sub_Getreward",
             "[JumpBack]ClosePage",
             "[JumpBack]returnHome",
             "StopGame"
         ]
     },
-    "AnnouncementExists":{
+    "ExtraAnnouncementExists":{
         "recognition":  "OCR",
         "expected": "空白区域",
         "roi": [191,570,908,134],
@@ -20,7 +20,10 @@
             "Startup"
         ]
     },
-   "StopGame":{
+    "StopTaskChain":{
+        "action": "StopTask"
+    },
+    "StopGame":{
         "action": "StopApp",
         "package": "com.yingche.qnzl/com.inchigame.elf.YCActivity",
         "next":[

@@ -2,7 +2,13 @@
     "Task_Division": {
         "doc": "神谕司任务链",
         "next": [
-            "openDivision"
+            "openDivision",
+            "[JumpBack]openDivisionAppointment",
+            "[JumpBack]Task_DivisionHotSpring",
+            "[JumpBack]Task_DivisionFarming",
+            "[JumpBack]ClosePage",
+            "[JumpBack]Sub_Getreward",
+            "Homeflag3"
         ]
     },
 
@@ -11,13 +17,14 @@
         "template": "daily/division.png",
         "roi": [718, 559, 243, 161],
         "action": "Click",
-        "target": [768, 613, 143, 61],
         "post_delay": 1000,
         "next": [
-            "openDivisionAppointment",
-            "Homeflag3",
+            "[JumpBack]openDivisionAppointment",
+            "[JumpBack]Task_DivisionHotSpring",
+            "[JumpBack]Task_DivisionFarming",
             "[JumpBack]ClosePage",
-            "[JumpBack]Sub_Getreward"
+            "[JumpBack]Sub_Getreward",
+            "Homeflag3"
         ]
     },
 
@@ -32,11 +39,10 @@
     },
 
     "openDivisionAppointment": {
-        "recognition": "OCR",
-        "expected": "委任",
-        "roi": [0, 32, 284, 162],
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [1,223,132,86],
         "action": "Click",
-        "target": [57, 98, 120, 34],
         "post_delay": 1000,
         "next": [
             "getDivisionAppointment"
@@ -76,10 +82,11 @@
         "template": "Alert.png",
         "roi":[19,551,69,79],
         "action": "Click",
+        "target_offset": [-5,10,0,0],
         "next": [
             "[JumpBack]Spring_of_MITIA",
-            "[JumpBack]Misty_Spring",
-            "Subreturn_back"
+            "[JumpBack]Spring_of_Misty",
+            "Return_Divisionlist"
         ]
     },
     "Spring_of_MITIA": {
@@ -87,25 +94,27 @@
         "template": "Alert.png",
         "roi": [1134,132,121,109],
         "action": "Click",
+        "post_wait_freezes": 1000,
         "next": [
             "[JumpBack]Hotspring_Getreward",
             "Subreturn_back"
         ]
     },
-    "Misty_Spring": {
+    "Spring_of_Misty": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
         "roi": [1146,245,93,88],
         "action": "Click",
+        "post_wait_freezes": 1000,
         "next": [
             "[JumpBack]Hotspring_Getreward",
             "Subreturn_back"
         ]
     },
     "Hotspring_Getreward": {
-        "recognition": "OCR",
-        "expected": "一键收取",
-        "roi": [140,484,255,167],
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [180,490,208,157],
         "action": "Click",
         "post_wait_freezes": 500,
         "next":[
@@ -118,11 +127,18 @@
         "roi": [0, 0, 215, 140],
         "action": "Click"
     },
+    "Return_Divisionlist": {
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [0, 0, 215, 140],
+        "action": "Click"
+    },
     "Task_DivisionFarming": {
         "doc": "神谕司任务链-农场任务",
         "recognition": "TemplateMatch",
         "template": "Alert.png",
         "roi":[14,307,83,84],
+        "pre_wait_freezes": 1500,
         "action": "Click",
         "next": [
             "[JumpBack]Sub_Getreward",
@@ -135,7 +151,8 @@
         "expected": "建设",
         "roi":[567,640,191,76],
         "next": [
-            "Farm_Enter_Harvest"
+            "[JumpBack]Farm_Enter_Harvest",
+            "[JumpBack]returnHome"
         ]
     },
     "Farm_Emergency_Entry": {
@@ -174,8 +191,9 @@
         "post_delay": 1000,
         "next": [
             "[JumpBack]Farm_HarvestAll",
-            "[JumpBack]Farm_Plant"
-            
+            "[JumpBack]Farm_Plant",
+            "[JumpBack]returnHome",
+            "Subreturn_back"
         ]
     },
     "Farm_HarvestAll":{
@@ -184,7 +202,18 @@
         "roi":[759,450,520,269],
         "action": "Click",
         "next": [
-            "[JumpBack]Sub_Getreward"
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]NothingtoHarvest",
+            "Subreturn_back"
+        ]
+    },
+    "NothingtoHarvest":{
+        "recognition": "ColorMatch",
+        "lower":[73, 73, 73],
+        "upper": [93, 93, 93],
+        "next": [
+            "[JumpBack]ClosePage",
+            "Homeflag3"
         ]
     },
     "Farm_Plant": {
@@ -197,8 +226,8 @@
         ]
     },
     "Farm_SelectCrop": {
-        "recognition": "TemplateMatch",
-        "template": "farm/作物图标.png",
+        "recognition": "FeatureMatch",
+        "template": "seed/龙鳞果.png",
         "roi":[373,135,832,479],
         "action": "Click",
         "post_delay": 1000,
@@ -236,6 +265,7 @@
         "recognition": "TemplateMatch",
         "template": "farm/速生型肥料.png",
         "roi":[373,135,832,479],
+        "method": 3,
         "action": "Click",
         "post_delay": 1000,
         "focus": {
@@ -276,7 +306,8 @@
         "post_delay": 2000,
         "next": [
             "[JumpBack]ClosePage",
-            "[JumpBack]Sub_Getreward"
+            "[JumpBack]Sub_Getreward",
+            "StopTaskChain"
         ]
     }
 }

@@ -63,7 +63,14 @@
             "description": "默认自动购买每日免费体力、日常商店的两管体力药",
             "entry": "Task_Store",
             "option": [
-                /"是否自动购买种子与蚯蚓（不一定能买全）"
+
+            ]
+        },
+        {
+            "name": "神谕司",
+            "entry": "Task_Division",
+            "option": [
+                
             ]
         },
         {
@@ -206,38 +213,6 @@
                     "pipeline_override": {
                         "beginAutoPush": {
                             "action": "Click"
-                        }
-                    }
-                }
-            ]
-        },
-        "是否自动购买种子与蚯蚓（不一定能买全）": {
-            "type": "switch",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "label": "是",
-                    "pipeline_override": {
-                        "collectFriendshippoint": {
-                            "next": [
-                                "Sub_BuyMedicine",
-                                "Sub_BuyTicket",
-                                "BuySeed",
-                                "Homeflag4"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "label": "否",
-                    "pipeline_override": {
-                        "collectFriendshippoint": {
-                            "next": [
-                                "Sub_BuyMedicine",
-                                "Sub_BuyTicket",
-                                "Homeflag4"
-                            ]
                         }
                     }
                 }

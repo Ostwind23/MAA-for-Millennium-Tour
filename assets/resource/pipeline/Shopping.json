@@ -15,7 +15,6 @@
         "next": [
             "openGiftstore",
             "openDailystore",
-            "BuySeed",
             "Homeflag4",
             "[JumpBack]ClosePage",
             "[JumpBack]Sub_Getreward"
@@ -32,8 +31,7 @@
         "next": [
             "[JumpBack]Sub_getGift",
             "[JumpBack]Sub_Getreward",
-            "openDailystore",
-            "BuySeed",
+            "[JumpBack]openDailystore",
             "Homeflag4"
         ]
     },
@@ -53,8 +51,8 @@
     },
 
     "Sub_buy": {
-        "recognition": "TemplateMatch",
-        "template": "daily/buy button.png",
+        "recognition": "OCR",
+        "expected": "购买",
         "roi": [675, 448, 291, 143],
         "action": "Click",
         "post_delay": 500
@@ -71,7 +69,9 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "buy_Stamina_Divisionstore"
+            "[JumpBack]buy_Stamina_Divisionstore",
+            "[JumpBack]open_Seedstore",
+            "Homeflag4"
         ]
     },
 
@@ -93,6 +93,7 @@
         "recognition": "TemplateMatch",
         "template": "maximize.png",
         "roi": [708, 413, 170, 150],
+        "pre_wait_freezes": 1000,
         "action": "Click",
         "next": [
             "confirmPurchase"
@@ -110,6 +111,17 @@
             "Subreturn_back"
         ]
     },
+    "open_Seedstore": {
+        "recognition": "OCR",
+        "expected": "种子",
+        "roi": [26,115,202,424],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]buy_Fertilizer_Divisionstore",
+            "Homeflag4"
+        ]
+    },
 
     "buy_Fertilizer_Divisionstore": {
         "doc": "购买三种肥料",
@@ -119,6 +131,7 @@
         "action": "Click",
         "next": [
             "[JumpBack]maxPurchase",
+            "buy_Fertilizer_Divisionstore",
             "Homeflag4"
         ]
     },
