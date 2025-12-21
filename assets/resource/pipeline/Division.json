@@ -17,6 +17,7 @@
         "template": "daily/division.png",
         "roi": [718, 559, 243, 161],
         "action": "Click",
+        "target_offset": [-20,0,0,0],
         "post_delay": 1000,
         "next": [
             "[JumpBack]openDivisionAppointment",
@@ -138,7 +139,7 @@
         "recognition": "TemplateMatch",
         "template": "Alert.png",
         "roi":[14,307,83,84],
-        "pre_wait_freezes": 1500,
+        "pre_wait_freezes": 2000,
         "action": "Click",
         "next": [
             "[JumpBack]Sub_Getreward",
@@ -151,6 +152,7 @@
         "expected": "建设",
         "roi":[567,640,191,76],
         "next": [
+            "[[JumpBack]Sub_Getreward",
             "[JumpBack]Farm_Enter_Harvest",
             "[JumpBack]returnHome"
         ]
@@ -181,6 +183,9 @@
         ]
     },
     "Farm_Emergency_Worms":{
+        "doc":"虫子color upper[110, 205, 94] lower[75, 177, 66]",
+        "recognition": "TemplateMatch",
+        "template": "farm/捉虫标志.png",
         "next":[
             "[JumpBack]Sub_Getreward"
         ]
@@ -201,6 +206,7 @@
         "expected": "全部收获",
         "roi":[759,450,520,269],
         "action": "Click",
+        "post_wait_freezes": 1000,
         "next": [
             "[JumpBack]Sub_Getreward",
             "[JumpBack]NothingtoHarvest",
@@ -209,9 +215,13 @@
     },
     "NothingtoHarvest":{
         "recognition": "ColorMatch",
-        "lower":[73, 73, 73],
-        "upper": [93, 93, 93],
+        "roi": [983,604,188,40],
+        "lower": [73, 73, 73],
+        "upper": [100, 100, 100],
+        "count": 30,
         "next": [
+            "[JumpBack]Sub_Getreward",
+            "CanFertilize",
             "[JumpBack]ClosePage",
             "Homeflag3"
         ]
@@ -239,7 +249,7 @@
         ]
     },
     "Farm_ConfirmPlant": {
-        "doc": "睡前防忘：点了种植之后是直接可以施肥",
+        "doc": "点了种植之后是直接可以施肥",
         "recognition": "OCR",
         "expected": "^(1[6-9]|[2-9]\\d|\\d{3})/16$",
         "roi":[863,593,96,69],
@@ -249,6 +259,18 @@
         "action": "Click",
         "next":[
             "Farm_Fertilize"
+        ]
+    },
+    "CanFertilize":{
+        "recognition": "ColorMatch",
+        "lower": [0, 97, 95],
+        "upper": [14, 117, 115],
+        "roi":[405,604,186,42],
+        "count": 30,
+        "next": [
+            "Farm_Fertilize",
+            "[JumpBack]ClosePage",
+            "Homeflag3"
         ]
     },
     "Farm_Fertilize": {
@@ -262,10 +284,11 @@
         ]
     },
     "Farm_ChooseFertilizer": {
-        "recognition": "TemplateMatch",
-        "template": "farm/速生型肥料.png",
-        "roi":[373,135,832,479],
-        "method": 3,
+        "doc": "速生型肥料colormatch upper[152, 179, 97], lower[132, 159, 77] 丰收型肥料upper[218, 182, 52], lower[199, 166, 31] 幸运型肥料upper[237, 140, 53], lower[217, 120, 33]",
+        "recognition": "ColorMatch",
+        "upper": [218, 182, 52],
+        "lower": [199, 166, 31],
+        "roi": [373, 135, 832, 479],
         "action": "Click",
         "post_delay": 1000,
         "focus": {

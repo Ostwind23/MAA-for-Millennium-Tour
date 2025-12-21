@@ -42,13 +42,17 @@
             ]
         }
     ],
-    // 可选的 agent 示例
-    // "agent": {
-    //     "child_exec": "python",
-    //     "child_args": [
-    //         "{PROJECT_DIR}/agent/main.py"
-    //     ]
-    // },
+    "agent": {
+        "child_exec": "conda",
+        "child_args": [
+            "run",
+            "-n",
+            "MAA",
+            "--no-capture-output",
+            "python",
+            "../agent/main.py"
+        ]
+    },
     "task": [
         {
             "name": "启动游戏",
@@ -60,17 +64,17 @@
         },
         {
             "name": "商店",
-            "description": "默认自动购买每日免费体力、日常商店的两管体力药",
+            "description": "默认自动购买每日免费体力、日常商店的两管体力药。可在选项中自定义购买的种子。",
             "entry": "Task_Store",
             "option": [
-
+                "种子购买设置"
             ]
         },
         {
             "name": "神谕司",
             "entry": "Task_Division",
             "option": [
-                
+                "肥料选择"
             ]
         },
         {
@@ -126,6 +130,249 @@
         }
     ],
     "option": {
+        "种子购买设置": {
+            "type": "select",
+            "label": "种子购买设置",
+            "description": "选择要购买的种子类型",
+            "default_case": "不购买种子",
+            "cases": [
+                {
+                    "name": "不购买种子"
+                },
+                {
+                    "name": "购买全部种子",
+                    "pipeline_override": {
+                        "Seed_Mark": {
+                            "attach": {
+                                "龙鳞果": true,
+                                "青海莓": true,
+                                "千蝶菇": true,
+                                "黄金葡萄": true,
+                                "连叶卷心菜": true,
+                                "拇指玉米": true,
+                                "月牙马铃薯": true,
+                                "火焰大番茄": true,
+                                "黑松露": true,
+                                "龟甲菇": true,
+                                "天谕橙": true,
+                                "绿翠绒": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "自定义选择",
+                    "option": [
+                        "种子_龙鳞果",
+                        "种子_青海莓",
+                        "种子_千蝶菇",
+                        "种子_黄金葡萄",
+                        "种子_连叶卷心菜",
+                        "种子_拇指玉米",
+                        "种子_月牙马铃薯",
+                        "种子_火焰大番茄",
+                        "种子_黑松露",
+                        "种子_龟甲菇",
+                        "种子_天谕橙",
+                        "种子_绿翠绒"
+                    ]
+                }
+            ]
+        },
+        "种子_龙鳞果": {
+            "type": "switch",
+            "label": "龙鳞果",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "龙鳞果": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_青海莓": {
+            "type": "switch",
+            "label": "青海莓",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "青海莓": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_千蝶菇": {
+            "type": "switch",
+            "label": "千蝶菇",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "千蝶菇": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_黄金葡萄": {
+            "type": "switch",
+            "label": "黄金葡萄",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "黄金葡萄": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_连叶卷心菜": {
+            "type": "switch",
+            "label": "连叶卷心菜",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "连叶卷心菜": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_拇指玉米": {
+            "type": "switch",
+            "label": "拇指玉米",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "拇指玉米": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_月牙马铃薯": {
+            "type": "switch",
+            "label": "月牙马铃薯",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "月牙马铃薯": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_火焰大番茄": {
+            "type": "switch",
+            "label": "火焰大番茄",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "火焰大番茄": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_黑松露": {
+            "type": "switch",
+            "label": "黑松露",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "黑松露": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_龟甲菇": {
+            "type": "switch",
+            "label": "龟甲菇",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "龟甲菇": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_天谕橙": {
+            "type": "switch",
+            "label": "天谕橙",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "天谕橙": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "种子_绿翠绒": {
+            "type": "switch",
+            "label": "绿翠绒",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "Seed_Mark": { "attach": { "绿翠绒": true } }
+                    }
+                },
+                { "name": "No" }
+            ]
+        },
+        "肥料选择": {
+            "type": "select",
+            "label": "肥料选择",
+            "description": "选择农场种植使用的肥料类型",
+            "default_case": "丰收型肥料",
+            "cases": [
+                {
+                    "name": "速生型肥料",
+                    "description": "加快作物生长速度",
+                    "pipeline_override": {
+                        "Farm_ChooseFertilizer": {
+                            "upper": [152, 179, 97],
+                            "lower": [132, 159, 77]
+                        }
+                    }
+                },
+                {
+                    "name": "丰收型肥料",
+                    "description": "增加作物产量",
+                    "pipeline_override": {
+                        "Farm_ChooseFertilizer": {
+                            "upper": [218, 182, 52],
+                            "lower": [199, 166, 31]
+                        }
+                    }
+                },
+                {
+                    "name": "幸运型肥料",
+                    "description": "增加稀有作物概率",
+                    "pipeline_override": {
+                        "Farm_ChooseFertilizer": {
+                            "upper": [237, 140, 53],
+                            "lower": [217, 120, 33]
+                        }
+                    }
+                }
+            ]
+        },
         "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）": {
             "type": "select",
             "cases": [

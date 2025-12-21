@@ -1,10 +1,15 @@
-from maa.agent.agent_server import AgentServer
+"""
+通用 Custom Recognition 实现
+"""
+
 from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 
 
-@AgentServer.custom_recognition("my_reco_222")
-class MyRecongition(CustomRecognition):
+class MyRecognition(CustomRecognition):
+    """
+    示例自定义识别
+    """
 
     def analyze(
         self,

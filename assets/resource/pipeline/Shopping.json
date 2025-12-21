@@ -2,6 +2,7 @@
     "Task_Store": {
         "doc": "【任务】商店购买",
         "next": [
+            "[JumpBack]Seed_custom",
             "openStore"
         ]
     },
@@ -87,7 +88,20 @@
             "buy_Fertilizer_Divisionstore"
         ]
     },
-
+    "PoorCancle": {
+        "doc": "钱不够了",
+        "recognition": "TemplateMatch",
+        "template": "NotEnoughCoin.png",
+        "roi": [504,0,273,101],
+        "post_wait_freezes": 500,
+        "focus": {
+            "Node.Recognition.Succeeded": "[color:red]圣殿币不足！[/color]"
+        },
+        "next": [
+            "[JumpBack]Sub_Cancle",
+            "Homeflag4"
+        ]
+    },
     "maxPurchase": {
         "doc": "[复用]点击后购买最大数量逻辑",
         "recognition": "TemplateMatch",
@@ -106,6 +120,7 @@
         "roi": [736, 505, 290, 142],
         "action": "Click",
         "post_wait_freezes": 500,
+        "on_error": ["PoorCancle"],
         "next": [
             "[JumpBack]Sub_Getreward",
             "Subreturn_back"
@@ -118,6 +133,7 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
+            "[JumpBack]Seed_custom",
             "[JumpBack]buy_Fertilizer_Divisionstore",
             "Homeflag4"
         ]
@@ -138,20 +154,7 @@
 
     "Findseed": {
         "recognition": "TemplateMatch",
-        "template": [
-            "seed/龙鳞果.png",
-            "seed/青海莓.png",
-            "seed/千蝶菇.png",
-            "seed/黄金葡萄.png",
-            "seed/连叶卷心菜.png",
-            "seed/拇指玉米.png",
-            "seed/月牙马铃薯.png",
-            "seed/火焰大番茄.png",
-            "seed/黑松露.png",
-            "seed/龟甲菇.png",
-            "seed/天谕橙.png",
-            "seed/绿翠绒.png"
-        ],
+        "template": [],
         "roi": [494, 135, 623, 548],
         "action": "Click",
         "next": [
@@ -188,5 +191,39 @@
         "roi": [74, 0, 202, 140],
         "action": "Click",
         "post_delay": 1000
+    },
+
+    "Seed_Mark": {
+        "doc": "种子选择标志节点，存储用户在 interface 中的选择",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "enabled": false,
+        "attach": {
+            "龙鳞果": false,
+            "青海莓": false,
+            "千蝶菇": false,
+            "黄金葡萄": false,
+            "连叶卷心菜": false,
+            "拇指玉米": false,
+            "月牙马铃薯": false,
+            "火焰大番茄": false,
+            "黑松露": false,
+            "龟甲菇": false,
+            "天谕橙": false,
+            "绿翠绒": false
+        }
+    },
+
+    "Seed_custom": {
+        "doc": "执行自定义动作，读取 Seed_Mark 的 attach 并覆写 Findseed 的 template",
+        "recognition": "DirectHit",
+        "max_hit": 1,
+        "action": "Custom",
+        "custom_action": "InitSeedSelection",
+        "custom_action_param": {
+            "flag_node": "Seed_Mark",
+            "target_node": "Findseed"
+        }
     }
+
 }

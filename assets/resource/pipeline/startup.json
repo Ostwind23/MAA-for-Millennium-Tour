@@ -103,28 +103,33 @@
         "next": [
             "CloseAnnouncement",
             "Collectmonthlycard",
-            "Mainmenu1",
             "[JumpBack]ClosePage",
-            "[JumpBack]Sub_Getreward"
+            "[JumpBack]Sub_Getreward",
+            "Mainmenu1"
         ]
     },
 
     "Sub_Getreward": {
         "doc": "[复用]通用「获得物品」弹窗处理",
         "recognition": "OCR",
-        "expected": ["获得物品", "获得道具"],
-        "roi": [514, 141, 242, 145],
+        "expected": ["获得物品", "获得道具", "本勒"],
+        "roi": [78,15,1014,254],
         "pre_wait_freezes": 500,
         "action": "Click",
         "target": [161, 510, 1, 1],
         "post_delay": 1000
     },
-
+    "Sub_Cancle":{
+        "recognition": "TemplateMatch",
+        "template": "cancle.png",
+        "roi":[4,292,777,423],
+        "action": "Click"
+    },
     "CloseAnnouncement": {
         "doc": "关闭公告弹窗",
         "recognition": "TemplateMatch",
         "template": ["announcement.png"],
-        "roi": [900, 2, 300, 300],
+        "roi": [901,3,377,313],
         "action": "Click",
         "next": [
             "Collectmonthlycard",
@@ -142,17 +147,9 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "[JumpBack]Sub_GetMonthlycard",
+            "[JumpBack]Sub_Getreward",
             "Mainmenu1"
         ]
-    },
-
-    "Sub_GetMonthlycard": {
-        "doc": "月卡奖励确认",
-        "recognition": "TemplateMatch",
-        "template": "getmonthlycard.png",
-        "roi": [517, 94, 246, 143],
-        "action": "Click"
     },
 
     "Mainmenu1": {
