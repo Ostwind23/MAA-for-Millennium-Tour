@@ -75,13 +75,18 @@
         "action": "Click",
         "post_delay": 1000
     },
+    "SwipetoRightside": {
+        "action": "Swipe",
+        "begin": [1207, 377, 1, 1],
+        "end": [600, 378, 1, 1]
+    },
 
     "Sub_StartGame": {
         "doc": "点击「进入游戏」按钮",
         "recognition": "OCR",
         "expected": ["进入游戏"],
         "action": "Click",
-        "post_delay": 5000,
+        "post_delay": 8000,
         "on_error": [
             "StopGame"
         ],
@@ -148,6 +153,7 @@
         "post_delay": 1000,
         "next": [
             "[JumpBack]Sub_Getreward",
+            "[JumpBack]ClosePage",
             "Mainmenu1"
         ]
     },

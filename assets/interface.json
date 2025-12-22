@@ -64,7 +64,7 @@
         },
         {
             "name": "商店",
-            "description": "默认自动购买每日免费体力、日常商店的两管体力药。可在选项中自定义购买的种子。",
+            "description": "默认自动购买每日免费体力、日常商店的两管体力药和种子商店的三种肥料。可在选项中自定义选择要购买的种子。",
             "entry": "Task_Store",
             "option": [
                 "种子购买设置"
@@ -74,16 +74,16 @@
             "name": "神谕司",
             "entry": "Task_Division",
             "option": [
+                "播种种子选择",
                 "肥料选择"
             ]
         },
         {
-            "name": "选择资源关+骚灵之境战斗",
+            "name": "选择资源关战斗",
             "entry": "autochoose_resBattle",
             "option": [
                 "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）",
-                "资源关关卡选择设置",
-                "骚灵之境关卡选择设置"
+                "资源关关卡选择设置"
             ]
         },
         {
@@ -335,6 +335,110 @@
                 { "name": "No" }
             ]
         },
+        "播种种子选择": {
+            "type": "select",
+            "label": "播种种子选择",
+            "description": "选择农场种植时使用的作物种子类型",
+            "default_case": "龙鳞果",
+            "cases": [
+                {
+                    "name": "龙鳞果",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/龙鳞果.png"
+                        }
+                    }
+                },
+                {
+                    "name": "青海莓",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/青海莓.png"
+                        }
+                    }
+                },
+                {
+                    "name": "千蝶菇",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/千蝶菇.png"
+                        }
+                    }
+                },
+                {
+                    "name": "黄金葡萄",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/黄金葡萄.png"
+                        }
+                    }
+                },
+                {
+                    "name": "连叶卷心菜",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/连叶卷心菜.png"
+                        }
+                    }
+                },
+                {
+                    "name": "拇指玉米",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/拇指玉米.png"
+                        }
+                    }
+                },
+                {
+                    "name": "月牙马铃薯",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/月牙马铃薯.png"
+                        }
+                    }
+                },
+                {
+                    "name": "火焰大番茄",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/火焰大番茄.png"
+                        }
+                    }
+                },
+                {
+                    "name": "黑松露",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/黑松露.png"
+                        }
+                    }
+                },
+                {
+                    "name": "龟甲菇",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/龟甲菇.png"
+                        }
+                    }
+                },
+                {
+                    "name": "天谕橙",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/天谕橙.png"
+                        }
+                    }
+                },
+                {
+                    "name": "绿翠绒",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "template": "seed/绿翠绒.png"
+                        }
+                    }
+                }
+            ]
+        },
         "肥料选择": {
             "type": "select",
             "label": "肥料选择",
@@ -375,12 +479,18 @@
         },
         "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）": {
             "type": "select",
+            "label": "资源关类型选择",
+            "description": "上三：本勒收集、经验获取、突破材料；下三：技能材料、符文之地、骚灵之境",
+            "default_case": "经验关",
             "cases": [
                 {
                     "name": "本勒关",
                     "pipeline_override": {
                         "chooseOwnmission": {
-                            "template": "money mission.png"
+                            "expected": "本勒收集"
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "本勒收集"
                         }
                     }
                 },
@@ -388,16 +498,156 @@
                     "name": "经验关",
                     "pipeline_override": {
                         "chooseOwnmission": {
-                            "template": "exp mission.png"
+                            "expected": "经验获取"
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "经验获取"
                         }
                     }
                 },
                 {
-                    "name": "技能书关",
+                    "name": "突破材料关",
+                    "option": [
+                        "突破材料类别选择"
+                    ],
                     "pipeline_override": {
                         "chooseOwnmission": {
-                            "template": "skill mission.png"
+                            "expected": "突破材料",
+                            "next": ["突破材料_findclass"],
+                            "on_error": ["Battle_SwipetoRightside"]
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "突破材料",
+                            "next": ["突破材料_findclass"],
+                            "on_error": ["Battle_SwipetoRightside"]
                         }
+                    }
+                },
+                {
+                    "name": "技能材料关",
+                    "pipeline_override": {
+                        "chooseOwnmission": {
+                            "expected": "技能材料"
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "技能材料"
+                        }
+                    }
+                },
+                {
+                    "name": "符文之地",
+                    "option": [
+                        "符文之地类别选择"
+                    ],
+                    "pipeline_override": {
+                        "chooseOwnmission": {
+                            "expected": "符文之地",
+                            "next": ["符文之地_findclass"]
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "符文之地",
+                            "next": ["符文之地_findclass"]
+                        }
+                    }
+                },
+                {
+                    "name": "骚灵之境",
+                    "pipeline_override": {
+                        "chooseOwnmission": {
+                            "expected": "骚灵之境"
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "骚灵之境"
+                        }
+                    }
+                }
+            ]
+        },
+        "突破材料类别选择": {
+            "type": "select",
+            "label": "突破材料类别",
+            "description": "选择要刷的突破材料类别",
+            "default_case": "传道",
+            "cases": [
+                {
+                    "name": "传道",
+                    "pipeline_override": {
+                        "突破材料_findclass": { "expected": "传道" },
+                        "突破材料_findclass_滑动后": { "expected": "传道" }
+                    }
+                },
+                {
+                    "name": "君王",
+                    "pipeline_override": {
+                        "突破材料_findclass": { "expected": "君王" },
+                        "突破材料_findclass_滑动后": { "expected": "君王" }
+                    }
+                },
+                {
+                    "name": "仆从",
+                    "pipeline_override": {
+                        "突破材料_findclass": { "expected": "仆从" },
+                        "突破材料_findclass_滑动后": { "expected": "仆从" }
+                    }
+                },
+                {
+                    "name": "诞生",
+                    "pipeline_override": {
+                        "突破材料_findclass": { "expected": "诞生" },
+                        "突破材料_findclass_滑动后": { "expected": "诞生" }
+                    }
+                },
+                {
+                    "name": "人子",
+                    "pipeline_override": {
+                        "突破材料_findclass": { "expected": "人子" },
+                        "突破材料_findclass_滑动后": { "expected": "人子" }
+                    }
+                },
+                {
+                    "name": "受难",
+                    "pipeline_override": {
+                        "突破材料_findclass": { "expected": "受难" },
+                        "突破材料_findclass_滑动后": { "expected": "受难" }
+                    }
+                },
+                {
+                    "name": "神子",
+                    "pipeline_override": {
+                        "突破材料_findclass": { "expected": "神子" },
+                        "突破材料_findclass_滑动后": { "expected": "神子" }
+                    }
+                }
+            ]
+        },
+        "符文之地类别选择": {
+            "type": "select",
+            "label": "符文之地类别",
+            "description": "选择要刷的符文之地类别",
+            "default_case": "西努之盾&漆黑之心",
+            "cases": [
+                {
+                    "name": "西努之盾&漆黑之心",
+                    "pipeline_override": {
+                        "符文之地_findclass": { "template": "battle/西努之盾&漆黑之心.png" }
+                    }
+                },
+                {
+                    "name": "天界光辉&帕尔斯坚毅",
+                    "pipeline_override": {
+                        "符文之地_findclass": { "template": "battle/天界光辉&帕尔斯坚毅.png" }
+                    }
+                },
+                {
+                    "name": "战争传奇&努海尔航行",
+                    "pipeline_override": {
+                        "符文之地_findclass": { "template": "battle/战争传奇&努海尔航行.png" }
+                    }
+                },
+                {
+                    "name": "上古之战&萨拉的审判",
+                    "pipeline_override": {
+                        "符文之地_findclass": { "template": "battle/上古之战&萨拉的审判.png" }
                     }
                 }
             ]
@@ -406,7 +656,7 @@
             "type": "select",
             "cases": [
                 {
-                    "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
+                    "name": "选择目前能打的最高关次（仅限没打完全部关卡的人选择）",
                     "pipeline_override": {
                         "scanmission": {
                             "index": -2
@@ -417,27 +667,6 @@
                     "name": "选择最后一关",
                     "pipeline_override": {
                         "scanmission": {
-                            "index": -1
-                        }
-                    }
-                }
-            ]
-        },
-        "骚灵之境关卡选择设置": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "自动选择目前能打的最高关次（仅限未打完全部关卡的人选择）",
-                    "pipeline_override": {
-                        "scanGhostmission": {
-                            "index": -2
-                        }
-                    }
-                },
-                {
-                    "name": "选择最后一关",
-                    "pipeline_override": {
-                        "scanGhostmission": {
                             "index": -1
                         }
                     }

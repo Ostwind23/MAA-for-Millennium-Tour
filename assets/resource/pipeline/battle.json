@@ -38,7 +38,7 @@
     },
     "openVaultinOCR": {
         "recognition": "OCR",
-        "expected": "宝库之门",
+        "expected": "宝库",
         "roi": [
             586,
             558,
@@ -49,16 +49,46 @@
         "post_wait_freezes": 1500,
         "next": [
             "findx2",
-            "chooseOwnmission"
+            "chooseOwnmission",
+            "SwipetoDownside"
         ]
     },
     "chooseOwnmission": {
-        "recognition": "TemplateMatch",
-        "template": "exp mission.png",
+        "doc": "上三任务：本勒收集，经验获取，突破材料。找不到则滑动到下三继续找",
+        "recognition": "OCR",
+        "expected": "经验获取",
+        "action": "Click",
+        "timeout": 5000,
+        "post_wait_freezes": 1000,
+        "next": [
+            "findmission"
+        ],
+        "on_error": [
+            "SwipetoDownside"
+        ]
+    },
+    "SwipetoDownside": {
+        "doc": "从上三滑动到下三，查看技能材料、符文之地、骚灵之境",
+        "action": "Swipe",
+        "begin": [1254,97,1,1],
+        "end": [1240,514,0,1],
+        "duration": 500,
+        "post_delay": 1000,
+        "next": [
+            "chooseOwnmission_下三"
+        ]
+    },
+    "chooseOwnmission_下三": {
+        "doc": "下三任务：技能材料，符文之地，骚灵之境。找不到则返回主界面",
+        "recognition": "OCR",
+        "expected": "技能材料",
         "action": "Click",
         "post_wait_freezes": 1500,
         "next": [
             "findmission"
+        ],
+        "on_error": [
+            "returnHome"
         ]
     },
     "findx2": {
@@ -68,6 +98,58 @@
         "post_delay": 3000,
         "next": [
             "findmission"
+        ]
+    },
+
+    "Battle_SwipetoRightside": {
+        "action": "Swipe",
+        "begin": [1207, 377, 1, 1],
+        "end": [600, 378, 1, 1],
+        "post_delay": 1000,
+        "next": [
+            "突破材料_findclass_滑动后"
+        ]
+    },
+    "突破材料_findclass": {
+        "doc": "突破材料关卡类别选择：传道、君王、仆从、诞生、人子、受难、神子",
+        "recognition": "OCR",
+        "expected": "传道",
+        "action": "Click",
+        "timeout": 5000,
+        "post_wait_freezes": 1500,
+        "next": [
+            "findmission"
+        ],
+        "on_error": [
+            "Battle_SwipetoRightside"
+        ]
+    },
+    "突破材料_findclass_滑动后": {
+        "doc": "滑动后继续查找突破材料类别，找不到则返回主界面",
+        "recognition": "OCR",
+        "expected": "传道",
+        "action": "Click",
+        "timeout": 5000,
+        "post_wait_freezes": 1500,
+        "next": [
+            "findmission"
+        ],
+        "on_error": [
+            "returnHome"
+        ]
+    },
+    "符文之地_findclass": {
+        "doc": "符文之地关卡类别选择：西努之盾&漆黑之心、天界光辉&帕尔斯坚毅、战争传奇&努海尔航行、上古之战&萨拉的审判",
+        "recognition": "TemplateMatch",
+        "template": "battle/上古之战&萨拉的审判.png",
+        "action": "Click",
+        "timeout": 5000,
+        "post_wait_freezes": 1500,
+        "next": [
+            "findmission"
+        ],
+        "on_error": [
+            "returnHome"
         ]
     },
     "findmission": {
@@ -91,15 +173,10 @@
         ]
     },
     "scanmission": {
+        "doc": "使用的正则表达式，匹配4个汉字后跟1-7的数字，优先选择数字最大的任务",
         "recognition": "OCR",
         "expected": [
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7"
+            "[\u4e00-\u9fa5]{4}(7|6(?!.*[\u4e00-\u9fa5]{4}7)|5(?!.*[\u4e00-\u9fa5]{4}[6-7])|4(?!.*[\u4e00-\u9fa5]{4}[5-7])|3(?!.*[\u4e00-\u9fa5]{4}[4-7])|2(?!.*[\u4e00-\u9fa5]{4}[3-7])|1(?!.*[\u4e00-\u9fa5]{4}[2-7]))"
         ],
         "action": "Click",
         "index": -2,
@@ -110,13 +187,8 @@
     },
     "entermission": {
         "recognition": "TemplateMatch",
-        "template": "fast battle.png",
-        "roi": [
-            715,
-            566,
-            275,
-            154
-        ],
+        "template": "battle/fast battle.png",
+        "roi": [646,606,278,113],
         "action": "Click",
         "next": [
             "maximization"
@@ -126,9 +198,9 @@
         "recognition": "TemplateMatch",
         "template": "maximize.png",
         "roi": [
-            1106,
+            1006,
             483,
-            165,
+            265,
             151
         ],
         "action": "Click",
@@ -138,7 +210,7 @@
     },
     "launchbattle": {
         "recognition": "TemplateMatch",
-        "template": "launch battle.png",
+        "template": "battle/launch battle.png",
         "roi": [
             904,
             563,
@@ -179,8 +251,17 @@
         "action": "Click",
         "post_delay": 500,
         "next": [
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]Battle_cancelpage",
             "x2_back"
         ]
+    },
+    "Battle_cancelpage": {
+        "recognition": "TemplateMatch",
+        "template": "battle/battle cancel.png",
+        "roi": [654,589,276,131],
+        "action": "Click",
+        "target_offset": [-300,0,0,0]
     },
     "x2_back": {
         "recognition": "TemplateMatch",
@@ -190,136 +271,6 @@
             0,
             215,
             140
-        ],
-        "action": "Click",
-        "post_delay": 3000,
-        "next": [
-            "SwipetoGhost"
-        ]
-    },
-    "SwipetoGhost": {
-        "action": "Swipe",
-        "begin": [
-            1243,
-            132,
-            1,
-            1
-        ],
-        "end": [
-            100,
-            132,
-            1,
-            1
-        ],
-        "post_delay": 500,
-        "next": [
-            "findGhost"
-        ]
-    },
-    "findGhost": {
-        "recognition": "TemplateMatch",
-        "template": "ghost.png",
-        "roi": [
-            544,
-            532,
-            154,
-            153
-        ],
-        "action": "Click",
-        "target_offset": [
-            50,
-            0,
-            0,
-            0
-        ],
-        "next": [
-            "scanGhostmission"
-        ]
-    },
-    "scanGhostmission": {
-        "recognition": "OCR",
-        "expected": [
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6"
-        ],
-        "action": "Click",
-        "index": -2,
-        "post_delay": 500,
-        "next": [
-            "enterGhostmission"
-        ]
-    },
-    "enterGhostmission": {
-        "recognition": "TemplateMatch",
-        "template": "fast battle.png",
-        "roi": [
-            715,
-            566,
-            275,
-            154
-        ],
-        "action": "Click",
-        "next": [
-            "Ghostmaximization"
-        ]
-    },
-    "Ghostmaximization": {
-        "recognition": "TemplateMatch",
-        "template": "maximize.png",
-        "roi": [
-            1106,
-            483,
-            165,
-            151
-        ],
-        "action": "Click",
-        "next": [
-            "launchGhostbattle"
-        ]
-    },
-    "launchGhostbattle": {
-        "recognition": "TemplateMatch",
-        "template": "launch battle.png",
-        "roi": [
-            904,
-            563,
-            297,
-            157
-        ],
-        "action": "Click",
-        "post_wait_freezes": 1000,
-        "next": [
-            "completeGhostbattle",
-            "cancelforsupplyGhost"
-        ]
-    },
-    "cancelforsupplyGhost": {
-        "recognition": "TemplateMatch",
-        "template": "daily/cancel.png",
-        "roi": [
-            301,
-            429,
-            287,
-            143
-        ],
-        "action": "Click",
-        "post_delay": 500,
-        "next": [
-            "returnHome"
-        ]
-    },
-    "completeGhostbattle": {
-        "recognition": "TemplateMatch",
-        "template": "battle finish.png",
-        "roi": [
-            495,
-            570,
-            290,
-            142
         ],
         "action": "Click",
         "post_delay": 3000,
