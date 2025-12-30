@@ -1,0 +1,77 @@
+{
+    "Sub_Getreward": {
+        "doc": "[复用]通用「获得物品」弹窗处理",
+        "recognition": "OCR",
+        "expected": ["获得物品", "获得道具", "本勒"],
+        "roi": [78,15,1014,254],
+        "pre_wait_freezes": 500,
+        "action": "Click",
+        "target": [161, 510, 1, 1],
+        "post_delay": 1000
+    },
+    "Sub_Cancel":{
+        "recognition": "TemplateMatch",
+        "template": "Cancel.png",
+        "roi":[4,292,777,423],
+        "action": "Click"
+    },
+    "GameLoading": {
+        "doc": "识别加载中/加载转圈，等待加载完成",
+        "recognition": "OCR",
+        "expected": "%",
+        "roi": [907, 581, 245, 124],
+        "post_delay": 3000
+    },
+
+    "ClosePage": {
+        "doc": "通用关闭按钮（公告/签到/详情页等）",
+        "recognition": "TemplateMatch",
+        "template": ["announcement.png"],
+        "action": "Click",
+        "post_delay": 1000
+    },
+
+    "BackButton": {
+        "doc": "返回上一级按钮",
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [0, 0, 215, 140],
+        "action": "Click",
+        "post_delay": 1000
+    },
+
+    "HomeButton": {
+        "doc": "返回主界面按钮（home图标）",
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [74, 0, 202, 140],
+        "action": "Click",
+        "post_delay": 2000
+    },
+
+    "Victory_Return_noNext": {
+        "doc": "战斗结束并检测到战斗胜利界面，点击继续",
+        "recognition": "OCR",
+        "expected": "战斗胜利",
+        "roi": [738,16,438,218],
+        "action": "Click"
+    },
+    "CloseNotification": {
+        "doc": "关闭弹窗",
+        "recognition": "OCR",
+        "expected": ["空白"],
+        "action": "Click"
+    },
+    "ClickEmptyArea": {
+        "doc": "点击空白区域以关闭可能的遮挡",
+        "recognition":  "OCR",
+        "expected": "领取",
+        "action": "Click",
+        "target": [569,685,1,0]
+    },
+    "SwipetoRightside": {
+        "action": "Swipe",
+        "begin": [1207, 377, 1, 1],
+        "end": [600, 378, 1, 1]
+    }
+}

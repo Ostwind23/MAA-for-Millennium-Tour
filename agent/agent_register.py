@@ -12,6 +12,8 @@ from maa.agent.agent_server import AgentServer
 from custom.action import (
     MyCustomAction,
     InitSeedSelection,
+    # 地牢刷关
+    DungeonFullAuto,
 )
 
 # ===== 导入所有 Custom Recognition =====
@@ -26,6 +28,11 @@ from custom.reco import (
 AgentServer.register_custom_action("my_action_111", MyCustomAction())
 AgentServer.register_custom_action("InitSeedSelection", InitSeedSelection())
 
+# 地牢刷关 - 唯一入口，自动循环到 6-1 停止
+# Pipeline 调用示例: {"custom_action": "DungeonFullAuto", "custom_action_param": "{\"max_stages\": 60}"}
+AgentServer.register_custom_action("DungeonFullAuto", DungeonFullAuto())
+
+
 # ===== 注册 Custom Recognitions =====
 # 格式: AgentServer.register_custom_recognition("注册名称", 类实例)
 
@@ -36,6 +43,7 @@ AgentServer.register_custom_recognition("my_reco_222", MyRecognition())
 REGISTERED_ACTIONS = [
     "my_action_111",
     "InitSeedSelection",
+    "DungeonFullAuto",  # 地牢刷关唯一入口
 ]
 
 REGISTERED_RECOGNITIONS = [
@@ -54,3 +62,4 @@ def print_registered_info():
     for name in REGISTERED_RECOGNITIONS:
         print(f"  - {name}")
     print("=" * 50)
+

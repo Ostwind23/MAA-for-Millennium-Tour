@@ -2,7 +2,7 @@
     "Task_Division": {
         "doc": "神谕司任务链",
         "next": [
-            "openDivision",
+            "[JumpBack]openDivision",
             "[JumpBack]openDivisionAppointment",
             "[JumpBack]Task_DivisionHotSpring",
             "[JumpBack]Task_DivisionFarming",
@@ -158,6 +158,7 @@
         ]
     },
     "Farm_Emergency_Entry": {
+        "doc": "农场故障事件检测，角色罢工会影响正常收取农作物，因此要优先处理",
         "next": [
             "Farm_Emergency_Annoying",
             "Farm_Emergency_Waterwheel",
@@ -165,8 +166,11 @@
         ]
     },
     "Farm_Emergency_Annoying": {
+        "recognition": "TemplateMatch",
+        "template": "farm/罢工.png",
+        "roi":[1064,99,215,147],
         "action": "Click",
-        "target": [609,241,27,26],
+        "target": [622,229,6,5],
         "post_delay": 1000,
         "next": [
             "[JumpBack]Sub_Getreward"

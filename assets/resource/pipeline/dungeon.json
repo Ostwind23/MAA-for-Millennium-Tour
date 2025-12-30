@@ -1,0 +1,130 @@
+{
+    "Task_Dungeon": {
+        "doc": "地牢入口。采用JumpBack混合模式：主流程通过next链式执行，入口节点包含关键场景JumpBack用于异常恢复",
+        "next": [
+            "[JumpBack]Dungeon_openBattle",
+            "[JumpBack]openDungeon",
+            "[JumpBack]enterDungeon",
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]CloseNotification",
+            "[JumpBack]Dungeon_AutoBattle",
+            "[JumpBack]Dungeon_Reward",
+            "[JumpBack]Dungeon_Collection",
+            "[JumpBack]Dungeon_CollectAll",
+            "[JumpBack]Dungeon_Complete",
+            "[JumpBack]Dungeon_BackToHome",
+            "[JumpBack]Dungeon_CheckHome",
+            "BackToHome"
+        ]
+    },
+    "Dungeon_openBattle": {
+        "recognition": "OCR",
+        "expected": "出击",
+        "roi": [1021, 476, 207, 244],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "openDungeon"
+        ]
+    },
+    "openDungeon": {
+        "recognition": "TemplateMatch",
+        "template": "battle/挑战关卡.png",
+        "roi": [771, 656, 256, 63],
+        "action": "Click",
+        "next": [
+            "enterDungeon"
+        ]
+    },
+    "enterDungeon": {
+        "recognition": "OCR",
+        "expected": "地牢",
+        "roi": [407, 285, 354, 164],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]CloseNotification",
+            "Dungeon_AutoBattle"
+        ]
+    },
+
+    "Dungeon_AutoBattle": {
+        "doc": "地牢全自动刷关 - DungeonFullAuto Custom Action（内含巡回匹配恢复机制）",
+        "action": "Custom",
+        "custom_action": "DungeonFullAuto",
+        "custom_action_param": "{\"max_stages\": 60, \"battle_timeout\": 300, \"stop_at_stage\": \"6-1\", \"enable_patrol\": true}",
+        "next": [
+            "[JumpBack]Dungeon_Reward",
+            "[JumpBack]Dungeon_Collection",
+            "Dungeon_Complete"
+        ]
+    },
+    "Dungeon_Reward": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [932,22,103,106],
+        "action": "Click",
+        "next": [
+            "[JumpBack]Dungeon_CollectAll",
+            "[JumpBack]Dungeon_Complete"
+        ]
+    },
+    "Dungeon_Collection": {
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [788,11,131,121],
+        "action": "Click",
+        "next": [
+            "Dungeon_CollectAll",
+            "Dungeon_Complete"
+        ]
+    },
+    "Dungeon_CollectAll": {
+        "recognition": "OCR",
+        "expected": "全部领取",
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "Dungeon_Complete"
+        ]
+    },
+    "Dungeon_Complete": {
+        "doc": "地牢任务完成，准备返回主页",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "post_delay": 500,
+        "next": [
+            "Dungeon_BackToHome"
+        ]
+    },
+
+    "Dungeon_BackToHome": {
+        "doc": "从地牢返回主页 - 连续点击返回按钮",
+        "recognition": "OCR",
+        "expected": "返回",
+        "roi": [0, 0, 200, 80],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "Dungeon_CheckHome",
+            "Dungeon_BackToHome"
+        ]
+    },
+
+    "Dungeon_CheckHome": {
+        "doc": "检查是否已回到主页",
+        "recognition": "OCR",
+        "expected": "出击",
+        "roi": [1021, 476, 207, 244],
+        "action": "DoNothing",
+        "next": [
+            "BackToHome"
+        ]
+    },
+
+    "Process_Guidance": {
+        "doc": "进入地牢页面后，就来到了选关页面。选关页面中从左到右分别是1-1、1-2、1-3一直到1-10结束第一章，一共有6章。已经打完的关卡会有个斜着的黄色'已完成'标志（可以用模版匹配识别），目前在的关卡会有个小人站在上面（也可以用模板匹配去进行识别），打完1-10会自动翻到2-1，以此类推。"
+    }
+}

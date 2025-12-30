@@ -10,7 +10,7 @@
             "[JumpBack]ClosePage",
             "[JumpBack]BackButton",
             "[JumpBack]HomeButton",
-            "[JumpBack]VictoryReturn",
+            "[JumpBack]Victory_Return_noNext",
             "[JumpBack]Sub_Getreward",
             "StartMillenniumTour"
         ]
@@ -32,55 +32,6 @@
             "StartMillenniumTour"
         ]
     },
-
-    "GameLoading": {
-        "doc": "识别加载中/加载转圈，等待加载完成",
-        "recognition": "OCR",
-        "expected": "%",
-        "roi": [907, 581, 245, 124],
-        "post_delay": 3000
-    },
-
-    "ClosePage": {
-        "doc": "通用关闭按钮（公告/签到/详情页等）",
-        "recognition": "TemplateMatch",
-        "template": ["announcement.png"],
-        "action": "Click",
-        "post_delay": 1000
-    },
-
-    "BackButton": {
-        "doc": "返回上一级按钮",
-        "recognition": "TemplateMatch",
-        "template": "back.png",
-        "roi": [0, 0, 215, 140],
-        "action": "Click",
-        "post_delay": 1000
-    },
-
-    "HomeButton": {
-        "doc": "返回主界面按钮（home图标）",
-        "recognition": "TemplateMatch",
-        "template": "home.png",
-        "roi": [74, 0, 202, 140],
-        "action": "Click",
-        "post_delay": 2000
-    },
-
-    "VictoryReturn": {
-        "doc": "战斗胜利界面，点击继续",
-        "recognition": "OCR",
-        "expected": "战斗胜利",
-        "roi": [400, 50, 500, 150],
-        "action": "Click",
-        "post_delay": 1000
-    },
-    "SwipetoRightside": {
-        "action": "Swipe",
-        "begin": [1207, 377, 1, 1],
-        "end": [600, 378, 1, 1]
-    },
-
     "Sub_StartGame": {
         "doc": "点击「进入游戏」按钮",
         "recognition": "OCR",
@@ -112,23 +63,6 @@
             "[JumpBack]Sub_Getreward",
             "Mainmenu1"
         ]
-    },
-
-    "Sub_Getreward": {
-        "doc": "[复用]通用「获得物品」弹窗处理",
-        "recognition": "OCR",
-        "expected": ["获得物品", "获得道具", "本勒"],
-        "roi": [78,15,1014,254],
-        "pre_wait_freezes": 500,
-        "action": "Click",
-        "target": [161, 510, 1, 1],
-        "post_delay": 1000
-    },
-    "Sub_Cancle":{
-        "recognition": "TemplateMatch",
-        "template": "cancle.png",
-        "roi":[4,292,777,423],
-        "action": "Click"
     },
     "CloseAnnouncement": {
         "doc": "关闭公告弹窗",

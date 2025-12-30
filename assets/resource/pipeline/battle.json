@@ -1,7 +1,26 @@
 {
-    "autochoose_resBattle": {
+    "Task_DailyBattle": {
+        "doc": "资源关日常战斗入口。采用JumpBack混合模式：主流程通过next链式执行，入口节点包含关键场景JumpBack用于异常恢复",
         "next": [
-            "openBattle"
+            "[JumpBack]openBattle",
+            "[JumpBack]openVault",
+            "[JumpBack]openVaultinOCR",
+            "[JumpBack]findx2",
+            "[JumpBack]chooseOwnmission",
+            "[JumpBack]chooseOwnmission_下三",
+            "[JumpBack]突破材料_findclass",
+            "[JumpBack]突破材料_findclass_滑动后",
+            "[JumpBack]符文之地_findclass",
+            "[JumpBack]scanmission",
+            "[JumpBack]entermission",
+            "[JumpBack]maximization",
+            "[JumpBack]launchbattle",
+            "[JumpBack]completebattle",
+            "[JumpBack]cancelforsupply",
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]Battle_cancelpage",
+            "[JumpBack]x2_back",
+            "returnHome"
         ]
     },
     "openBattle": {
@@ -83,6 +102,7 @@
         "recognition": "OCR",
         "expected": "技能材料",
         "action": "Click",
+        "timeout": 5000,
         "post_wait_freezes": 1500,
         "next": [
             "findmission"
@@ -102,6 +122,7 @@
     },
 
     "Battle_SwipetoRightside": {
+        "doc": "突破材料界面向右滑动",
         "action": "Swipe",
         "begin": [1207, 377, 1, 1],
         "end": [600, 378, 1, 1],
@@ -153,6 +174,7 @@
         ]
     },
     "findmission": {
+        "doc": "关卡选择界面滑动到最右边",
         "action": "Swipe",
         "begin": [
             1000,

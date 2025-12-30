@@ -3,8 +3,39 @@
 
 from .general import MyCustomAction
 from .seed_pick import InitSeedSelection
+from .dungeon import (
+    DungeonFullAuto,  # 地牢刷关唯一入口
+    # 以下为内部辅助类，可选导出
+    DungeonNavigator,
+    DungeonStageSelector,
+    DungeonSwipeRight,
+    DungeonSwipeLeft,
+    DungeonAutoProgress,
+    DungeonCheckCompleted,
+    DungeonTryQuickBattle,
+    DungeonNormalBattle,
+    DungeonBattleFlow,
+    DungeonSetQuickBattleFlag,
+    DungeonSelectCardEffect,
+    DungeonCompleteStage,
+)
 
 __all__ = [
     "MyCustomAction",
     "InitSeedSelection",
+    # 地牢刷关主入口
+    "DungeonFullAuto",
+    # 辅助action（可选，调试用）
+    "DungeonNavigator",
+    "DungeonStageSelector",
+    "DungeonSwipeRight",
+    "DungeonSwipeLeft",
+    "DungeonAutoProgress",
+    "DungeonCheckCompleted",
+    "DungeonTryQuickBattle",
+    "DungeonNormalBattle",
+    "DungeonBattleFlow",
+    "DungeonSetQuickBattleFlag",
+    "DungeonSelectCardEffect",
+    "DungeonCompleteStage",
 ]

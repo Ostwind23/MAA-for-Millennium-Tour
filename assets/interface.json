@@ -79,12 +79,20 @@
             ]
         },
         {
-            "name": "选择资源关战斗",
-            "entry": "autochoose_resBattle",
+            "name": "资源关战斗",
+            "entry": "Task_DailyBattle",
             "option": [
                 "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）",
                 "资源关关卡选择设置"
             ]
+        },
+        {
+            "name": "深渊",
+            "entry": "Task_Abyss"
+        },
+        {
+            "name": "地牢",
+            "entry": "Task_Dungeon"
         },
         {
             "name": "后半部分日常（公会+交日常周常任务+第二次投色子+通行证）",

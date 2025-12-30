@@ -98,7 +98,7 @@
             "Node.Recognition.Succeeded": "[color:red]圣殿币不足！[/color]"
         },
         "next": [
-            "[JumpBack]Sub_Cancle",
+            "[JumpBack]Sub_Cancel",
             "Homeflag4"
         ]
     },
