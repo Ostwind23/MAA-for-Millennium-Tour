@@ -1,4 +1,18 @@
 {
+    "$section_abyss_config": "========== 深渊任务配置节点 ==========",
+
+    "Abyss_BattleModeConfig": {
+        "doc": "[配置节点] 深渊战斗模式配置 - 在任务链开始时覆盖 BattleMode_Check 的参数。用户通过 interface.json 选择的战斗模式会通过 pipeline_override 写入此节点的 custom_action_param",
+        "recognition": "DirectHit",
+        "action": "Custom",
+        "custom_action": "BattleModeConfigOverride",
+        "custom_action_param": {"target_mode": "auto"},
+        "max_hit": 1,
+        "next": [
+            "Abyss_openBattle"
+        ]
+    },
+
     "Task_Abyss": {
         "doc": "深渊挑战入口。采用JumpBack混合模式：主流程通过next链式执行，入口节点包含关键场景JumpBack用于异常恢复",
         "next": [
@@ -10,6 +24,8 @@
             "[JumpBack]Abyss_ExitReward",
             "[JumpBack]Abyss_LaunchBattle",
             "[JumpBack]Abyss_LaunchBattle_inTeam",
+            "[JumpBack]BattleMode_Check",
+            "[JumpBack]Abyss_WaitBattleEnd",
             "[JumpBack]Victory_Return_noNext",
             "BackToHome"
         ]
@@ -82,19 +98,33 @@
         "template": "battle/launch battle.png",
         "roi": [826,575,281,143],
         "action": "Click",
+        "post_wait_freezes": 3000,
         "next": [
             "Abyss_LaunchBattle_inTeam"
         ]
     },
     "Abyss_LaunchBattle_inTeam":{
-        "doc": "在组队界面点了开始战斗后就正式进战斗了，接下来用wait freeze来等待战斗结束结算（因为战斗中画面会一直保持变化，所以可以利用wait freeze来卡住进度）",
+        "doc": "在组队界面点击开始战斗，进入战斗后触发战斗模式检测",
         "recognition": "TemplateMatch",
         "template": "battle/launch battle.png",
         "roi": [1003,633,251,83],
         "action": "Click",
+        "post_delay": 5000,
+        "next":[
+            "[JumpBack]Abyss_BattleModeConfig",
+            "[JumpBack]BattleMode_Check",
+            "Abyss_WaitBattleEnd",
+            "[JumpBack]Victory_Return_noNext",
+            "BackToHome"
+        ]
+    },
+    "Abyss_WaitBattleEnd":{
+        "doc": "战斗中等待结束 - 通过wait_freeze等待战斗结算（战斗中画面变化大，结算后静止）",
+        "recognition": "TemplateMatch",
+        "template": ["battle/自动战斗状态.png", "battle/手动战斗状态.png"],
+        "roi": [901,0,378,263],
         "post_wait_freezes": {
-            "time": 5000,
-            "threshold": 0.90
+            "time": 5000
         },
         "rate_limit": 15000,
         "timeout": 300000,

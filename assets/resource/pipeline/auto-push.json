@@ -1,5 +1,27 @@
 {
+    "$section_autopush_config": "========== 主线推图配置节点 ==========",
+
+    "AutoPush_BattleModeConfig": {
+        "_doc": "[配置节点] 主线推图战斗模式配置 - 在任务链开始时覆盖 BattleMode_Check 的参数。用户通过 interface.json 选择的战斗模式会通过 pipeline_override 写入此节点的 custom_action_param",
+        "recognition": "DirectHit",
+        "action": "Custom",
+        "custom_action": "BattleModeConfigOverride",
+        "custom_action_param": {"target_mode": "auto"},
+        "max_hit": 1,
+        "next": [
+            "beginAutoPush_Main"
+        ]
+    },
+
     "beginAutoPush": {
+        "_doc": "主线推图入口 - 首先执行战斗模式配置",
+        "recognition": "DirectHit",
+        "next": [
+            "AutoPush_BattleModeConfig"
+        ]
+    },
+
+    "beginAutoPush_Main": {
         "_doc": "在具体的章节界面打开，根据此处的action设置选择普通模式或者困难模式",
         "recognition": "TemplateMatch",
         "template": "autopush/hardmode.png",

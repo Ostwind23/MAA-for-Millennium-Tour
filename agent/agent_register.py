@@ -14,6 +14,11 @@ from custom.action import (
     InitSeedSelection,
     # 地牢刷关
     DungeonFullAuto,
+    # 战斗模式管理
+    BattleModeManager,
+    # Pipeline 配置覆盖
+    PipelineConfigOverride,
+    BattleModeConfigOverride,
 )
 
 # ===== 导入所有 Custom Recognition =====
@@ -32,6 +37,18 @@ AgentServer.register_custom_action("InitSeedSelection", InitSeedSelection())
 # Pipeline 调用示例: {"custom_action": "DungeonFullAuto", "custom_action_param": "{\"max_stages\": 60}"}
 AgentServer.register_custom_action("DungeonFullAuto", DungeonFullAuto())
 
+# 战斗模式管理 - 检测并切换自动/手动战斗状态
+# Pipeline 调用示例: {"custom_action": "BattleModeManager", "custom_action_param": "{\"target_mode\": \"auto\"}"}
+AgentServer.register_custom_action("BattleModeManager", BattleModeManager())
+
+# Pipeline 配置覆盖 - 通用节点参数覆盖器
+# Pipeline 调用示例: {"custom_action": "PipelineConfigOverride", "custom_action_param": {"target_node": "XXX", "override_params": {...}}}
+AgentServer.register_custom_action("PipelineConfigOverride", PipelineConfigOverride())
+
+# 战斗模式配置覆盖 - 专门用于覆盖 BattleMode_Check 的参数
+# Pipeline 调用示例: {"custom_action": "BattleModeConfigOverride", "custom_action_param": {"target_mode": "auto"}}
+AgentServer.register_custom_action("BattleModeConfigOverride", BattleModeConfigOverride())
+
 
 # ===== 注册 Custom Recognitions =====
 # 格式: AgentServer.register_custom_recognition("注册名称", 类实例)
@@ -44,6 +61,9 @@ REGISTERED_ACTIONS = [
     "my_action_111",
     "InitSeedSelection",
     "DungeonFullAuto",  # 地牢刷关唯一入口
+    "BattleModeManager",  # 战斗模式管理
+    "PipelineConfigOverride",  # Pipeline 配置覆盖
+    "BattleModeConfigOverride",  # 战斗模式配置覆盖
 ]
 
 REGISTERED_RECOGNITIONS = [

@@ -19,12 +19,19 @@ from .dungeon import (
     DungeonSelectCardEffect,
     DungeonCompleteStage,
 )
+from .battle_mode import BattleModeManager
+from .pipeline_override import PipelineConfigOverride, BattleModeConfigOverride
 
 __all__ = [
     "MyCustomAction",
     "InitSeedSelection",
     # 地牢刷关主入口
     "DungeonFullAuto",
+    # 战斗模式管理
+    "BattleModeManager",
+    # Pipeline 配置覆盖
+    "PipelineConfigOverride",
+    "BattleModeConfigOverride",
     # 辅助action（可选，调试用）
     "DungeonNavigator",
     "DungeonStageSelector",

@@ -88,11 +88,22 @@
         },
         {
             "name": "深渊",
-            "entry": "Task_Abyss"
+            "entry": "Task_Abyss",
+            "option": [
+                "深渊战斗模式选择"
+            ]
         },
         {
             "name": "地牢",
             "entry": "Task_Dungeon"
+        },
+        {
+            "name": "公会",
+            "description": "自动完成公会捐赠、公会首领战和公会任务（日常/周常）",
+            "entry": "Task_Guild",
+            "option": [
+                "公会战斗模式选择"
+            ]
         },
         {
             "name": "后半部分日常（公会+交日常周常任务+第二次投色子+通行证）",
@@ -114,7 +125,8 @@
             "name": "自动推进主线战斗关卡（需要点进自己要打的主线章；目前只支持多关纯战斗自动连战）",
             "entry": "beginAutoPush",
             "option": [
-                "选择表界或里界"
+                "选择表界或里界",
+                "主线战斗模式选择"
             ]
         },
         {
@@ -742,6 +754,102 @@
                             "expected": [
                                 "冰原"
                             ]
+                        }
+                    }
+                }
+            ]
+        },
+        "深渊战斗模式选择": {
+            "type": "select",
+            "label": "深渊战斗模式选择",
+            "description": "选择深渊战斗时的模式：\n- 自动战斗：保持自动战斗状态，等待战斗自动结束\n- 手动跳过：切换到手动模式并点击跳过按钮快速结束战斗\n\n注意：手动跳过模式下如果检测不到跳过按钮会自动切回自动战斗",
+            "default_case": "自动战斗",
+            "cases": [
+                {
+                    "name": "自动战斗",
+                    "pipeline_override": {
+                        "Abyss_BattleModeConfig": {
+                            "custom_action_param": {"target_mode": "auto"}
+                        }
+                    }
+                },
+                {
+                    "name": "手动跳过",
+                    "pipeline_override": {
+                        "Abyss_BattleModeConfig": {
+                            "custom_action_param": {"target_mode": "manual_skip"}
+                        }
+                    }
+                }
+            ]
+        },
+        "主线战斗模式选择": {
+            "type": "select",
+            "label": "主线战斗模式选择",
+            "description": "选择主线推图战斗时的模式：\n- 自动战斗：保持自动战斗状态，等待战斗自动结束\n- 手动跳过：切换到手动模式并点击跳过按钮快速结束战斗\n\n注意：手动跳过模式下如果检测不到跳过按钮会自动切回自动战斗",
+            "default_case": "自动战斗",
+            "cases": [
+                {
+                    "name": "自动战斗",
+                    "pipeline_override": {
+                        "AutoPush_BattleModeConfig": {
+                            "custom_action_param": {"target_mode": "auto"}
+                        }
+                    }
+                },
+                {
+                    "name": "手动跳过",
+                    "pipeline_override": {
+                        "AutoPush_BattleModeConfig": {
+                            "custom_action_param": {"target_mode": "manual_skip"}
+                        }
+                    }
+                }
+            ]
+        },
+        "公会战斗模式选择": {
+            "type": "select",
+            "label": "公会战斗模式选择",
+            "description": "选择公会首领战时的模式：\n- 自动战斗：保持自动战斗状态，等待战斗自动结束\n- 手动跳过：切换到手动模式并点击跳过按钮快速结束战斗\n\n注意：手动跳过模式下如果检测不到跳过按钮会自动切回自动战斗",
+            "default_case": "自动战斗",
+            "cases": [
+                {
+                    "name": "自动战斗",
+                    "pipeline_override": {
+                        "Guild_BattleModeConfig": {
+                            "custom_action_param": {"target_mode": "auto"}
+                        }
+                    }
+                },
+                {
+                    "name": "手动跳过",
+                    "pipeline_override": {
+                        "Guild_BattleModeConfig": {
+                            "custom_action_param": {"target_mode": "manual_skip"}
+                        }
+                    }
+                }
+            ]
+        },
+        "战斗模式选择": {
+            "type": "select",
+            "label": "战斗模式选择",
+            "description": "选择战斗时的模式：\n- 自动战斗：保持自动战斗状态，等待战斗自动结束\n- 手动跳过：切换到手动模式并点击跳过按钮快速结束战斗\n\n注意：手动跳过模式下如果检测不到跳过按钮会自动切回自动战斗",
+            "default_case": "自动战斗",
+            "cases": [
+                {
+                    "name": "自动战斗",
+                    "pipeline_override": {
+                        "BattleMode_Check": {
+                            "custom_action_param": {"target_mode": "auto"}
+                        }
+                    }
+                },
+                {
+                    "name": "手动跳过",
+                    "pipeline_override": {
+                        "BattleMode_Check": {
+                            "custom_action_param": {"target_mode": "manual_skip"}
                         }
                     }
                 }

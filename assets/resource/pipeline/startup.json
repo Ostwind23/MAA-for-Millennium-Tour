@@ -74,7 +74,8 @@
             "Collectmonthlycard",
             "Mainmenu1",
             "[JumpBack]ClosePage",
-            "[JumpBack]Sub_Getreward"
+            "[JumpBack]Sub_Getreward",
+            "Sub_StartGame"
         ]
     },
 
