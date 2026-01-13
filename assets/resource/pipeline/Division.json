@@ -11,13 +11,22 @@
             "Homeflag3"
         ]
     },
-
     "openDivision": {
         "recognition": "TemplateMatch",
         "template": "daily/division.png",
-        "roi": [718, 559, 243, 161],
+        "roi": [
+            718,
+            559,
+            243,
+            161
+        ],
         "action": "Click",
-        "target_offset": [-20,0,0,0],
+        "target_offset": [
+            -20,
+            0,
+            0,
+            0
+        ],
         "post_delay": 1000,
         "next": [
             "[JumpBack]openDivisionAppointment",
@@ -28,21 +37,29 @@
             "Homeflag3"
         ]
     },
-
     "ifDivisionNotneedaction": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
         "inverse": true,
-        "roi": [0, 32, 284, 162],
+        "roi": [
+            0,
+            32,
+            284,
+            162
+        ],
         "next": [
             "Homeflag3"
         ]
     },
-
     "openDivisionAppointment": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [1,223,132,86],
+        "roi": [
+            1,
+            223,
+            132,
+            86
+        ],
         "action": "Click",
         "post_delay": 1000,
         "next": [
@@ -52,7 +69,12 @@
     "getDivisionAppointment": {
         "recognition": "OCR",
         "expected": "领取",
-        "roi": [813,578,201,125],
+        "roi": [
+            813,
+            578,
+            201,
+            125
+        ],
         "action": "Click",
         "post_delay": 1000,
         "next": [
@@ -63,13 +85,17 @@
     "Division_backtolist": {
         "recognition": "TemplateMatch",
         "template": "back.png",
-        "roi": [0, 0, 215, 140],
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
         "action": "Click",
         "next": [
             "Division_Judginglist"
         ]
     },
-
     "Division_Judginglist": {
         "next": [
             "[JumpBack]Task_DivisionHotSpring",
@@ -81,9 +107,19 @@
         "doc": "神谕司任务链-温泉奖励领取",
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi":[19,551,69,79],
+        "roi": [
+            19,
+            551,
+            69,
+            79
+        ],
         "action": "Click",
-        "target_offset": [-5,10,0,0],
+        "target_offset": [
+            -5,
+            10,
+            0,
+            0
+        ],
         "next": [
             "[JumpBack]Spring_of_MITIA",
             "[JumpBack]Spring_of_Misty",
@@ -93,7 +129,12 @@
     "Spring_of_MITIA": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [1134,132,121,109],
+        "roi": [
+            1134,
+            132,
+            121,
+            109
+        ],
         "action": "Click",
         "post_wait_freezes": 1000,
         "next": [
@@ -104,7 +145,12 @@
     "Spring_of_Misty": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [1146,245,93,88],
+        "roi": [
+            1146,
+            245,
+            93,
+            88
+        ],
         "action": "Click",
         "post_wait_freezes": 1000,
         "next": [
@@ -115,30 +161,50 @@
     "Hotspring_Getreward": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [180,490,208,157],
+        "roi": [
+            180,
+            490,
+            208,
+            157
+        ],
         "action": "Click",
         "post_wait_freezes": 500,
-        "next":[
+        "next": [
             "Return_Hotspringlist"
         ]
     },
     "Return_Hotspringlist": {
         "recognition": "TemplateMatch",
         "template": "back.png",
-        "roi": [0, 0, 215, 140],
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
         "action": "Click"
     },
     "Return_Divisionlist": {
         "recognition": "TemplateMatch",
         "template": "back.png",
-        "roi": [0, 0, 215, 140],
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
         "action": "Click"
     },
     "Task_DivisionFarming": {
         "doc": "神谕司任务链-农场任务",
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi":[14,307,83,84],
+        "roi": [
+            14,
+            307,
+            83,
+            84
+        ],
         "pre_wait_freezes": 2000,
         "action": "Click",
         "next": [
@@ -147,12 +213,17 @@
         ]
     },
     "EnterFarm": {
-        "doc":"Farm_Emergency_Entry还没弄完，缺Annoying截图、水车修复逻辑和虫子捕捉逻辑",
+        "doc": "Farm_Emergency_Entry还没弄完，缺Annoying截图、水车修复逻辑和虫子捕捉逻辑",
         "recognition": "OCR",
         "expected": "建设",
-        "roi":[567,640,191,76],
+        "roi": [
+            567,
+            640,
+            191,
+            76
+        ],
         "next": [
-            "[[JumpBack]Sub_Getreward",
+            "[JumpBack]Sub_Getreward",
             "[JumpBack]Farm_Enter_Harvest",
             "[JumpBack]returnHome"
         ]
@@ -168,35 +239,65 @@
     "Farm_Emergency_Annoying": {
         "recognition": "TemplateMatch",
         "template": "farm/罢工.png",
-        "roi":[1064,99,215,147],
+        "roi": [
+            1064,
+            99,
+            215,
+            147
+        ],
         "action": "Click",
-        "target": [622,229,6,5],
+        "target": [
+            622,
+            229,
+            6,
+            5
+        ],
         "post_delay": 1000,
         "next": [
-            "[JumpBack]Sub_Getreward"
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
         ]
     },
     "Farm_Emergency_Waterwheel": {
+        "doc": "农场水车损坏事件 - 使用 YOLOv8 检测角色位置，操控移动到水车附近修理",
         "recognition": "TemplateMatch",
         "template": "farm/水车损坏.png",
-        "roi": [1103,160,172,93],
-        "action": "DoNothing",
+        "roi": [
+            1103,
+            160,
+            172,
+            93
+        ],
+        "action": "Custom",
+        "custom_action": "FarmWaterwheelRepair",
+        "custom_action_param": {
+            "event_type": "waterwheel"
+        },
         "post_delay": 1000,
         "next": [
-            "[JumpBack]Sub_Getreward"
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
         ]
     },
-    "Farm_Emergency_Worms":{
-        "doc":"虫子color upper[110, 205, 94] lower[75, 177, 66]",
+    "Farm_Emergency_Worms": {
+        "doc": "农场捉虫事件 - 使用 YOLOv8 检测虫子和角色位置，操控移动捕捉（待实现）",
         "recognition": "TemplateMatch",
         "template": "farm/捉虫标志.png",
-        "next":[
-            "[JumpBack]Sub_Getreward"
+        "action": "Custom",
+        "custom_action": "FarmWormCatching",
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
         ]
     },
     "Farm_Enter_Harvest": {
         "action": "Click",
-        "target": [490,346,1,3],
+        "target": [
+            490,
+            346,
+            1,
+            3
+        ],
         "post_delay": 1000,
         "next": [
             "[JumpBack]Farm_HarvestAll",
@@ -205,10 +306,15 @@
             "Subreturn_back"
         ]
     },
-    "Farm_HarvestAll":{
+    "Farm_HarvestAll": {
         "recognition": "OCR",
         "expected": "全部收获",
-        "roi":[759,450,520,269],
+        "roi": [
+            759,
+            450,
+            520,
+            269
+        ],
         "action": "Click",
         "post_wait_freezes": 1000,
         "next": [
@@ -217,11 +323,24 @@
             "Subreturn_back"
         ]
     },
-    "NothingtoHarvest":{
+    "NothingtoHarvest": {
         "recognition": "ColorMatch",
-        "roi": [983,604,188,40],
-        "lower": [73, 73, 73],
-        "upper": [100, 100, 100],
+        "roi": [
+            983,
+            604,
+            188,
+            40
+        ],
+        "lower": [
+            73,
+            73,
+            73
+        ],
+        "upper": [
+            100,
+            100,
+            100
+        ],
         "count": 30,
         "next": [
             "[JumpBack]Sub_Getreward",
@@ -233,7 +352,12 @@
     "Farm_Plant": {
         "recognition": "TemplateMatch",
         "template": "farm/种植按钮.png",
-        "roi":[639,528,291,144],
+        "roi": [
+            639,
+            528,
+            291,
+            144
+        ],
         "action": "Click",
         "next": [
             "Farm_SelectCrop"
@@ -242,7 +366,12 @@
     "Farm_SelectCrop": {
         "recognition": "FeatureMatch",
         "template": "seed/龙鳞果.png",
-        "roi":[373,135,832,479],
+        "roi": [
+            373,
+            135,
+            832,
+            479
+        ],
         "action": "Click",
         "post_delay": 1000,
         "focus": {
@@ -256,20 +385,38 @@
         "doc": "点了种植之后是直接可以施肥",
         "recognition": "OCR",
         "expected": "^(1[6-9]|[2-9]\\d|\\d{3})/16$",
-        "roi":[863,593,96,69],
+        "roi": [
+            863,
+            593,
+            96,
+            69
+        ],
         "focus": {
             "Node.Recognition.Failed": "[color:red]选择的作物种子数量不满16，请重新选择[/color]"
         },
         "action": "Click",
-        "next":[
+        "next": [
             "Farm_Fertilize"
         ]
     },
-    "CanFertilize":{
+    "CanFertilize": {
         "recognition": "ColorMatch",
-        "lower": [0, 97, 95],
-        "upper": [14, 117, 115],
-        "roi":[405,604,186,42],
+        "lower": [
+            0,
+            97,
+            95
+        ],
+        "upper": [
+            14,
+            117,
+            115
+        ],
+        "roi": [
+            405,
+            604,
+            186,
+            42
+        ],
         "count": 30,
         "next": [
             "Farm_Fertilize",
@@ -280,7 +427,12 @@
     "Farm_Fertilize": {
         "recognition": "TemplateMatch",
         "template": "farm/施肥.png",
-        "roi":[355,555,284,141],
+        "roi": [
+            355,
+            555,
+            284,
+            141
+        ],
         "action": "Click",
         "post_delay": 1000,
         "next": [
@@ -290,9 +442,22 @@
     "Farm_ChooseFertilizer": {
         "doc": "速生型肥料colormatch upper[152, 179, 97], lower[132, 159, 77] 丰收型肥料upper[218, 182, 52], lower[199, 166, 31] 幸运型肥料upper[237, 140, 53], lower[217, 120, 33]",
         "recognition": "ColorMatch",
-        "upper": [218, 182, 52],
-        "lower": [199, 166, 31],
-        "roi": [373, 135, 832, 479],
+        "upper": [
+            218,
+            182,
+            52
+        ],
+        "lower": [
+            199,
+            166,
+            31
+        ],
+        "roi": [
+            373,
+            135,
+            832,
+            479
+        ],
         "action": "Click",
         "post_delay": 1000,
         "focus": {
@@ -305,7 +470,12 @@
     "Farm_ConfirmFertilize": {
         "recognition": "OCR",
         "expected": "^(1[6-9]|[2-9]\\d|\\d{3})/16$",
-        "roi":[863,593,96,69],
+        "roi": [
+            863,
+            593,
+            96,
+            69
+        ],
         "focus": {
             "Node.Recognition.Failed": "[color:red]选择的肥料数量不满16，请重新选择[/color]"
         },
@@ -313,22 +483,83 @@
         "post_delay": 2000,
         "next": [
             "[JumpBack]ClosePage",
+            "[JumpBack]CheckWhetherWatered",
             "[JumpBack]BackToHome"
+        ]
+    },
+    "CheckWhetherWatered": {
+        "doc": "检查是否都浇过水，如果都浇过水，则直接返回主界面",
+        "recognition": "Or",
+        "any_of": [
+            {
+                "recognition": "ColorMatch",
+                "lower": [
+                    150,
+                    107,
+                    82
+                ],
+                "upper": [
+                    170,
+                    127,
+                    102
+                ],
+                "roi": [
+                    264,
+                    314,
+                    705,
+                    325
+                ]
+            },
+            {
+                "recognition": "TemplateMatch",
+                "template": "farm/干涸标志.png",
+                "roi": [
+                    248,
+                    196,
+                    789,
+                    451
+                ]
+            }
+        ],
+        "next": [
+            "Farm_Watering",
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
+    "Farm_Watering": {
+        "action": "Custom",
+        "custom_action": "FarmWateringAll",
+        "custom_action_param": {
+            "event_type": "watering"
+        },
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
         ]
     },
     "Division_back": {
         "recognition": "TemplateMatch",
         "template": "back.png",
-        "roi": [0, 0, 215, 140],
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
         "action": "Click",
         "post_delay": 2000
     },
-
     "Homeflag3": {
         "doc": "神谕司任务结束，返回主界面",
         "recognition": "TemplateMatch",
         "template": "home.png",
-        "roi": [74, 0, 202, 140],
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
         "action": "Click",
         "post_delay": 2000,
         "next": [

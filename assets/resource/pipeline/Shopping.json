@@ -6,11 +6,15 @@
             "openStore"
         ]
     },
-
     "openStore": {
         "recognition": "TemplateMatch",
         "template": "daily/store.png",
-        "roi": [869, 549, 218, 171],
+        "roi": [
+            869,
+            549,
+            218,
+            171
+        ],
         "action": "Click",
         "post_delay": 2000,
         "next": [
@@ -21,13 +25,22 @@
             "[JumpBack]Sub_Getreward"
         ]
     },
-
     "openGiftstore": {
         "recognition": "TemplateMatch",
         "template": "Alert.png",
-        "roi": [478, 643, 206, 77],
+        "roi": [
+            478,
+            643,
+            206,
+            77
+        ],
         "action": "Click",
-        "target": [587, 688, 1, 1],
+        "target": [
+            587,
+            688,
+            1,
+            1
+        ],
         "post_delay": 1000,
         "next": [
             "[JumpBack]Sub_getGift",
@@ -36,12 +49,16 @@
             "Homeflag4"
         ]
     },
-
     "Sub_getGift": {
         "pre_delay": 500,
         "recognition": "OCR",
         "expected": "免费",
-        "roi": [180,83,324,344],
+        "roi": [
+            180,
+            83,
+            324,
+            344
+        ],
         "action": "Click",
         "post_delay": 1000,
         "next": [
@@ -50,23 +67,30 @@
             "Subreturn_back"
         ]
     },
-
     "Sub_buy": {
         "recognition": "OCR",
         "expected": "购买",
-        "roi": [675, 448, 291, 143],
+        "roi": [
+            675,
+            448,
+            291,
+            143
+        ],
         "action": "Click",
         "post_delay": 500
     },
-
     "Subreturn_back": {
         "action": "DoNothing"
     },
-
     "openDailystore": {
         "recognition": "OCR",
         "expected": "日常商店",
-        "roi": [880,612,400,107],
+        "roi": [
+            880,
+            612,
+            400,
+            107
+        ],
         "action": "Click",
         "post_delay": 1000,
         "next": [
@@ -75,11 +99,18 @@
             "Homeflag4"
         ]
     },
-
     "buy_Stamina_Divisionstore": {
         "recognition": "OCR",
-        "expected": ["中型星魂精髓", "大型星魂精髓"],
-        "roi": [222,124,1058,517],
+        "expected": [
+            "中型星魂精髓",
+            "大型星魂精髓"
+        ],
+        "roi": [
+            222,
+            124,
+            1058,
+            517
+        ],
         "action": "Click",
         "post_delay": 500,
         "next": [
@@ -92,7 +123,12 @@
         "doc": "钱不够了",
         "recognition": "TemplateMatch",
         "template": "NotEnoughCoin.png",
-        "roi": [504,0,273,101],
+        "roi": [
+            504,
+            0,
+            273,
+            101
+        ],
         "post_wait_freezes": 500,
         "focus": {
             "Node.Recognition.Succeeded": "[color:red]圣殿币不足！[/color]"
@@ -106,21 +142,32 @@
         "doc": "[复用]点击后购买最大数量逻辑",
         "recognition": "TemplateMatch",
         "template": "maximize.png",
-        "roi": [708, 413, 170, 150],
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
         "pre_wait_freezes": 1000,
         "action": "Click",
         "next": [
             "confirmPurchase"
         ]
     },
-
     "confirmPurchase": {
         "recognition": "TemplateMatch",
         "template": "daily/confirmPurchase.png",
-        "roi": [736, 505, 290, 142],
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
         "action": "Click",
         "post_wait_freezes": 500,
-        "on_error": ["PoorCancle"],
+        "on_error": [
+            "PoorCancle"
+        ],
         "next": [
             "[JumpBack]Sub_Getreward",
             "Subreturn_back"
@@ -129,21 +176,33 @@
     "open_Seedstore": {
         "recognition": "OCR",
         "expected": "种子",
-        "roi": [26,115,202,424],
+        "roi": [
+            26,
+            115,
+            202,
+            424
+        ],
         "action": "Click",
         "post_delay": 1000,
         "next": [
             "[JumpBack]Seed_custom",
             "[JumpBack]buy_Fertilizer_Divisionstore",
-            "Homeflag4"
+            "Homeflag4",
+            "EndOnHome"
         ]
     },
-
     "buy_Fertilizer_Divisionstore": {
         "doc": "购买三种肥料",
         "recognition": "OCR",
-        "expected": ["肥料"],
-        "roi": [222,124,1058,517],
+        "expected": [
+            "肥料"
+        ],
+        "roi": [
+            222,
+            124,
+            1058,
+            517
+        ],
         "action": "Click",
         "next": [
             "[JumpBack]maxPurchase",
@@ -151,48 +210,73 @@
             "Homeflag4"
         ]
     },
-
     "Findseed": {
         "recognition": "TemplateMatch",
         "template": [],
-        "roi": [494, 135, 623, 548],
+        "roi": [
+            494,
+            135,
+            623,
+            548
+        ],
         "action": "Click",
         "next": [
             "[JumpBack]maxPurchase",
             "Homeflag4"
         ]
     },
-
     "Swipetootherside1": {
         "action": "Swipe",
-        "begin": [1207, 377, 1, 1],
-        "end": [600, 378, 1, 1],
+        "begin": [
+            1207,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            600,
+            378,
+            1,
+            1
+        ],
         "next": [
             "Findseed",
             "Swipetootherside2",
             "Homeflag4"
         ]
     },
-
     "Swipetootherside2": {
         "action": "Swipe",
-        "begin": [1200, 377, 1, 1],
-        "end": [607, 377, 1, 1],
+        "begin": [
+            1200,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            607,
+            377,
+            1,
+            1
+        ],
         "next": [
             "Findseed",
             "Homeflag4"
         ]
     },
-
     "Homeflag4": {
         "doc": "商店任务结束，返回主界面",
         "recognition": "TemplateMatch",
         "template": "home.png",
-        "roi": [74, 0, 202, 140],
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
         "action": "Click",
         "post_delay": 1000
     },
-
     "Seed_Mark": {
         "doc": "种子选择标志节点，存储用户在 interface 中的选择",
         "recognition": "DirectHit",
@@ -213,7 +297,6 @@
             "绿翠绒": false
         }
     },
-
     "Seed_custom": {
         "doc": "执行自定义动作，读取 Seed_Mark 的 attach 并覆写 Findseed 的 template",
         "recognition": "DirectHit",
@@ -225,5 +308,4 @@
             "target_node": "Findseed"
         }
     }
-
 }

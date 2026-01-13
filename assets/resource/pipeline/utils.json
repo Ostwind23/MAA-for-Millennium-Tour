@@ -2,151 +2,292 @@
     "Sub_Getreward": {
         "doc": "[复用]通用「获得物品」弹窗处理",
         "recognition": "OCR",
-        "expected": ["获得物品", "获得道具", "本勒", "LEVEL", "等级提升"],
-        "roi": [78,15,1014,254],
+        "expected": [
+            "获得物品",
+            "获得道具",
+            "本勒",
+            "LEVEL",
+            "等级提升"
+        ],
+        "roi": [
+            78,
+            15,
+            1014,
+            254
+        ],
         "pre_wait_freezes": 500,
         "action": "Click",
-        "target": [161, 510, 1, 1],
+        "target": [
+            161,
+            510,
+            1,
+            1
+        ],
         "post_delay": 1000
     },
-    "Sub_Cancel":{
+    "Sub_Cancel": {
         "recognition": "TemplateMatch",
         "template": "Cancel.png",
-        "roi":[4,292,777,423],
+        "roi": [
+            4,
+            292,
+            777,
+            423
+        ],
         "action": "Click"
     },
     "GameLoading": {
         "doc": "识别加载中/加载转圈，等待加载完成",
         "recognition": "OCR",
         "expected": "%",
-        "roi": [907, 581, 245, 124],
+        "roi": [
+            907,
+            581,
+            245,
+            124
+        ],
         "post_delay": 3000
     },
-
     "ClosePage": {
         "doc": "通用关闭按钮（公告/签到/详情页等）",
         "recognition": "TemplateMatch",
-        "template": ["announcement.png"],
+        "template": [
+            "announcement.png"
+        ],
         "action": "Click",
         "post_delay": 1000
     },
-
     "BackButton": {
         "doc": "返回上一级按钮",
         "recognition": "TemplateMatch",
         "template": "back.png",
-        "roi": [0, 0, 215, 140],
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
         "action": "Click",
         "post_delay": 1000
     },
-
     "HomeButton": {
         "doc": "返回主界面按钮（home图标）",
         "recognition": "TemplateMatch",
         "template": "home.png",
-        "roi": [74, 0, 202, 140],
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
         "action": "Click",
         "post_delay": 2000
     },
-
     "Victory_Return_noNext": {
         "doc": "战斗结束并检测到战斗胜利界面，点击继续",
         "recognition": "OCR",
         "expected": "战斗胜利",
-        "roi": [738,16,438,218],
+        "roi": [
+            738,
+            16,
+            438,
+            218
+        ],
         "action": "Click"
     },
     "CloseNotification": {
         "doc": "关闭弹窗",
         "recognition": "OCR",
-        "expected": ["空白"],
+        "expected": [
+            "空白"
+        ],
         "action": "Click"
     },
     "ClickEmptyArea": {
         "doc": "点击空白区域以关闭可能的遮挡",
-        "recognition":  "OCR",
+        "recognition": "OCR",
         "expected": "领取",
         "action": "Click",
-        "target": [569,685,1,0]
+        "target": [
+            569,
+            685,
+            1,
+            0
+        ]
     },
     "SwipetoRightside": {
         "action": "Swipe",
-        "begin": [1207, 377, 1, 1],
-        "end": [600, 378, 1, 1]
+        "begin": [
+            1207,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            600,
+            378,
+            1,
+            1
+        ]
     },
-
     "$BattleMode_Section": "========== 战斗模式管理（自动/手动+跳过）==========",
-
     "BattleMode_Check": {
         "doc": "[复用][JumpBack入口] 战斗模式智能管理 - 根据用户配置自动切换战斗模式。在各战斗场景的 next 中以 [JumpBack]BattleMode_Check 方式引用",
         "recognition": "TemplateMatch",
-        "template": ["battle/自动战斗状态.png", "battle/手动战斗状态.png"],
-        "roi": [901,0,378,263],
+        "template": [
+            "battle/自动战斗状态.png",
+            "battle/手动战斗状态.png"
+        ],
+        "roi": [
+            901,
+            0,
+            378,
+            263
+        ],
         "threshold": 0.7,
         "action": "Custom",
         "custom_action": "BattleModeManager",
-        "custom_action_param": {"target_mode": "auto"}
+        "custom_action_param": {
+            "target_mode": "auto"
+        }
     },
-
     "BattleMode_Check_AutoMode": {
         "doc": "[复用] 战斗模式检测 - 强制自动战斗模式（用于不需要用户选择的场景）",
         "recognition": "TemplateMatch",
-        "template": ["battle/自动战斗状态.png", "battle/手动战斗状态.png"],
-        "roi": [1160, 0, 120, 80],
+        "template": [
+            "battle/自动战斗状态.png",
+            "battle/手动战斗状态.png"
+        ],
+        "roi": [
+            1160,
+            0,
+            120,
+            80
+        ],
         "threshold": 0.7,
         "action": "Custom",
         "custom_action": "BattleModeManager",
-        "custom_action_param": {"target_mode": "auto"},
+        "custom_action_param": {
+            "target_mode": "auto"
+        },
         "post_delay": 500
     },
-
     "BattleMode_Check_ManualSkip": {
         "doc": "[复用] 战斗模式检测 - 强制手动+跳过模式",
         "recognition": "TemplateMatch",
-        "template": ["battle/自动战斗状态.png", "battle/手动战斗状态.png"],
-        "roi": [1160, 0, 120, 80],
+        "template": [
+            "battle/自动战斗状态.png",
+            "battle/手动战斗状态.png"
+        ],
+        "roi": [
+            1160,
+            0,
+            120,
+            80
+        ],
         "threshold": 0.7,
         "action": "Custom",
         "custom_action": "BattleModeManager",
-        "custom_action_param": {"target_mode": "manual_skip"},
+        "custom_action_param": {
+            "target_mode": "manual_skip"
+        },
         "post_delay": 500
     },
-
     "BattleMode_DetectAuto": {
         "doc": "检测是否为自动战斗状态",
         "recognition": "TemplateMatch",
         "template": "battle/自动战斗状态.png",
-        "roi": [1160, 0, 120, 80],
+        "roi": [
+            1160,
+            0,
+            120,
+            80
+        ],
         "threshold": 0.7,
         "action": "DoNothing"
     },
-
     "BattleMode_DetectManual": {
         "doc": "检测是否为手动战斗状态",
         "recognition": "TemplateMatch",
         "template": "battle/手动战斗状态.png",
-        "roi": [1160, 0, 120, 80],
+        "roi": [
+            1160,
+            0,
+            120,
+            80
+        ],
         "threshold": 0.7,
         "action": "DoNothing"
     },
-
     "BattleMode_ClickSkipButton": {
         "doc": "点击跳过战斗按钮（仅手动模式下可用）",
         "recognition": "TemplateMatch",
         "template": "battle/跳过战斗按钮.png",
-        "roi": [1100, 60, 150, 80],
+        "roi": [
+            1100,
+            60,
+            150,
+            80
+        ],
         "threshold": 0.7,
         "action": "Click",
         "post_delay": 500
     },
-
     "BattleMode_ToggleMode": {
         "doc": "点击战斗模式图标以切换自动/手动状态",
         "recognition": "TemplateMatch",
-        "template": ["battle/自动战斗状态.png", "battle/手动战斗状态.png"],
-        "roi": [1160, 0, 120, 80],
+        "template": [
+            "battle/自动战斗状态.png",
+            "battle/手动战斗状态.png"
+        ],
+        "roi": [
+            1160,
+            0,
+            120,
+            80
+        ],
         "threshold": 0.7,
         "action": "Click",
         "post_delay": 800
+    },
+    "$TestTools_Section": "========== 测试工具 ==========",
+    "Test_RunReco_AllClasses": {
+        "doc": "[测试] 使用 MaaFramework run_recognition 检测所有类别（bugs + girl）",
+        "recognition": "DirectHit",
+        "action": "Custom",
+        "custom_action": "TestRunRecoHandler",
+        "custom_action_param": {
+            "test_mode": "all_classes",
+            "save_result": true
+        }
+    },
+    "Test_RunReco_GirlOnly": {
+        "doc": "[测试] 使用 MaaFramework run_recognition 仅检测角色（girl）",
+        "recognition": "DirectHit",
+        "action": "Custom",
+        "custom_action": "TestRunRecoHandler",
+        "custom_action_param": {
+            "test_mode": "single_class",
+            "target_class": 1,
+            "save_result": true
+        }
+    },
+    "Test_RunReco_NoLabels": {
+        "doc": "[测试] 使用 MaaFramework run_recognition 不设置 labels（自动读取 metadata）",
+        "recognition": "DirectHit",
+        "action": "Custom",
+        "custom_action": "TestRunRecoHandler",
+        "custom_action_param": {
+            "test_mode": "no_labels",
+            "save_result": true
+        }
+    },
+    "Test_Neural": {
+        "recognition": "NeuralNetworkDetect",
+        "model": "farming.onnx",
+        "expected": [
+            1
+        ],
+        "action": "Click"
     }
 }

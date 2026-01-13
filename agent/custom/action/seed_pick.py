@@ -50,8 +50,10 @@ class InitSeedSelection(CustomAction):
 
         # 2. 读取标志节点的当前定义
         try:
-            node_json = context.get_node_data(flag_node)
-            node_data = json.loads(node_json)
+            node_data = context.get_node_data(flag_node)
+            # 兼容处理：可能返回 dict 或 JSON 字符串
+            if isinstance(node_data, str):
+                node_data = json.loads(node_data)
             attach = node_data.get("attach", {})
             print(f"[InitSeedSelection] attach 内容: {attach}")
         except Exception as e:

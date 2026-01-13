@@ -21,6 +21,18 @@ from .dungeon import (
 )
 from .battle_mode import BattleModeManager
 from .pipeline_override import PipelineConfigOverride, BattleModeConfigOverride
+from .screenshot_collector import (
+    ScreenshotCollector,
+    BatchScreenshotCollector,
+    ConditionalScreenshotCollector,
+)
+from .farm_event import (
+    FarmEventHandler,  # 农场事件处理器（通用入口）
+    FarmWaterwheelRepair,  # 水车修理专用
+    FarmWormCatching,  # 捉虫专用
+    FarmWateringAll,  # 全农场浇水专用
+)
+from .test_run_reco import TestRunRecoHandler  # 测试 NeuralNetworkDetect
 
 __all__ = [
     "MyCustomAction",
@@ -45,4 +57,15 @@ __all__ = [
     "DungeonSetQuickBattleFlag",
     "DungeonSelectCardEffect",
     "DungeonCompleteStage",
+    # 截图采集器（YOLOv8 数据集收集）
+    "ScreenshotCollector",
+    "BatchScreenshotCollector",
+    "ConditionalScreenshotCollector",
+    # 农场事件处理
+    "FarmEventHandler",
+    "FarmWaterwheelRepair",
+    "FarmWormCatching",
+    "FarmWateringAll",
+    # 测试工具
+    "TestRunRecoHandler",
 ]

@@ -14,17 +14,21 @@ import agent_register
 
 def main():
     Toolkit.init_option("./")
+    if len(sys.argv) >1:
+        socket_id = sys.argv[-1]
+    else:
+        socket_id = "MAA_AGENT_SOCKET"
+    # if len(sys.argv) < 2:
+    #     print("Usage: python main.py <socket_id>")
+    #     print("socket_id is provided by AgentIdentifier.")
+    #     print(f"Starting Agent Server with socket ID: {socket_id}")
+    #     sys.exit(1)
 
-    if len(sys.argv) < 2:
-        print("Usage: python main.py <socket_id>")
-        print("socket_id is provided by AgentIdentifier.")
-        sys.exit(1)
-
-    socket_id = sys.argv[-1]
+    # socket_id = sys.argv[-1]
 
     # 打印已注册的信息（可选，便于调试）
     agent_register.print_registered_info()
-
+    print(f"Starting Agent Server with socket ID: {socket_id}")
     AgentServer.start_up(socket_id)
     AgentServer.join()
     AgentServer.shut_down()

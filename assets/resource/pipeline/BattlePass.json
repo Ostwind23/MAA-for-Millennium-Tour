@@ -1,0 +1,44 @@
+{
+    "battlePass": {
+        "_doc": "通行证入口节点",
+        "next": [
+            "accessBattlePass"
+        ]
+    },
+    "accessBattlePass": {
+        "_doc": "点击进入通行证界面",
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            963,
+            151,
+            317,
+            225
+        ],
+        "action": "Click",
+        "next": [
+            "gainPassAward"
+        ]
+    },
+    "gainPassAward": {
+        "_doc": "领取通行证奖励",
+        "recognition": "TemplateMatch",
+        "template": "daily/gainpassaward.png",
+        "roi": [
+            180,
+            545,
+            289,
+            145
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "endBattlePass"
+        ]
+    },
+    "endBattlePass": {
+        "_doc": "通行证任务结束",
+        "action": "StopTask"
+    }
+}

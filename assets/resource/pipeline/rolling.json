@@ -11,12 +11,62 @@
     "_doc": "在主界面点开投骰子界面的按钮",
     "recognition": "TemplateMatch",
     "template": "骰子入口.png",
-    "roi": [958,0,133,110],
+    "roi": [
+      958,
+      0,
+      133,
+      110
+    ],
     "action": "Click",
-    "post_delay": 3000,
+    "post_delay": 5000,
     "next": [
       "DoRolling"
     ]
+  },
+  "checkSpecialChests": {
+    "_doc": "检查是否有唱片宝箱或者水晶宝箱",
+    "max_hit": 1,
+    "recognition": "Or",
+    "any_of": [
+      {
+        "recognition": "ColorMatch",
+        "upper": [
+          90,
+          175,
+          227
+        ],
+        "lower": [
+          70,
+          155,
+          207
+        ]
+      },
+      {
+        "recognition": "ColorMatch",
+        "upper": [
+          91,
+          160,
+          159
+        ],
+        "lower": [
+          71,
+          140,
+          139
+        ]
+      },
+      {
+        "recognition": "FeatureMatch",
+        "template": [
+          "唱片宝箱__803_64_24_23__753_14_124_123.png",
+          "水晶宝箱__725_120_29_25__675_70_129_125.png",
+          "水晶宝箱（后）.png",
+          "水晶宝箱（左）.png"
+        ]
+      }
+    ],
+    "focus": {
+      "Node.Recognition.Succeeded": "<span style='color: red; font-weight:bold;'>⚠️ 发现水晶宝箱或唱片宝箱！</span><br>节点 {name} 识别成功"
+    }
   },
   "DoRolling": {
     "_doc": "检测并点击投骰子",
@@ -61,7 +111,12 @@
     "_doc": "检测到骰子用完",
     "recognition": "OCR",
     "expected": "暂无",
-    "roi": [1058,551,176,147],
+    "roi": [
+      1058,
+      551,
+      176,
+      147
+    ],
     "pre_wait_freezes": 500,
     "next": [
       "BackToHome"

@@ -60,7 +60,10 @@
         },
         {
             "name": "投骰子",
-            "entry": "rolling"
+            "entry": "rolling",
+            "option": [
+                "是否自动检测与通知存在特殊宝箱"
+            ]
         },
         {
             "name": "商店",
@@ -74,6 +77,8 @@
             "name": "神谕司",
             "entry": "Task_Division",
             "option": [
+                "农场故障事件自动处理",
+                "农场自动浇水",
                 "播种种子选择",
                 "肥料选择"
             ]
@@ -106,8 +111,14 @@
             ]
         },
         {
-            "name": "后半部分日常（公会+交日常周常任务+第二次投色子+通行证）",
-            "entry": "after_battle"
+            "name": "领取日常周常任务奖励",
+            "description": "自动领取日常任务和周常任务的奖励",
+            "entry": "dailyAward"
+        },
+        {
+            "name": "领取通行证奖励",
+            "description": "自动领取当期赛季通行证奖励",
+            "entry": "battlePass"
         },
         {
             "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后再选择此任务）",
@@ -206,10 +217,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "龙鳞果": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "龙鳞果": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_青海莓": {
@@ -219,10 +236,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "青海莓": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "青海莓": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_千蝶菇": {
@@ -232,10 +255,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "千蝶菇": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "千蝶菇": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_黄金葡萄": {
@@ -245,10 +274,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "黄金葡萄": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "黄金葡萄": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_连叶卷心菜": {
@@ -258,10 +293,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "连叶卷心菜": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "连叶卷心菜": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_拇指玉米": {
@@ -271,10 +312,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "拇指玉米": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "拇指玉米": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_月牙马铃薯": {
@@ -284,10 +331,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "月牙马铃薯": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "月牙马铃薯": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_火焰大番茄": {
@@ -297,10 +350,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "火焰大番茄": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "火焰大番茄": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_黑松露": {
@@ -310,10 +369,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "黑松露": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "黑松露": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_龟甲菇": {
@@ -323,10 +388,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "龟甲菇": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "龟甲菇": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_天谕橙": {
@@ -336,10 +407,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "天谕橙": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "天谕橙": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "种子_绿翠绒": {
@@ -349,10 +426,16 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "Seed_Mark": { "attach": { "绿翠绒": true } }
+                        "Seed_Mark": {
+                            "attach": {
+                                "绿翠绒": true
+                            }
+                        }
                     }
                 },
-                { "name": "No" }
+                {
+                    "name": "No"
+                }
             ]
         },
         "播种种子选择": {
@@ -470,8 +553,16 @@
                     "description": "加快作物生长速度",
                     "pipeline_override": {
                         "Farm_ChooseFertilizer": {
-                            "upper": [152, 179, 97],
-                            "lower": [132, 159, 77]
+                            "upper": [
+                                152,
+                                179,
+                                97
+                            ],
+                            "lower": [
+                                132,
+                                159,
+                                77
+                            ]
                         }
                     }
                 },
@@ -480,8 +571,16 @@
                     "description": "增加作物产量",
                     "pipeline_override": {
                         "Farm_ChooseFertilizer": {
-                            "upper": [218, 182, 52],
-                            "lower": [199, 166, 31]
+                            "upper": [
+                                218,
+                                182,
+                                52
+                            ],
+                            "lower": [
+                                199,
+                                166,
+                                31
+                            ]
                         }
                     }
                 },
@@ -490,8 +589,84 @@
                     "description": "增加稀有作物概率",
                     "pipeline_override": {
                         "Farm_ChooseFertilizer": {
-                            "upper": [237, 140, 53],
-                            "lower": [217, 120, 33]
+                            "upper": [
+                                237,
+                                140,
+                                53
+                            ],
+                            "lower": [
+                                217,
+                                120,
+                                33
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "农场故障事件自动处理": {
+            "type": "switch",
+            "label": "农场故障事件自动处理",
+            "description": "开启后会在进入农场后自动处理故障事件（修水车/捉虫）。关闭则跳过故障处理直接进入收获/种植流程。",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "EnterFarm": {
+                            "next": [
+                                "[JumpBack]Sub_Getreward",
+                                "[JumpBack]Farm_Emergency_Annoying",
+                                "[JumpBack]Farm_Emergency_Waterwheel",
+                                "[JumpBack]Farm_Emergency_Worms",
+                                "[JumpBack]Farm_Enter_Harvest",
+                                "[JumpBack]returnHome"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "EnterFarm": {
+                            "next": [
+                                "[JumpBack]Sub_Getreward",
+                                "[JumpBack]Farm_Enter_Harvest",
+                                "[JumpBack]returnHome"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "农场自动浇水": {
+            "type": "switch",
+            "label": "农场自动浇水",
+            "description": "开启后在施肥完成后自动检查并执行全农场浇水；关闭则跳过浇水流程。",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "Farm_ConfirmFertilize": {
+                            "next": [
+                                "[JumpBack]ClosePage",
+                                "[JumpBack]CheckWhetherWatered",
+                                "[JumpBack]BackToHome"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭",
+                    "pipeline_override": {
+                        "Farm_ConfirmFertilize": {
+                            "next": [
+                                "[JumpBack]ClosePage",
+                                "[JumpBack]BackToHome"
+                            ]
                         }
                     }
                 }
@@ -533,13 +708,21 @@
                     "pipeline_override": {
                         "chooseOwnmission": {
                             "expected": "突破材料",
-                            "next": ["突破材料_findclass"],
-                            "on_error": ["Battle_SwipetoRightside"]
+                            "next": [
+                                "突破材料_findclass"
+                            ],
+                            "on_error": [
+                                "Battle_SwipetoRightside"
+                            ]
                         },
                         "chooseOwnmission_下三": {
                             "expected": "突破材料",
-                            "next": ["突破材料_findclass"],
-                            "on_error": ["Battle_SwipetoRightside"]
+                            "next": [
+                                "突破材料_findclass"
+                            ],
+                            "on_error": [
+                                "Battle_SwipetoRightside"
+                            ]
                         }
                     }
                 },
@@ -562,11 +745,15 @@
                     "pipeline_override": {
                         "chooseOwnmission": {
                             "expected": "符文之地",
-                            "next": ["符文之地_findclass"]
+                            "next": [
+                                "符文之地_findclass"
+                            ]
                         },
                         "chooseOwnmission_下三": {
                             "expected": "符文之地",
-                            "next": ["符文之地_findclass"]
+                            "next": [
+                                "符文之地_findclass"
+                            ]
                         }
                     }
                 },
@@ -592,50 +779,78 @@
                 {
                     "name": "传道",
                     "pipeline_override": {
-                        "突破材料_findclass": { "expected": "传道" },
-                        "突破材料_findclass_滑动后": { "expected": "传道" }
+                        "突破材料_findclass": {
+                            "expected": "传道"
+                        },
+                        "突破材料_findclass_滑动后": {
+                            "expected": "传道"
+                        }
                     }
                 },
                 {
                     "name": "君王",
                     "pipeline_override": {
-                        "突破材料_findclass": { "expected": "君王" },
-                        "突破材料_findclass_滑动后": { "expected": "君王" }
+                        "突破材料_findclass": {
+                            "expected": "君王"
+                        },
+                        "突破材料_findclass_滑动后": {
+                            "expected": "君王"
+                        }
                     }
                 },
                 {
                     "name": "仆从",
                     "pipeline_override": {
-                        "突破材料_findclass": { "expected": "仆从" },
-                        "突破材料_findclass_滑动后": { "expected": "仆从" }
+                        "突破材料_findclass": {
+                            "expected": "仆从"
+                        },
+                        "突破材料_findclass_滑动后": {
+                            "expected": "仆从"
+                        }
                     }
                 },
                 {
                     "name": "诞生",
                     "pipeline_override": {
-                        "突破材料_findclass": { "expected": "诞生" },
-                        "突破材料_findclass_滑动后": { "expected": "诞生" }
+                        "突破材料_findclass": {
+                            "expected": "诞生"
+                        },
+                        "突破材料_findclass_滑动后": {
+                            "expected": "诞生"
+                        }
                     }
                 },
                 {
                     "name": "人子",
                     "pipeline_override": {
-                        "突破材料_findclass": { "expected": "人子" },
-                        "突破材料_findclass_滑动后": { "expected": "人子" }
+                        "突破材料_findclass": {
+                            "expected": "人子"
+                        },
+                        "突破材料_findclass_滑动后": {
+                            "expected": "人子"
+                        }
                     }
                 },
                 {
                     "name": "受难",
                     "pipeline_override": {
-                        "突破材料_findclass": { "expected": "受难" },
-                        "突破材料_findclass_滑动后": { "expected": "受难" }
+                        "突破材料_findclass": {
+                            "expected": "受难"
+                        },
+                        "突破材料_findclass_滑动后": {
+                            "expected": "受难"
+                        }
                     }
                 },
                 {
                     "name": "神子",
                     "pipeline_override": {
-                        "突破材料_findclass": { "expected": "神子" },
-                        "突破材料_findclass_滑动后": { "expected": "神子" }
+                        "突破材料_findclass": {
+                            "expected": "神子"
+                        },
+                        "突破材料_findclass_滑动后": {
+                            "expected": "神子"
+                        }
                     }
                 }
             ]
@@ -649,25 +864,33 @@
                 {
                     "name": "西努之盾&漆黑之心",
                     "pipeline_override": {
-                        "符文之地_findclass": { "template": "battle/西努之盾&漆黑之心.png" }
+                        "符文之地_findclass": {
+                            "template": "battle/西努之盾&漆黑之心.png"
+                        }
                     }
                 },
                 {
                     "name": "天界光辉&帕尔斯坚毅",
                     "pipeline_override": {
-                        "符文之地_findclass": { "template": "battle/天界光辉&帕尔斯坚毅.png" }
+                        "符文之地_findclass": {
+                            "template": "battle/天界光辉&帕尔斯坚毅.png"
+                        }
                     }
                 },
                 {
                     "name": "战争传奇&努海尔航行",
                     "pipeline_override": {
-                        "符文之地_findclass": { "template": "battle/战争传奇&努海尔航行.png" }
+                        "符文之地_findclass": {
+                            "template": "battle/战争传奇&努海尔航行.png"
+                        }
                     }
                 },
                 {
                     "name": "上古之战&萨拉的审判",
                     "pipeline_override": {
-                        "符文之地_findclass": { "template": "battle/上古之战&萨拉的审判.png" }
+                        "符文之地_findclass": {
+                            "template": "battle/上古之战&萨拉的审判.png"
+                        }
                     }
                 }
             ]
@@ -769,7 +992,9 @@
                     "name": "自动战斗",
                     "pipeline_override": {
                         "Abyss_BattleModeConfig": {
-                            "custom_action_param": {"target_mode": "auto"}
+                            "custom_action_param": {
+                                "target_mode": "auto"
+                            }
                         }
                     }
                 },
@@ -777,7 +1002,9 @@
                     "name": "手动跳过",
                     "pipeline_override": {
                         "Abyss_BattleModeConfig": {
-                            "custom_action_param": {"target_mode": "manual_skip"}
+                            "custom_action_param": {
+                                "target_mode": "manual_skip"
+                            }
                         }
                     }
                 }
@@ -793,7 +1020,9 @@
                     "name": "自动战斗",
                     "pipeline_override": {
                         "AutoPush_BattleModeConfig": {
-                            "custom_action_param": {"target_mode": "auto"}
+                            "custom_action_param": {
+                                "target_mode": "auto"
+                            }
                         }
                     }
                 },
@@ -801,7 +1030,9 @@
                     "name": "手动跳过",
                     "pipeline_override": {
                         "AutoPush_BattleModeConfig": {
-                            "custom_action_param": {"target_mode": "manual_skip"}
+                            "custom_action_param": {
+                                "target_mode": "manual_skip"
+                            }
                         }
                     }
                 }
@@ -817,7 +1048,9 @@
                     "name": "自动战斗",
                     "pipeline_override": {
                         "Guild_BattleModeConfig": {
-                            "custom_action_param": {"target_mode": "auto"}
+                            "custom_action_param": {
+                                "target_mode": "auto"
+                            }
                         }
                     }
                 },
@@ -825,7 +1058,9 @@
                     "name": "手动跳过",
                     "pipeline_override": {
                         "Guild_BattleModeConfig": {
-                            "custom_action_param": {"target_mode": "manual_skip"}
+                            "custom_action_param": {
+                                "target_mode": "manual_skip"
+                            }
                         }
                     }
                 }
@@ -841,7 +1076,9 @@
                     "name": "自动战斗",
                     "pipeline_override": {
                         "BattleMode_Check": {
-                            "custom_action_param": {"target_mode": "auto"}
+                            "custom_action_param": {
+                                "target_mode": "auto"
+                            }
                         }
                     }
                 },
@@ -849,9 +1086,34 @@
                     "name": "手动跳过",
                     "pipeline_override": {
                         "BattleMode_Check": {
-                            "custom_action_param": {"target_mode": "manual_skip"}
+                            "custom_action_param": {
+                                "target_mode": "manual_skip"
+                            }
                         }
                     }
+                }
+            ]
+        },
+        "是否自动检测与通知存在特殊宝箱": {
+            "type": "switch",
+            "label": "是否自动检测与通知存在特殊宝箱",
+            "description": "开启后会在投骰子时检测画面中是否存在唱片宝箱或水晶宝箱，并在识别成功时发出通知。性能开销会变大一些。",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "开启",
+                    "pipeline_override": {
+                        "OpenRollingPanel": {
+                            "next": [
+                                "[JumpBack]checkSpecialChests",
+                                "DoRolling"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "关闭"
                 }
             ]
         }

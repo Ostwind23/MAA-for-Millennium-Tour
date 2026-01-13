@@ -1,0 +1,21 @@
+// 单次截图
+{
+    "CollectBattleScreenshot": {
+        "action": "Custom",
+        "custom_action": "ScreenshotCollector",
+        "custom_action_param": {
+            "prefix": "battle",
+            "save_dir": "training/images"
+        }
+    },
+    // 批量截图（count 张，间隔 interval ms，前缀 prefix）
+    "BatchCollect": {
+        "action": "Custom",
+        "custom_action": "BatchScreenshotCollector",
+        "custom_action_param": {
+            "count": 100,
+            "interval": 1000,
+            "prefix": "farm"
+        }
+    }
+}

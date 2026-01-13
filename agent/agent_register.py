@@ -19,6 +19,17 @@ from custom.action import (
     # Pipeline 配置覆盖
     PipelineConfigOverride,
     BattleModeConfigOverride,
+    # 截图采集器（YOLOv8 数据集收集）
+    ScreenshotCollector,
+    BatchScreenshotCollector,
+    ConditionalScreenshotCollector,
+    # 农场事件处理
+    FarmEventHandler,
+    FarmWaterwheelRepair,
+    FarmWormCatching,
+    FarmWateringAll,
+    # 测试工具
+    TestRunRecoHandler,
 )
 
 # ===== 导入所有 Custom Recognition =====
@@ -49,6 +60,39 @@ AgentServer.register_custom_action("PipelineConfigOverride", PipelineConfigOverr
 # Pipeline 调用示例: {"custom_action": "BattleModeConfigOverride", "custom_action_param": {"target_mode": "auto"}}
 AgentServer.register_custom_action("BattleModeConfigOverride", BattleModeConfigOverride())
 
+# 截图采集器 - 用于收集 YOLOv8 训练数据集
+# Pipeline 调用示例: {"custom_action": "ScreenshotCollector", "custom_action_param": {"prefix": "battle", "save_dir": "training/images"}}
+AgentServer.register_custom_action("ScreenshotCollector", ScreenshotCollector())
+
+# 批量截图采集器 - 连续采集多张截图
+# Pipeline 调用示例: {"custom_action": "BatchScreenshotCollector", "custom_action_param": {"count": 10, "interval": 300}}
+AgentServer.register_custom_action("BatchScreenshotCollector", BatchScreenshotCollector())
+
+# 条件截图采集器 - 只在识别成功时保存截图
+# Pipeline 调用示例: {"custom_action": "ConditionalScreenshotCollector", "custom_action_param": {"prefix": "ui_element"}}
+AgentServer.register_custom_action("ConditionalScreenshotCollector", ConditionalScreenshotCollector())
+
+# 农场事件处理器 - 通用入口，通过 event_type 参数区分事件类型
+# Pipeline 调用示例: {"custom_action": "FarmEventHandler", "custom_action_param": {"event_type": "waterwheel"}}
+AgentServer.register_custom_action("FarmEventHandler", FarmEventHandler())
+
+# 水车修理专用 - 简化调用，无需传参
+# Pipeline 调用示例: {"custom_action": "FarmWaterwheelRepair"}
+AgentServer.register_custom_action("FarmWaterwheelRepair", FarmWaterwheelRepair())
+
+# 捉虫专用 - 简化调用（待实现）
+# Pipeline 调用示例: {"custom_action": "FarmWormCatching"}
+AgentServer.register_custom_action("FarmWormCatching", FarmWormCatching())
+
+# 全农场浇水专用
+# Pipeline 调用示例: {"custom_action": "FarmWateringAll"}
+AgentServer.register_custom_action("FarmWateringAll", FarmWateringAll())
+
+# 测试 MaaFramework NeuralNetworkDetect 功能
+# Pipeline 调用示例: {"custom_action": "TestRunRecoHandler", "custom_action_param": {"test_mode": "all_classes"}}
+AgentServer.register_custom_action("TestRunRecoHandler", TestRunRecoHandler())
+
+
 
 # ===== 注册 Custom Recognitions =====
 # 格式: AgentServer.register_custom_recognition("注册名称", 类实例)
@@ -64,6 +108,17 @@ REGISTERED_ACTIONS = [
     "BattleModeManager",  # 战斗模式管理
     "PipelineConfigOverride",  # Pipeline 配置覆盖
     "BattleModeConfigOverride",  # 战斗模式配置覆盖
+    # 截图采集器（YOLOv8 数据集收集）
+    "ScreenshotCollector",
+    "BatchScreenshotCollector",
+    "ConditionalScreenshotCollector",
+    # 农场事件处理
+    "FarmEventHandler",  # 通用入口
+    "FarmWaterwheelRepair",  # 水车修理
+    "FarmWormCatching",  # 捉虫（待实现）
+    "FarmWateringAll",  # 全农场浇水
+    # 测试工具
+    "TestRunRecoHandler",  # 测试 NeuralNetworkDetect
 ]
 
 REGISTERED_RECOGNITIONS = [

@@ -30,7 +30,8 @@
         "editor.formatOnSave": true,
         "editor.insertSpaces": true,
         "editor.tabSize": 4,
-        "editor.indentSize": "tabSize"
+        "editor.indentSize": "tabSize",
+        "editor.defaultFormatter": "vscode.json-language-features"
     },
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
@@ -38,5 +39,8 @@
     "[markdown]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda",
+    "python-envs.pythonProjects": []
 }
