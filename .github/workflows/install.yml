@@ -131,8 +131,8 @@ jobs:
         env:
           PYTHONIOENCODING: utf-8
         run: |
-          # 使用 Runner 自带的 Python + pip，把依赖下载并安装到 install/deps
-          python tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
+          # 使用嵌入式 Python 下载并安装依赖到 install/deps
+          ./install/python/python.exe tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
 
       - name: Install resources
         shell: bash
