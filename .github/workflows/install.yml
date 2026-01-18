@@ -23,6 +23,8 @@ env:
   # 固定 MaaFramework 版本以确保构建稳定性
   # MFAAvalonia 始终使用最新版（latest: true）
   MAA_FRAMEWORK_VERSION: "v5.3.3"
+  # 嵌入式 Python 版本（用于打包的运行时）
+  PYTHON_EMBED_VERSION: "3.12.4"
 
 permissions:
   contents: write
@@ -83,6 +85,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Setup Python 3.12.4
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.4"
+
       - name: Set platform variables
         id: platform
         shell: bash
@@ -124,15 +131,17 @@ jobs:
         env:
           PYTHONIOENCODING: utf-8
         run: |
-          python tools/ci/setup_embed_python.py --output-dir install/python
+          python tools/ci/setup_embed_python.py --version "${{ env.PYTHON_EMBED_VERSION }}" --output-dir install/python
 
       - name: Download Python dependencies
         shell: bash
         env:
           PYTHONIOENCODING: utf-8
         run: |
-          # 使用嵌入式 Python 下载并安装依赖到 install/deps
-          ./install/python/python.exe tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
+          # 使用外部 Python 下载并安装依赖到嵌入式 Python 的 Lib/site-packages（不再单独创建 install/deps）
+          python tools/ci/download_deps.py \
+            --deps-dir ./install/python/Lib/site-packages \
+            --requirements agent/requirements.txt
 
       - name: Install resources
         shell: bash

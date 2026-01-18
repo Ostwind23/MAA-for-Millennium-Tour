@@ -455,3 +455,4 @@ tools/ImageCropper/**/*.png
 
 config
 debug
+.github/workflows/install_example.yml
