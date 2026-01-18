@@ -126,12 +126,13 @@ jobs:
         run: |
           python tools/ci/setup_embed_python.py --output-dir install/python
 
-      - name: Install Python dependencies into embedded env
+      - name: Download Python dependencies
         shell: bash
         env:
           PYTHONIOENCODING: utf-8
         run: |
-          ./install/python/python.exe -m pip install -r agent/requirements.txt --no-warn-script-location
+          # 使用 Runner 自带的 Python + pip，把依赖下载并安装到 install/deps
+          python tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
 
       - name: Install resources
         shell: bash
