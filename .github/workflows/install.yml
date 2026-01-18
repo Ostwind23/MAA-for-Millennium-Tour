@@ -20,9 +20,9 @@ on:
   workflow_dispatch:
 
 env:
-  # 固定版本以确保构建稳定性
+  # 固定 MaaFramework 版本以确保构建稳定性
+  # MFAAvalonia 始终使用最新版（latest: true）
   MAA_FRAMEWORK_VERSION: "v5.3.3"
-  MFAA_VERSION: "latest"
 
 permissions:
   contents: write
@@ -98,7 +98,7 @@ jobs:
         with:
           repository: MaaXYZ/MaaFramework
           fileName: "MAA-win-${{ matrix.arch }}*"
-          latest: true
+          tag: ${{ env.MAA_FRAMEWORK_VERSION }}
           out-file-path: "deps"
           extract: true
 
@@ -164,6 +164,52 @@ jobs:
             cp -rv assets/Assets/* install/assets/
           fi
 
+      - name: Configure agent for embedded Python
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          
+          interface_path = Path("install/interface.json")
+          if interface_path.exists():
+              with open(interface_path, "r", encoding="utf-8") as f:
+                  data = json.load(f)
+              
+              # Windows: 使用打包的嵌入式 Python
+              data["agent"] = {
+                  "child_exec": "python/python.exe",
+                  "child_args": ["agent/main.py"]
+              }
+              
+              with open(interface_path, "w", encoding="utf-8") as f:
+                  json.dump(data, f, ensure_ascii=False, indent=4)
+              
+              print("Agent configuration updated for Windows embedded Python")
+          else:
+              print("Warning: interface.json not found")
+
+      - name: Replace MFAAvalonia.exe icon
+        shell: pwsh
+        run: |
+          # 下载 rcedit 工具
+          $rceditUrl = "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe"
+          $rceditPath = "rcedit-x64.exe"
+          Invoke-WebRequest -Uri $rceditUrl -OutFile $rceditPath
+          
+          # 查找 MFAAvalonia.exe
+          $exePath = "install/MFAAvalonia.exe"
+          $icoPath = "assets/Assets/logo.ico"
+          
+          if ((Test-Path $exePath) -and (Test-Path $icoPath)) {
+            Write-Host "Replacing icon for MFAAvalonia.exe..."
+            & .\$rceditPath $exePath --set-icon $icoPath
+            Write-Host "Icon replaced successfully!"
+          } else {
+            Write-Host "Warning: MFAAvalonia.exe or logo.ico not found"
+            Write-Host "  EXE exists: $(Test-Path $exePath)"
+            Write-Host "  ICO exists: $(Test-Path $icoPath)"
+          }
+
       - uses: actions/upload-artifact@v4
         with:
           name: Maa-Millennium-Tour-win-${{ matrix.arch }}
@@ -198,7 +244,7 @@ jobs:
         with:
           repository: MaaXYZ/MaaFramework
           fileName: "MAA-linux-${{ matrix.arch }}*"
-          latest: true
+          tag: ${{ env.MAA_FRAMEWORK_VERSION }}
           out-file-path: "deps"
           extract: true
 
@@ -253,6 +299,30 @@ jobs:
             cp -rv assets/Assets/* install/assets/
           fi
 
+      - name: Configure agent for system Python
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          
+          interface_path = Path("install/interface.json")
+          if interface_path.exists():
+              with open(interface_path, "r", encoding="utf-8") as f:
+                  data = json.load(f)
+              
+              # Linux: 使用系统 Python，依赖通过 PYTHONPATH 加载
+              data["agent"] = {
+                  "child_exec": "python3",
+                  "child_args": ["agent/main.py"]
+              }
+              
+              with open(interface_path, "w", encoding="utf-8") as f:
+                  json.dump(data, f, ensure_ascii=False, indent=4)
+              
+              print("Agent configuration updated for Linux system Python")
+          else:
+              print("Warning: interface.json not found")
+
       - uses: actions/upload-artifact@v4
         with:
           name: Maa-Millennium-Tour-linux-${{ matrix.arch }}
@@ -287,7 +357,7 @@ jobs:
         with:
           repository: MaaXYZ/MaaFramework
           fileName: "MAA-macos-${{ matrix.arch }}*"
-          latest: true
+          tag: ${{ env.MAA_FRAMEWORK_VERSION }}
           out-file-path: "deps"
           extract: true
 
@@ -353,6 +423,30 @@ jobs:
           if [ -d "assets/Assets" ]; then
             cp -rv assets/Assets/* install/assets/
           fi
+
+      - name: Configure agent for embedded Python
+        shell: python3
+        run: |
+          import json
+          from pathlib import Path
+          
+          interface_path = Path("install/interface.json")
+          if interface_path.exists():
+              with open(interface_path, "r", encoding="utf-8") as f:
+                  data = json.load(f)
+              
+              # macOS: 使用打包的嵌入式 Python
+              data["agent"] = {
+                  "child_exec": "python/bin/python3",
+                  "child_args": ["agent/main.py"]
+              }
+              
+              with open(interface_path, "w", encoding="utf-8") as f:
+                  json.dump(data, f, ensure_ascii=False, indent=4)
+              
+              print("Agent configuration updated for macOS embedded Python")
+          else:
+              print("Warning: interface.json not found")
 
       - uses: actions/upload-artifact@v4
         with:
