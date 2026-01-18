@@ -165,28 +165,30 @@ jobs:
           fi
 
       - name: Configure agent for embedded Python
-        shell: python
+        shell: bash
         run: |
+          python - << 'PY'
           import json
           from pathlib import Path
-          
+
           interface_path = Path("install/interface.json")
           if interface_path.exists():
               with open(interface_path, "r", encoding="utf-8") as f:
                   data = json.load(f)
-              
+
               # Windows: 使用打包的嵌入式 Python
               data["agent"] = {
                   "child_exec": "python/python.exe",
-                  "child_args": ["agent/main.py"]
+                  "child_args": ["agent/main.py"],
               }
-              
+
               with open(interface_path, "w", encoding="utf-8") as f:
                   json.dump(data, f, ensure_ascii=False, indent=4)
-              
+
               print("Agent configuration updated for Windows embedded Python")
           else:
               print("Warning: interface.json not found")
+          PY
 
       - name: Replace MFAAvalonia.exe icon
         shell: pwsh
@@ -300,28 +302,30 @@ jobs:
           fi
 
       - name: Configure agent for system Python
-        shell: python
+        shell: bash
         run: |
+          python - << 'PY'
           import json
           from pathlib import Path
-          
+
           interface_path = Path("install/interface.json")
           if interface_path.exists():
               with open(interface_path, "r", encoding="utf-8") as f:
                   data = json.load(f)
-              
+
               # Linux: 使用系统 Python，依赖通过 PYTHONPATH 加载
               data["agent"] = {
                   "child_exec": "python3",
-                  "child_args": ["agent/main.py"]
+                  "child_args": ["agent/main.py"],
               }
-              
+
               with open(interface_path, "w", encoding="utf-8") as f:
                   json.dump(data, f, ensure_ascii=False, indent=4)
-              
+
               print("Agent configuration updated for Linux system Python")
           else:
               print("Warning: interface.json not found")
+          PY
 
       - uses: actions/upload-artifact@v4
         with:
@@ -425,28 +429,30 @@ jobs:
           fi
 
       - name: Configure agent for embedded Python
-        shell: python3
+        shell: bash
         run: |
+          python3 - << 'PY'
           import json
           from pathlib import Path
-          
+
           interface_path = Path("install/interface.json")
           if interface_path.exists():
               with open(interface_path, "r", encoding="utf-8") as f:
                   data = json.load(f)
-              
+
               # macOS: 使用打包的嵌入式 Python
               data["agent"] = {
                   "child_exec": "python/bin/python3",
-                  "child_args": ["agent/main.py"]
+                  "child_args": ["agent/main.py"],
               }
-              
+
               with open(interface_path, "w", encoding="utf-8") as f:
                   json.dump(data, f, ensure_ascii=False, indent=4)
-              
+
               print("Agent configuration updated for macOS embedded Python")
           else:
               print("Warning: interface.json not found")
+          PY
 
       - uses: actions/upload-artifact@v4
         with:
