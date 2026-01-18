@@ -128,6 +128,12 @@ jobs:
               mkdir -p install
               cp -v "tools/DependencySetup_依赖库安装.bat" install/
             fi
+            # 复制自定义 Assets 文件夹（图标、背景等）
+            if [ -d "assets/Assets" ]; then
+              echo "Copying custom Assets (logo, background, etc.)..."
+              mkdir -p install/Assets
+              cp -rv assets/Assets/* install/Assets/
+            fi
           else
             echo "Skipping copy MFA for Android."
           fi

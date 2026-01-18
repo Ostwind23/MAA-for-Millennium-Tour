@@ -8,7 +8,7 @@
     "description": "千年之旅 MAA-for-Millennium-Tour 律律子小助手",
     "contact": "2523559001@qq.com",
     "license": "MIT",
-    "welcome": "欢迎使用律律子小助手！\n本项目由 风暴鸟 维护，基于 MaaFramework 开发。\n如有任何问题请前往项目主页查看文档或提交 Issue。",
+    "welcome": "欢迎使用千年之旅自动化律律子小助手！\n本项目由 风暴鸟 维护，基于 MaaFramework 开发。\n如有任何问题请前往项目主页查看文档或提交 Issue。",
     // 填写项目地址和版本号可实现自动更新功能
     "github": "https://github.com/Ostwind23/MAA-for-Millennium-Tour",
     "version": "2.0.0",
