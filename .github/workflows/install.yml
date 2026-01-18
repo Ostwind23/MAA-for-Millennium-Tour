@@ -19,6 +19,15 @@ on:
       - "**.py"
   workflow_dispatch:
 
+env:
+  # 固定版本以确保构建稳定性
+  MAA_FRAMEWORK_VERSION: "v5.3.3"
+  MFAA_VERSION: "latest"
+
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   meta:
     runs-on: ubuntu-latest
@@ -60,13 +69,13 @@ jobs:
       is_release: ${{ steps.set_tag.outputs.is_release }}
       is_prerelease: ${{ steps.set_tag.outputs.is_prerelease }}
 
-  install:
+  # ========== Windows 构建 ==========
+  windows:
     needs: meta
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     strategy:
       matrix:
-        os: [win, macos, linux, android]
-        arch: [aarch64, x86_64]
+        arch: [x86_64]
       fail-fast: false
 
     steps:
@@ -74,41 +83,53 @@ jobs:
         with:
           submodules: true
 
+      - name: Set platform variables
+        id: platform
+        shell: bash
+        run: |
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            echo "tag=x64" >> $GITHUB_OUTPUT
+          else
+            echo "tag=arm64" >> $GITHUB_OUTPUT
+          fi
+
       - name: Download MaaFramework
         uses: robinraju/release-downloader@v1
         with:
           repository: MaaXYZ/MaaFramework
-          fileName: "MAA-${{ matrix.os }}-${{ matrix.arch }}*"
+          fileName: "MAA-win-${{ matrix.arch }}*"
           latest: true
           out-file-path: "deps"
           extract: true
 
-      - name: Remove built-in runtime in MFA
-        if: matrix.os != 'android'
-        shell: bash
-        run: |
-          rm -rf MFA/runtimes
-
       - name: Download MFAAvalonia
-        if: matrix.os != 'android'
         id: download_mfa
         uses: robinraju/release-downloader@v1
         with:
           repository: SweetSmellFox/MFAAvalonia
-          fileName: "MFAAvalonia-*-${{ (matrix.os == 'win' && 'win') || (matrix.os == 'macos' && 'osx') || (matrix.os == 'linux' && 'linux') }}-${{ (matrix.arch == 'x86_64' && 'x64') || (matrix.arch == 'aarch64' && 'arm64') }}*"
+          fileName: "MFAAvalonia-*-win-${{ steps.platform.outputs.tag }}*"
           latest: true
           out-file-path: "MFA"
           extract: true
 
       - name: Clean up MFAAvalonia archive
-        if: matrix.os != 'android'
         shell: bash
         run: |
           ARCHIVE_FILE_PATH="${{ fromJson(steps.download_mfa.outputs.downloaded_files)[0] }}"
           rm -f "${ARCHIVE_FILE_PATH}"
           echo "Archive cleanup command executed for MFAAvalonia."
 
-      - name: Install
+      - name: Setup Embed Python
+        shell: bash
+        run: |
+          python tools/ci/setup_embed_python.py --output-dir install/python
+
+      - name: Download Python dependencies
+        shell: bash
+        run: |
+          ./install/python/python.exe tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
+
+      - name: Install resources
         shell: bash
         run: |
           cd tools/
@@ -116,33 +137,219 @@ jobs:
           python ./install.py ${{ needs.meta.outputs.tag }}
           cd ..
 
-          if [[ "${{ matrix.os }}" != "android" ]]; then
-            if [ -d "MFA" ]; then
-              echo "Copying MFA files to install directory..."
-              mkdir -p install
-              rsync -av --ignore-existing MFA/ install/
-            else
-              echo "MFA directory not found, skipping copy."
-            fi
-            if [[ "${{ matrix.os }}" == "win" ]]; then
-              mkdir -p install
-              cp -v "tools/DependencySetup_依赖库安装.bat" install/
-            fi
-            # 复制自定义 Assets 文件夹（图标、背景等）
-            if [ -d "assets/Assets" ]; then
-              echo "Copying custom Assets (logo, background, etc.)..."
-              mkdir -p install/Assets
-              cp -rv assets/Assets/* install/Assets/
-            fi
-          else
-            echo "Skipping copy MFA for Android."
+      - name: Copy MFA files
+        shell: bash
+        run: |
+          if [ -d "MFA" ]; then
+            echo "Copying MFA files to install directory..."
+            mkdir -p install
+            cp -rpvn MFA/. install/ || rsync -av --ignore-existing MFA/ install/
+          fi
+
+      - name: Setup custom Assets
+        shell: bash
+        run: |
+          # 删除 MFA 自带的 Assets
+          if [ -d "install/Assets" ]; then
+            rm -rf install/Assets
+          fi
+          
+          # 创建 assets 目录并复制自定义图标
+          mkdir -p install/assets
+          if [ -d "assets/Assets" ]; then
+            cp -rv assets/Assets/* install/assets/
           fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Maa-Millennium-Tour-${{ matrix.os }}-${{ matrix.arch }}
+          name: Maa-Millennium-Tour-win-${{ matrix.arch }}
           path: "install"
 
+  # ========== Linux 构建 ==========
+  linux:
+    needs: meta
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Set platform variables
+        id: platform
+        shell: bash
+        run: |
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            echo "tag=x64" >> $GITHUB_OUTPUT
+          else
+            echo "tag=arm64" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download MaaFramework
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: MaaXYZ/MaaFramework
+          fileName: "MAA-linux-${{ matrix.arch }}*"
+          latest: true
+          out-file-path: "deps"
+          extract: true
+
+      - name: Download MFAAvalonia
+        id: download_mfa
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: SweetSmellFox/MFAAvalonia
+          fileName: "MFAAvalonia-*-linux-${{ steps.platform.outputs.tag }}*"
+          latest: true
+          out-file-path: "MFA"
+          extract: true
+
+      - name: Clean up MFAAvalonia archive
+        shell: bash
+        run: |
+          ARCHIVE_FILE_PATH="${{ fromJson(steps.download_mfa.outputs.downloaded_files)[0] }}"
+          rm -f "${ARCHIVE_FILE_PATH}"
+
+      - name: Download Python dependencies
+        shell: bash
+        run: |
+          python tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
+
+      - name: Install resources
+        shell: bash
+        run: |
+          cd tools/
+          python -m pip install -r ./requirements.txt
+          python ./install.py ${{ needs.meta.outputs.tag }}
+          cd ..
+
+      - name: Copy MFA files
+        shell: bash
+        run: |
+          if [ -d "MFA" ]; then
+            echo "Copying MFA files to install directory..."
+            mkdir -p install
+            rsync -av --ignore-existing MFA/ install/
+          fi
+
+      - name: Setup custom Assets
+        shell: bash
+        run: |
+          if [ -d "install/Assets" ]; then
+            rm -rf install/Assets
+          fi
+          mkdir -p install/assets
+          if [ -d "assets/Assets" ]; then
+            cp -rv assets/Assets/* install/assets/
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Maa-Millennium-Tour-linux-${{ matrix.arch }}
+          path: "install"
+
+  # ========== macOS 构建 ==========
+  macos:
+    needs: meta
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [aarch64]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Set platform variables
+        id: platform
+        shell: bash
+        run: |
+          if [ "${{ matrix.arch }}" = "x86_64" ]; then
+            echo "tag=x64" >> $GITHUB_OUTPUT
+          else
+            echo "tag=arm64" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download MaaFramework
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: MaaXYZ/MaaFramework
+          fileName: "MAA-macos-${{ matrix.arch }}*"
+          latest: true
+          out-file-path: "deps"
+          extract: true
+
+      - name: Download MFAAvalonia
+        id: download_mfa
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: SweetSmellFox/MFAAvalonia
+          fileName: "MFAAvalonia-*-osx-${{ steps.platform.outputs.tag }}*"
+          latest: true
+          out-file-path: "MFA"
+          extract: true
+
+      - name: Clean up MFAAvalonia archive
+        shell: bash
+        run: |
+          ARCHIVE_FILE_PATH="${{ fromJson(steps.download_mfa.outputs.downloaded_files)[0] }}"
+          rm -f "${ARCHIVE_FILE_PATH}"
+
+      - name: Setup Embed Python
+        shell: bash
+        run: |
+          python3 tools/ci/setup_embed_python.py --output-dir install/python
+
+      - name: Download Python dependencies
+        shell: bash
+        run: |
+          if [ -f "./install/python/bin/python3" ]; then
+            chmod +x ./install/python/bin/python3
+            ./install/python/bin/python3 tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
+          else
+            python3 tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
+          fi
+
+      - name: Install resources
+        shell: bash
+        run: |
+          cd tools/
+          python3 -m pip install -r ./requirements.txt
+          python3 ./install.py ${{ needs.meta.outputs.tag }}
+          cd ..
+
+      - name: Copy MFA files
+        shell: bash
+        run: |
+          if [ -d "MFA" ]; then
+            echo "Copying MFA files to install directory..."
+            mkdir -p install
+            rsync -av --ignore-existing MFA/ install/
+          fi
+
+      - name: Setup custom Assets
+        shell: bash
+        run: |
+          if [ -d "install/Assets" ]; then
+            rm -rf install/Assets
+          fi
+          mkdir -p install/assets
+          if [ -d "assets/Assets" ]; then
+            cp -rv assets/Assets/* install/assets/
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Maa-Millennium-Tour-macos-${{ matrix.arch }}
+          path: "install"
+
+  # ========== Changelog 生成 ==========
   changelog:
     name: Generate changelog
     runs-on: ubuntu-latest
@@ -164,21 +371,33 @@ jobs:
           OUTPUT: CHANGES.md
           GITHUB_REPO: ${{ github.repository }}
 
+  # ========== 发布 ==========
   release:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
-    needs: [meta, install, changelog]
+    needs: [meta, windows, linux, macos, changelog]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: assets
 
-      - run: |
+      - name: Package artifacts
+        run: |
           cd assets
           for f in *; do
-            (cd $f && zip -r ../$f-${{ needs.meta.outputs.tag }}.zip .)
+            if [[ $f == *"win"* ]]; then
+              (cd "$f" && zip -r "../$f-${{ needs.meta.outputs.tag }}.zip" .)
+            else
+              # Unix: 设置执行权限并打包为 tar.gz
+              if [[ -f "$f/MaaPiCli" ]]; then
+                chmod +x "$f/MaaPiCli"
+              fi
+              find "$f" -type f -name "MFAAvalonia*" -exec chmod +x {} \; 2>/dev/null || true
+              find "$f" -type f -name "python*" -exec chmod +x {} \; 2>/dev/null || true
+              tar -cpzf "$f-${{ needs.meta.outputs.tag }}.tar.gz" -C "$f" .
+            fi
           done
-          
+
       - uses: softprops/action-gh-release@v2
         with:
           files: assets/*

@@ -1,0 +1,15 @@
+# MAA for Millennium Tour - Python 运行时依赖
+# 这些依赖会在 CI 构建时预下载并打包
+
+# MaaFramework Python 绑定
+maafw==5.3.3
+
+# 数值计算
+numpy>=1.20.0
+
+# 图像处理
+opencv-python>=4.5.0
+pillow>=8.0.0
+
+# ONNX 推理（用于 YOLO 模型）
+onnxruntime>=1.15.0
