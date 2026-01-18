@@ -1,0 +1,308 @@
+{
+    "$section_dream_config": "========== 幻梦之境任务配置节点 ==========",
+    "dreamBattleModeConfig": {
+        "doc": "[配置节点] 幻梦之境战斗模式配置 - 在任务链开始时覆盖 BattleMode_Check 的参数，具体模式由 interface.json 的“幻梦之境战斗模式选择”通过 pipeline_override 写入 custom_action_param",
+        "recognition": "DirectHit",
+        "action": "Custom",
+        "custom_action": "BattleModeConfigOverride",
+        "custom_action_param": {
+            "target_mode": "auto"
+        },
+        "max_hit": 1,
+        "next": [
+            "dreamOpenBattle"
+        ]
+    },
+    "taskDreamBattle": {
+        "doc": "幻梦之境主任务入口。采用 JumpBack 混合模式：线性流程由各节点自身的 next 串联，入口节点通过 [JumpBack] 链统一兜底异常弹窗和战斗流程",
+        "next": [
+            "[JumpBack]dreamBattleModeConfig",
+            "[JumpBack]dreamOpenBattle",
+            "[JumpBack]openDreamEntry",
+            "[JumpBack]dreamBossLoop",
+            "[JumpBack]dreamEnterFinalStage",
+            "[JumpBack]dreamLaunchBattle",
+            "[JumpBack]dreamLaunchBattleInTeam",
+            "[JumpBack]BattleMode_Check",
+            "[JumpBack]dreamWaitBattleEnd",
+            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]CloseNotification",
+            "[JumpBack]ClickEmptyArea",
+            "[JumpBack]missionAlertCheck",
+            "[JumpBack]openDreamMission",
+            "[JumpBack]collectDreamMissions",
+            "[JumpBack]HomeButton"
+        ]
+    },
+    "dreamOpenBattle": {
+        "doc": "从主界面点击右下角“出击”按钮，进入出击页面。逻辑参考 battle.json 中的 openBattle，单独拆分以便与其他任务解耦",
+        "recognition": "OCR",
+        "expected": "出击",
+        "roi": [
+            1021,
+            476,
+            207,
+            244
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "openDreamEntry"
+        ]
+    },
+    "openDreamEntry": {
+        "doc": "在出击页面底部点击“幻梦之境”入口，进入幻梦之境 Boss 列表页面。需要配套准备专用模板图片",
+        "recognition": "TemplateMatch",
+        "template": "dreambattle/幻梦之境页面.png",
+        "roi": [
+            1027,
+            617,
+            254,
+            106
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "dreamBossLoop"
+        ]
+    },
+    "dreamBossLoop": {
+        "doc": "每周 Boss 循环入口：依次尝试识别上/中/下三名 Boss 节点，三者的 max_hit 耗尽后将命中 bossesDone 进入任务奖励流程",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]bossFirst",
+            "[JumpBack]bossSecond",
+            "[JumpBack]bossThird",
+            "bossesDone"
+        ]
+    },
+    "bossFirst": {
+        "doc": "幻梦之境 Boss（第一栏，上方）入口：使用通用 Boss 图标模板，在顶部 ROI 中点击第一名 Boss（如恶神-桃）。max_hit=1 确保每周只打一次",
+        "recognition": "TemplateMatch",
+        "template": "dreambattle/dream_boss_icon.png",
+        "roi": [
+            475,
+            39,
+            283,
+            201
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "max_hit": 1,
+        "next": [
+            "dreamEnterFinalStage"
+        ]
+    },
+    "bossSecond": {
+        "doc": "幻梦之境 Boss（第二栏，中间）入口：使用通用 Boss 图标模板，在中部 ROI 中点击第二名 Boss（如西蒙）。max_hit=1 确保每周只打一次",
+        "recognition": "TemplateMatch",
+        "template": "dreambattle/dream_boss_icon.png",
+        "roi": [
+            397,
+            293,
+            245,
+            154
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "max_hit": 1,
+        "next": [
+            "dreamEnterFinalStage"
+        ]
+    },
+    "bossThird": {
+        "doc": "幻梦之境 Boss（第三栏，下方）入口：使用通用 Boss 图标模板，在底部 ROI 中点击第三名 Boss（如咎瓦尤斯）。max_hit=1 确保每周只打一次",
+        "recognition": "TemplateMatch",
+        "template": "dreambattle/dream_boss_icon.png",
+        "roi": [
+            324,
+            496,
+            245,
+            154
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "max_hit": 1,
+        "next": [
+            "dreamEnterFinalStage"
+        ]
+    },
+    "bossesDone": {
+        "doc": "当三名 Boss 对应节点均因 max_hit 耗尽而跳过识别时命中，表示当周 Boss 已全部完成，进入任务奖励检测流程",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "missionAlertCheck"
+        ]
+    },
+    "dreamEnterFinalStage": {
+        "doc": "在当前 Boss 的挑战选关界面中查找红色终极关卡区域并点击进入关卡详情。若长时间未找到则返回 Boss 列表以避免卡死",
+        "recognition": "ColorMatch",
+        "upper": [
+            202,
+            23,
+            81
+        ],
+        "lower": [
+            182,
+            3,
+            61
+        ],
+        "roi": [
+            456,
+            522,
+            376,
+            223
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "dreamLaunchBattle"
+        ],
+        "on_error": [
+            "backToBossList"
+        ]
+    },
+    "dreamLaunchBattle": {
+        "doc": "幻梦之境关卡详情界面：第一次点击“出击”按钮进入编队界面，模板与深渊/普通战斗共用",
+        "recognition": "TemplateMatch",
+        "template": "battle/launch battle.png",
+        "roi": [
+            826,
+            575,
+            281,
+            143
+        ],
+        "action": "Click",
+        "post_wait_freezes": 3000,
+        "next": [
+            "dreamLaunchBattleInTeam"
+        ]
+    },
+    "dreamLaunchBattleInTeam": {
+        "doc": "幻梦之境编队界面：第二次点击“出击”按钮进入战斗，并在进入战斗后通过战斗模式检查实现自动战斗/手动跳过",
+        "recognition": "TemplateMatch",
+        "template": "battle/launch battle.png",
+        "roi": [
+            1003,
+            633,
+            251,
+            83
+        ],
+        "action": "Click",
+        "post_delay": 5000,
+        "next": [
+            "[JumpBack]dreamBattleModeConfig",
+            "[JumpBack]BattleMode_Check",
+            "dreamWaitBattleEnd",
+            "[JumpBack]Victory_Return_noNext",
+            "backToBossList"
+        ]
+    },
+    "dreamWaitBattleEnd": {
+        "doc": "战斗中等待结束 - 通过自动/手动战斗状态图标监控画面静止，结算后交给 Victory_Return_noNext 处理再返回 Boss 列表",
+        "recognition": "TemplateMatch",
+        "template": [
+            "battle/自动战斗状态.png",
+            "battle/手动战斗状态.png"
+        ],
+        "roi": [
+            901,
+            0,
+            378,
+            263
+        ],
+        "post_wait_freezes": {
+            "time": 5000
+        },
+        "rate_limit": 15000,
+        "timeout": 300000,
+        "next": [
+            "[JumpBack]Victory_Return_noNext",
+            "backToBossList"
+        ]
+    },
+    "backToBossList": {
+        "doc": "战斗结算或异常处理完成后，点击左上角返回按钮回到幻梦之境 Boss 列表，用于继续处理剩余 Boss 或结束循环",
+        "recognition": "TemplateMatch",
+        "template": "back.png",
+        "roi": [
+            0,
+            0,
+            215,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "dreamBossLoop"
+        ]
+    },
+    "missionAlertCheck": {
+        "doc": "幻梦之境任务按钮 Alert 状态检测入口：优先尝试命中 Alert 图标并打开任务面板，若不存在 Alert 则直接返回主界面",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "openDreamMission",
+            "missionNoAlert"
+        ]
+    },
+    "openDreamMission": {
+        "doc": "在幻梦之境页面左侧点击带 Alert 感叹号的“任务”按钮，进入幻梦之境任务列表面板",
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            1,
+            286,
+            160,
+            154
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "max_hit": 1,
+        "next": [
+            "collectDreamMissions"
+        ]
+    },
+    "missionNoAlert": {
+        "doc": "当前幻梦之境任务按钮上不存在 Alert 感叹号，说明当周任务已经全部领取完成，直接返回主界面结束任务",
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            1,
+            286,
+            160,
+            154
+        ],
+        "inverse": true,
+        "action": "DoNothing",
+        "timeout": 5000,
+        "next": [
+            "[JumpBack]HomeButton",
+            "EndonHome"
+        ]
+    },
+    "collectDreamMissions": {
+        "doc": "在幻梦之境任务面板中点击“全部领取”按钮，依次处理获得奖励弹窗并点击下方空白区域关闭任务面板，最后返回主界面",
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            928,
+            2,
+            350,
+            101
+        ],
+        "action": "Click",
+        "max_hit": 1,
+        "post_wait_freezes": 500,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]CloseNotification",
+            "[JumpBack]ClickEmptyArea",
+            "[JumpBack]HomeButton",
+            "EndonHome"
+        ]
+    }
+}

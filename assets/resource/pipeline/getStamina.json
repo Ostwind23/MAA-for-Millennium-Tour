@@ -1,0 +1,90 @@
+{
+    "Task_GetStamina": {
+        "doc": "获取体力任务入口",
+        "next": [
+            "[JumpBack]getStaminaTask",
+            "[JumpBack]chooseExtraStamina",
+            "[JumpBack]cancelExtraStaminaPurchase",
+            "[JumpBack]maximizeExtraStamina",
+            "[JumpBack]comfirmExtraStaminaPurchase",
+            "[JumpBack]Sub_Getreward",
+            "EndonHome"
+        ]
+    },
+    "getStaminaTask": {
+        "doc": "获取存储的体力",
+        "recognition": "TemplateMatch",
+        "template": "get_extra_stamina.png",
+        "roi": [
+            1058,
+            469,
+            222,
+            214
+        ],
+        "action": "Click",
+        "next": [
+            "EndonHome"
+        ]
+    },
+    "chooseExtraStamina": {
+        "doc": "点选额外体力",
+        "recognition": "TemplateMatch",
+        "template": "extra_stamina.png",
+        "roi": [
+            304,
+            125,
+            744,
+            226
+        ],
+        "action": "Click",
+        "next": [
+            "maximizeExtraStamina"
+        ]
+    },
+    "maximizeExtraStamina": {
+        "doc": "复用 battle.json 的 maximization 配置",
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            642,
+            297,
+            301,
+            196
+        ],
+        "action": "Click",
+        "next": [
+            "comfirmExtraStaminaPurchase"
+        ]
+    },
+    "comfirmExtraStaminaPurchase": {
+        "doc": "确认获得额外体力界面",
+        "recognition": "TemplateMatch",
+        "template": "confirm.png",
+        "roi": [
+            689,
+            419,
+            309,
+            150
+        ],
+        "action": "Click",
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "cancelExtraStaminaPurchase"
+        ]
+    },
+    "cancelExtraStaminaPurchase": {
+        "doc": "取消获得额外体力界面，返回主界面",
+        "recognition": "TemplateMatch",
+        "template": "cancel.png",
+        "roi": [
+            313,
+            394,
+            291,
+            192
+        ],
+        "action": "Click",
+        "next": [
+            "EndonHome"
+        ]
+    }
+}

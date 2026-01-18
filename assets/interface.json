@@ -75,6 +75,7 @@
         },
         {
             "name": "神谕司",
+            "description": "可以自动完成神谕司的农场种植、浇水、施肥等操作。当前自动处理故障和浇水仅适配律律子作为农场主。",
             "entry": "Task_Division",
             "option": [
                 "农场故障事件自动处理",
@@ -87,7 +88,10 @@
             "name": "资源关战斗",
             "entry": "Task_DailyBattle",
             "option": [
-                "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）",
+                "资源关模板_当日无x2",
+                "资源关模板_当日x2为突破材料",
+                "资源关模板_当日x2为符文之地",
+                "资源关x2模式选择",
                 "资源关关卡选择设置"
             ]
         },
@@ -99,6 +103,13 @@
             ]
         },
         {
+            "name": "幻梦之境",
+            "entry": "taskDreamBattle",
+            "option": [
+                "幻梦之境战斗模式选择"
+            ]
+        },
+        {
             "name": "地牢",
             "entry": "Task_Dungeon"
         },
@@ -107,7 +118,7 @@
             "description": "自动完成公会捐赠、公会首领战和公会任务（日常/周常）",
             "entry": "Task_Guild",
             "option": [
-                "公会战斗模式选择"
+                "公会每日boss战斗模式选择"
             ]
         },
         {
@@ -156,8 +167,32 @@
             "entry": "autofishing"
         },
         {
-            "name": "自动推图（自动主线的功能抽离,打开活动的战斗关卡,点进去到编队预备出击界面即可单独启动此任务以自动推进活动图）",
+            "name": "自动推图（自动主线的功能抽离,打开活动的战斗关卡,点进去到编队预备出击界面即可单独启动此任务以自动推进本页内的战斗关卡）",
             "entry": "Activityautopush"
+        },
+        {
+            "name": "活动战斗",
+            "description": "在当前活动中自动刷最后一关，需要提前手动打到最后一关",
+            "entry": "taskActivityBattle"
+        },
+        {
+            "name": "活动任务收取",
+            "description": "在当前活动中自动进入活动商店购买目标商品、领取活动任务奖励并完成每日签到后返回主界面",
+            "entry": "taskActivityMission"
+        },
+        {
+            "name": "收取储存的体力",
+            "description": "全额收取储存的体力",
+            "entry": "Task_GetStamina"
+        },
+        {
+            "name": "回忆深潜",
+            "description": "自动进入回忆深潜并自动选择目标关卡和出战队伍，按照每5关的顺序跳着打，打到战斗失败后才会退出",
+            "entry": "taskMemoryDive",
+            "option": [
+                "回忆深潜目标关卡",
+                "回忆深潜出战队伍"
+            ]
         }
     ],
     "option": {
@@ -672,7 +707,7 @@
                 }
             ]
         },
-        "自动选择当天x2的资源关,如若没有x2则选择经验/本勒/技能书关（默认经验关）": {
+        "自动选择当天x2的资源关,如果x2关有子选项则需要手动设置对应的关卡": {
             "type": "select",
             "label": "资源关类型选择",
             "description": "上三：本勒收集、经验获取、突破材料；下三：技能材料、符文之地、骚灵之境",
@@ -765,6 +800,243 @@
                         },
                         "chooseOwnmission_下三": {
                             "expected": "骚灵之境"
+                        }
+                    }
+                }
+            ]
+        },
+        "资源关x2模式选择": {
+            "type": "select",
+            "label": "资源关x2模式选择",
+            "description": "选择是否根据模板优先打当日x2资源，或忽略x2只按“当日无x2模板”配置刷指定关卡",
+            "default_case": "全局优先x2（根据模板）",
+            "cases": [
+                {
+                    "name": "全局优先x2（根据模板）"
+                },
+                {
+                    "name": "忽略x2，仅按无x2模板",
+                    "pipeline_override": {
+                        "checkDailyBattleX2": {
+                            "enabled": false
+                        },
+                        "findx2_BenLe": {
+                            "enabled": false
+                        },
+                        "findx2_Exp": {
+                            "enabled": false
+                        },
+                        "findx2_Break": {
+                            "enabled": false
+                        },
+                        "findx2_Rune": {
+                            "enabled": false
+                        },
+                        "findx2_SaoLing": {
+                            "enabled": false
+                        },
+                        "findx2": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "资源关模板_当日无x2": {
+            "type": "select",
+            "label": "当日无x2默认刷",
+            "description": "当日没有任何x2资源关时，默认刷哪一类资源关（及其小类）。",
+            "default_case": "经验关",
+            "cases": [
+                {
+                    "name": "本勒关",
+                    "pipeline_override": {
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
+                        },
+                        "chooseOwnmission": {
+                            "expected": "本勒收集"
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "本勒收集"
+                        }
+                    }
+                },
+                {
+                    "name": "经验关",
+                    "pipeline_override": {
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
+                        },
+                        "chooseOwnmission": {
+                            "expected": "经验获取"
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "经验获取"
+                        }
+                    }
+                },
+                {
+                    "name": "突破材料关",
+                    "option": [
+                        "突破材料类别选择"
+                    ],
+                    "pipeline_override": {
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
+                        },
+                        "chooseOwnmission": {
+                            "expected": "突破材料",
+                            "next": [
+                                "突破材料_findclass"
+                            ],
+                            "on_error": [
+                                "Battle_SwipetoRightside"
+                            ]
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "突破材料",
+                            "next": [
+                                "突破材料_findclass"
+                            ],
+                            "on_error": [
+                                "Battle_SwipetoRightside"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "技能材料关",
+                    "pipeline_override": {
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
+                        },
+                        "chooseOwnmission": {
+                            "expected": "技能材料"
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "技能材料"
+                        }
+                    }
+                },
+                {
+                    "name": "符文之地",
+                    "option": [
+                        "符文之地类别选择"
+                    ],
+                    "pipeline_override": {
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
+                        },
+                        "chooseOwnmission": {
+                            "expected": "符文之地",
+                            "next": [
+                                "符文之地_findclass"
+                            ]
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "符文之地",
+                            "next": [
+                                "符文之地_findclass"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "骚灵之境",
+                    "pipeline_override": {
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission_下三"
+                            ]
+                        },
+                        "chooseOwnmission": {
+                            "expected": "骚灵之境"
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "骚灵之境"
+                        }
+                    }
+                }
+            ]
+        },
+        "资源关模板_当日x2为突破材料": {
+            "type": "select",
+            "label": "当日x2为突破材料时刷",
+            "description": "配置当日x2在突破材料时要刷的默认小类。小类的具体关卡由“突破材料类别选择”控制。",
+            "default_case": "突破材料关",
+            "cases": [
+                {
+                    "name": "突破材料关",
+                    "option": [
+                        "突破材料类别选择"
+                    ],
+                    "pipeline_override": {
+                        "DailyTemplate_BreakX2": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
+                        },
+                        "chooseOwnmission": {
+                            "expected": "突破材料",
+                            "next": [
+                                "突破材料_findclass"
+                            ],
+                            "on_error": [
+                                "Battle_SwipetoRightside"
+                            ]
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "突破材料",
+                            "next": [
+                                "突破材料_findclass"
+                            ],
+                            "on_error": [
+                                "Battle_SwipetoRightside"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "资源关模板_当日x2为符文之地": {
+            "type": "select",
+            "label": "当日x2为符文之地时刷",
+            "description": "配置当日x2在符文之地时要刷的默认小类。小类的具体关卡由“符文之地类别选择”控制。",
+            "default_case": "符文之地",
+            "cases": [
+                {
+                    "name": "符文之地",
+                    "option": [
+                        "符文之地类别选择"
+                    ],
+                    "pipeline_override": {
+                        "DailyTemplate_RuneX2": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
+                        },
+                        "chooseOwnmission": {
+                            "expected": "符文之地",
+                            "next": [
+                                "符文之地_findclass"
+                            ]
+                        },
+                        "chooseOwnmission_下三": {
+                            "expected": "符文之地",
+                            "next": [
+                                "符文之地_findclass"
+                            ]
                         }
                     }
                 }
@@ -1010,6 +1282,198 @@
                 }
             ]
         },
+        "幻梦之境战斗模式选择": {
+            "type": "select",
+            "label": "幻梦之境战斗模式选择",
+            "description": "选择幻梦之境战斗时的模式：\n- 自动战斗：保持自动战斗状态，等待战斗自动结束\n- 手动跳过：切换到手动模式并点击跳过按钮快速结束战斗\n\n注意：手动跳过模式下如果检测不到跳过按钮会自动切回自动战斗",
+            "default_case": "自动战斗",
+            "cases": [
+                {
+                    "name": "自动战斗",
+                    "pipeline_override": {
+                        "dreamBattleModeConfig": {
+                            "custom_action_param": {
+                                "target_mode": "auto"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "手动跳过",
+                    "pipeline_override": {
+                        "dreamBattleModeConfig": {
+                            "custom_action_param": {
+                                "target_mode": "manual_skip"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "回忆深潜目标关卡": {
+            "type": "select",
+            "label": "回忆深潜目标关卡",
+            "description": "选择要挑战的回忆深潜入口关卡",
+            "default_case": "悖逆之城",
+            "cases": [
+                {
+                    "name": "镜中异相",
+                    "pipeline_override": {
+                        "memoryFindDungeonByOcr": {
+                            "expected": [
+                                "镜中异相"
+                            ]
+                        },
+                        "memoryFindDungeonByTemplate": {
+                            "template": [
+                                "memorydive/镜中异相_未选中.png",
+                                "memorydive/镜中异相_选中.png"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "内陆国度",
+                    "pipeline_override": {
+                        "memoryFindDungeonByOcr": {
+                            "expected": [
+                                "内陆国度"
+                            ]
+                        },
+                        "memoryFindDungeonByTemplate": {
+                            "template": [
+                                "memorydive/内陆国度_未选中.png",
+                                "memorydive/内陆国度_选中.png"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "悖逆之城",
+                    "pipeline_override": {
+                        "memoryFindDungeonByOcr": {
+                            "expected": [
+                                "悖逆之城"
+                            ]
+                        },
+                        "memoryFindDungeonByTemplate": {
+                            "template": [
+                                "memorydive/悖逆之城_未选中.png",
+                                "memorydive/悖逆之城_选中.png"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "狂号风暴",
+                    "pipeline_override": {
+                        "memoryFindDungeonByOcr": {
+                            "expected": [
+                                "狂号风暴"
+                            ]
+                        },
+                        "memoryFindDungeonByTemplate": {
+                            "template": [
+                                "memorydive/狂号风暴_未选中.png",
+                                "memorydive/狂号风暴_选中.png"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "洞悉之瞳",
+                    "pipeline_override": {
+                        "memoryFindDungeonByOcr": {
+                            "expected": [
+                                "洞悉之瞳"
+                            ]
+                        },
+                        "memoryFindDungeonByTemplate": {
+                            "template": [
+                                "memorydive/洞悉之瞳_未选中.png",
+                                "memorydive/洞悉之瞳_选中.png"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "深暗魔井",
+                    "pipeline_override": {
+                        "memoryFindDungeonByOcr": {
+                            "expected": [
+                                "深暗魔井"
+                            ]
+                        },
+                        "memoryFindDungeonByTemplate": {
+                            "template": [
+                                "memorydive/深暗魔井_未选中.png",
+                                "memorydive/深暗魔井_选中.png"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "回忆深潜出战队伍": {
+            "type": "select",
+            "label": "回忆深潜出战队伍",
+            "description": "选择在回忆深潜中使用的出战队伍（1-4队）",
+            "default_case": "队伍1",
+            "cases": [
+                {
+                    "name": "队伍1",
+                    "pipeline_override": {
+                        "memorySelectTeam": {
+                            "target": [
+                                37,
+                                663,
+                                112,
+                                34
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "队伍2",
+                    "pipeline_override": {
+                        "memorySelectTeam": {
+                            "target": [
+                                240,
+                                665,
+                                105,
+                                32
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "队伍3",
+                    "pipeline_override": {
+                        "memorySelectTeam": {
+                            "target": [
+                                446,
+                                671,
+                                89,
+                                25
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "队伍4",
+                    "pipeline_override": {
+                        "memorySelectTeam": {
+                            "target": [
+                                646,
+                                668,
+                                89,
+                                26
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
         "主线战斗模式选择": {
             "type": "select",
             "label": "主线战斗模式选择",
@@ -1038,9 +1502,9 @@
                 }
             ]
         },
-        "公会战斗模式选择": {
+        "公会每日boss战斗模式选择": {
             "type": "select",
-            "label": "公会战斗模式选择",
+            "label": "公会每日boss战斗模式选择",
             "description": "选择公会首领战时的模式：\n- 自动战斗：保持自动战斗状态，等待战斗自动结束\n- 手动跳过：切换到手动模式并点击跳过按钮快速结束战斗\n\n注意：手动跳过模式下如果检测不到跳过按钮会自动切回自动战斗",
             "default_case": "自动战斗",
             "cases": [

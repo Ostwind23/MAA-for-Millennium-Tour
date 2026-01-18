@@ -5,7 +5,8 @@
             "[JumpBack]openBattle",
             "[JumpBack]openVault",
             "[JumpBack]openVaultinOCR",
-            "[JumpBack]findx2",
+            "[JumpBack]checkDailyBattleX2",
+            "[JumpBack]DailyTemplate_NoneX2",
             "[JumpBack]chooseOwnmission",
             "[JumpBack]chooseOwnmission_下三",
             "[JumpBack]突破材料_findclass",
@@ -21,6 +22,205 @@
             "[JumpBack]Battle_cancelpage",
             "[JumpBack]x2_back",
             "returnHome"
+        ]
+    },
+    "checkDailyBattleX2": {
+        "doc": "[模板调度] 在宝库资源总表界面按资源类型检查当日x2并跳转到对应模板入口，由界面全局模板配置决定各类型行为",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "findx2_BenLe",
+            "findx2_Exp",
+            "findx2_Break",
+            "findx2_Rune",
+            "findx2_SaoLing"
+        ]
+    },
+    "DailyTemplate_NoneX2": {
+        "doc": "[模板入口] 当日无x2或未启用x2时默认刷的资源关入口，由界面全局模板配置覆盖",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "chooseOwnmission"
+        ]
+    },
+    "DailyTemplate_BenLeX2": {
+        "doc": "[模板入口] 当日x2为本勒收集时的刷本入口，由界面全局模板配置覆盖",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "Daily_BenLe_SelectType"
+        ]
+    },
+    "DailyTemplate_ExpX2": {
+        "doc": "[模板入口] 当日x2为经验获取时的刷本入口，由界面全局模板配置覆盖",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "Daily_Exp_SelectType"
+        ]
+    },
+    "DailyTemplate_BreakX2": {
+        "doc": "[模板入口] 当日x2为突破材料时的刷本入口，由界面全局模板配置覆盖（具体小类由“突破材料类别选择”决定）",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "chooseOwnmission"
+        ]
+    },
+    "DailyTemplate_RuneX2": {
+        "doc": "[模板入口] 当日x2为符文之地时的刷本入口，由界面全局模板配置覆盖（具体小类由“符文之地类别选择”决定）",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "chooseOwnmission"
+        ]
+    },
+    "DailyTemplate_SaoLingX2": {
+        "doc": "[模板入口] 当日x2为骚灵之境时的刷本入口，由界面全局模板配置覆盖",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "Daily_SaoLing_SelectType"
+        ]
+    },
+    "Daily_BenLe_SelectType": {
+        "doc": "当日x2为本勒：在上三任务中选择“本勒收集”",
+        "recognition": "OCR",
+        "expected": "本勒收集",
+        "roi": [
+            324,
+            1,
+            616,
+            653
+        ],
+        "action": "Click",
+        "timeout": 5000,
+        "post_wait_freezes": 1000,
+        "next": [
+            "findmission"
+        ],
+        "on_error": [
+            "SwipetoDownside"
+        ]
+    },
+    "Daily_Exp_SelectType": {
+        "doc": "当日x2为经验：在上三任务中选择“经验获取”（固定行为，独立于其他模板设置）",
+        "recognition": "OCR",
+        "expected": "经验获取",
+        "roi": [
+            324,
+            1,
+            616,
+            653
+        ],
+        "action": "Click",
+        "timeout": 5000,
+        "post_wait_freezes": 1000,
+        "next": [
+            "findmission"
+        ],
+        "on_error": [
+            "SwipetoDownside"
+        ]
+    },
+    "Daily_SaoLing_SelectType": {
+        "doc": "当日x2为骚灵之境：在下三任务中选择“骚灵之境”",
+        "recognition": "OCR",
+        "expected": "骚灵之境",
+        "action": "Click",
+        "timeout": 5000,
+        "post_wait_freezes": 1500,
+        "next": [
+            "findmission"
+        ],
+        "on_error": [
+            "returnHome"
+        ]
+    },
+    "findx2_BenLe": {
+        "doc": "[模板调度] 在宝库资源总表界面检测本勒收集区域的x2标记，命中则跳转到本勒模板入口",
+        "recognition": "TemplateMatch",
+        "template": "x2.png",
+        "roi": [
+            80,
+            160,
+            320,
+            220
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "max_hit": 1,
+        "next": [
+            "DailyTemplate_BenLeX2"
+        ]
+    },
+    "findx2_Exp": {
+        "doc": "[模板调度] 在宝库资源总表界面检测经验获取区域的x2标记，命中则跳转到经验模板入口",
+        "recognition": "TemplateMatch",
+        "template": "x2.png",
+        "roi": [
+            480,
+            160,
+            320,
+            220
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "max_hit": 1,
+        "next": [
+            "DailyTemplate_ExpX2"
+        ]
+    },
+    "findx2_Break": {
+        "doc": "[模板调度] 在宝库资源总表界面检测突破材料区域的x2标记，命中则跳转到突破材料模板入口",
+        "recognition": "TemplateMatch",
+        "template": "x2.png",
+        "roi": [
+            880,
+            160,
+            320,
+            220
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "max_hit": 1,
+        "next": [
+            "DailyTemplate_BreakX2"
+        ]
+    },
+    "findx2_Rune": {
+        "doc": "[模板调度] 在宝库资源总表界面检测符文之地区域的x2标记，命中则跳转到符文之地模板入口",
+        "recognition": "TemplateMatch",
+        "template": "x2.png",
+        "roi": [
+            480,
+            380,
+            320,
+            220
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "max_hit": 1,
+        "next": [
+            "DailyTemplate_RuneX2"
+        ]
+    },
+    "findx2_SaoLing": {
+        "doc": "[模板调度] 在宝库资源总表界面检测骚灵之境区域的x2标记，命中则跳转到骚灵之境模板入口",
+        "recognition": "TemplateMatch",
+        "template": "x2.png",
+        "roi": [
+            880,
+            380,
+            320,
+            220
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "max_hit": 1,
+        "next": [
+            "DailyTemplate_SaoLingX2"
         ]
     },
     "openBattle": {
@@ -51,7 +251,6 @@
         "action": "Click",
         "post_wait_freezes": 1500,
         "next": [
-            "findx2",
             "chooseOwnmission"
         ]
     },
@@ -67,7 +266,6 @@
         "action": "Click",
         "post_wait_freezes": 1500,
         "next": [
-            "findx2",
             "chooseOwnmission",
             "SwipetoDownside"
         ]
@@ -76,6 +274,12 @@
         "doc": "上三任务：本勒收集，经验获取，突破材料。找不到则滑动到下三继续找",
         "recognition": "OCR",
         "expected": "经验获取",
+        "roi": [
+            324,
+            1,
+            616,
+            653
+        ],
         "action": "Click",
         "timeout": 5000,
         "post_wait_freezes": 1000,
@@ -89,8 +293,18 @@
     "SwipetoDownside": {
         "doc": "从上三滑动到下三，查看技能材料、符文之地、骚灵之境",
         "action": "Swipe",
-        "begin": [1254,97,1,1],
-        "end": [1240,514,0,1],
+        "begin": [
+            1254,
+            97,
+            1,
+            1
+        ],
+        "end": [
+            1240,
+            514,
+            0,
+            1
+        ],
         "duration": 500,
         "post_delay": 1000,
         "next": [
@@ -101,6 +315,12 @@
         "doc": "下三任务：技能材料，符文之地，骚灵之境。找不到则返回主界面",
         "recognition": "OCR",
         "expected": "技能材料",
+        "roi": [
+            331,
+            0,
+            581,
+            650
+        ],
         "action": "Click",
         "timeout": 5000,
         "post_wait_freezes": 1500,
@@ -116,16 +336,26 @@
         "template": "x2.png",
         "action": "Click",
         "post_delay": 3000,
+        "max_hit": 1,
         "next": [
             "findmission"
         ]
     },
-
     "Battle_SwipetoRightside": {
         "doc": "突破材料界面向右滑动",
         "action": "Swipe",
-        "begin": [1207, 377, 1, 1],
-        "end": [600, 378, 1, 1],
+        "begin": [
+            1207,
+            377,
+            1,
+            1
+        ],
+        "end": [
+            600,
+            378,
+            1,
+            1
+        ],
         "post_delay": 1000,
         "next": [
             "突破材料_findclass_滑动后"
@@ -163,6 +393,7 @@
         "doc": "符文之地关卡类别选择：西努之盾&漆黑之心、天界光辉&帕尔斯坚毅、战争传奇&努海尔航行、上古之战&萨拉的审判",
         "recognition": "TemplateMatch",
         "template": "battle/上古之战&萨拉的审判.png",
+        "threshold": 0.85,
         "action": "Click",
         "timeout": 5000,
         "post_wait_freezes": 1500,
@@ -210,7 +441,12 @@
     "entermission": {
         "recognition": "TemplateMatch",
         "template": "battle/fast battle.png",
-        "roi": [646,606,278,113],
+        "roi": [
+            646,
+            606,
+            278,
+            113
+        ],
         "action": "Click",
         "next": [
             "maximization"
@@ -281,9 +517,19 @@
     "Battle_cancelpage": {
         "recognition": "TemplateMatch",
         "template": "battle/battle cancel.png",
-        "roi": [654,589,276,131],
+        "roi": [
+            654,
+            589,
+            276,
+            131
+        ],
         "action": "Click",
-        "target_offset": [-300,0,0,0]
+        "target_offset": [
+            -300,
+            0,
+            0,
+            0
+        ]
     },
     "x2_back": {
         "recognition": "TemplateMatch",
@@ -309,6 +555,9 @@
             202,
             140
         ],
-        "action": "Click"
+        "action": "Click",
+        "next": [
+            "EndonHome"
+        ]
     }
 }

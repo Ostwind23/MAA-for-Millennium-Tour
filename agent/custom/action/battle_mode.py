@@ -5,6 +5,7 @@
 
 import time
 import json
+import numpy as np
 from maa.custom_action import CustomAction
 from maa.context import Context
 
@@ -42,6 +43,8 @@ class BattleModeManager(CustomAction):
     
     # 同一战斗的判定阈值（秒）
     _SAME_BATTLE_THRESHOLD: float = 30.0
+    # auto 模式下的同一战斗判定阈值（秒）
+    _AUTO_SAME_BATTLE_THRESHOLD: float = 180.0
     # 检测间隔（秒）
     _DETECT_INTERVAL: float = 5.0
     # 切换成功后等待时间（秒）- 等待角色动画结束
@@ -50,11 +53,32 @@ class BattleModeManager(CustomAction):
     _MAX_SWITCH_ATTEMPTS: int = 10
     # 最大跳过尝试次数
     _MAX_SKIP_ATTEMPTS: int = 30
+    # 重复执行日志节流（秒）
+    _SKIP_LOG_INTERVAL: float = 15.0
+    # auto 模式下的低频轮询间隔（秒）
+    _AUTO_WATCH_INTERVAL: float = 4.0
+    # auto 模式下画面未变化时的胜利检测间隔（秒）
+    _AUTO_VICTORY_CHECK_INTERVAL: float = 10.0
+    # 画面变化检测采样步长（像素）
+    _FRAME_SAMPLE_STEP: int = 32
+    # 平均差异阈值（越大越“宽松”）
+    _AUTO_FRAME_DIFF_THRESHOLD: float = 3.0
+    # 胜利/结算 OCR 检测 ROI（全屏）
+    _VICTORY_CHECK_ROI = [
+            738,
+            16,
+            438,
+            218
+        ]
 
     def __init__(self):
         super().__init__()
         self._last_execution_time: float = 0.0
         self._last_target_mode: str = ""
+        self._last_skip_log_time: float = 0.0
+        self._last_auto_frame_sample = None
+        self._last_auto_frame_time: float = 0.0
+        self._last_auto_victory_check_time: float = 0.0
 
     def run(
         self,
@@ -80,10 +104,17 @@ class BattleModeManager(CustomAction):
         current_time = time.time()
         
         # 幂等性检查
+        same_battle_threshold = (
+            self._AUTO_SAME_BATTLE_THRESHOLD if target_mode == "auto" else self._SAME_BATTLE_THRESHOLD
+        )
         time_since_last = current_time - self._last_execution_time
-        if (time_since_last < self._SAME_BATTLE_THRESHOLD and 
+        if (time_since_last < same_battle_threshold and 
             self._last_target_mode == target_mode):
-            print(f"[BattleModeManager] 跳过重复执行（{time_since_last:.1f}秒内已执行）")
+            if target_mode == "auto":
+                self._auto_watch_repeat(context)
+            if current_time - self._last_skip_log_time >= self._SKIP_LOG_INTERVAL:
+                print(f"[BattleModeManager] 跳过重复执行（{time_since_last:.1f}秒内已执行）")
+                self._last_skip_log_time = current_time
             return CustomAction.RunResult(success=True)
         
         print(f"[BattleModeManager] 目标模式: {target_mode}")
@@ -103,6 +134,8 @@ class BattleModeManager(CustomAction):
         # 步骤3: 如果是手动跳过模式，持续点击跳过按钮
         if want_manual:
             self._perform_skip_loop(context)
+        else:
+            self._refresh_auto_frame_sample(context)
         
         # 更新执行状态
         self._last_execution_time = current_time
@@ -222,6 +255,114 @@ class BattleModeManager(CustomAction):
         if skip_result is not None and skip_result.hit:
             return skip_result
         return None
+
+    def _sample_frame(self, image):
+        """对画面进行稀疏采样，用于轻量变化检测"""
+        if image is None:
+            return None
+        try:
+            return image[::self._FRAME_SAMPLE_STEP, ::self._FRAME_SAMPLE_STEP, 1].astype(np.int16)
+        except Exception:
+            return None
+
+    def _detect_mode_on_image(self, context: Context, image) -> tuple[str | None, any]:
+        """在指定截图上检测当前战斗模式"""
+        auto_reco_param = {
+            "BattleMode_DetectAuto_Internal": {
+                "recognition": "TemplateMatch",
+                "template": self.AUTO_MODE_TEMPLATE,
+                "roi": self.MODE_ICON_ROI
+            }
+        }
+        
+        auto_result = context.run_recognition(
+            "BattleMode_DetectAuto_Internal",
+            image,
+            auto_reco_param
+        )
+        
+        if auto_result is not None and auto_result.hit:
+            return ("auto", auto_result)
+        
+        manual_reco_param = {
+            "BattleMode_DetectManual_Internal": {
+                "recognition": "TemplateMatch",
+                "template": self.MANUAL_MODE_TEMPLATE,
+                "roi": self.MODE_ICON_ROI
+            }
+        }
+        
+        manual_result = context.run_recognition(
+            "BattleMode_DetectManual_Internal",
+            image,
+            manual_reco_param
+        )
+        
+        if manual_result is not None and manual_result.hit:
+            return ("manual", manual_result)
+        
+        return (None, None)
+
+    def _detect_victory_settlement(self, context: Context, image) -> bool:
+        """检测是否出现胜利/结算相关文案"""
+        victory_reco = context.run_recognition(
+            "BattleMode_VictoryCheck",
+            image,
+            {
+                "BattleMode_VictoryCheck": {
+                    "recognition": "OCR",
+                    "expected": "点击.*继续|返回|胜利|结算",
+                    "roi": self._VICTORY_CHECK_ROI,
+                }
+            }
+        )
+        
+        return victory_reco is not None and victory_reco.hit
+
+    def _refresh_auto_frame_sample(self, context: Context) -> None:
+        """切换到 auto 后刷新一帧基准画面"""
+        context.tasker.controller.post_screencap().wait()
+        image = context.tasker.controller.cached_image
+        self._last_auto_frame_sample = self._sample_frame(image)
+        self._last_auto_frame_time = time.time()
+
+    def _auto_watch_repeat(self, context: Context) -> None:
+        """
+        auto 模式下的轻量轮询：
+        - 低频截帧检测画面变化
+        - 若画面未变化且到达间隔，则尝试检测胜利/结算
+        """
+        now = time.time()
+        if now - self._last_auto_frame_time < self._AUTO_WATCH_INTERVAL:
+            return
+        
+        context.tasker.controller.post_screencap().wait()
+        image = context.tasker.controller.cached_image
+        sample = self._sample_frame(image)
+        if sample is None:
+            self._last_auto_frame_time = now
+            return
+        
+        if self._last_auto_frame_sample is None:
+            self._last_auto_frame_sample = sample
+            self._last_auto_frame_time = now
+            return
+        
+        diff = float(np.mean(np.abs(sample - self._last_auto_frame_sample)))
+        self._last_auto_frame_time = now
+        
+        if diff >= self._AUTO_FRAME_DIFF_THRESHOLD:
+            self._last_auto_frame_sample = sample
+            mode, reco_result = self._detect_mode_on_image(context, image)
+            if mode == "manual":
+                box = reco_result.box if reco_result and hasattr(reco_result, 'box') else None
+                self._click_mode_toggle(context, box)
+            return
+        
+        if now - self._last_auto_victory_check_time >= self._AUTO_VICTORY_CHECK_INTERVAL:
+            self._last_auto_victory_check_time = now
+            if self._detect_victory_settlement(context, image):
+                print("[BattleModeManager] 检测到胜利/结算文案")
 
     def _perform_skip_loop(self, context: Context) -> None:
         """

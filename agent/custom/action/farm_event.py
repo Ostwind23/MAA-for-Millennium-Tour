@@ -29,9 +29,18 @@ import time
 import math
 import os
 import threading
-from typing import Optional, List, Tuple, Callable
+import subprocess
+import shutil
+import ctypes
+from ctypes import wintypes
+from pathlib import Path
+from dataclasses import dataclass, field
+from typing import Optional, List, Tuple, Callable, Dict, Any
 import numpy as np
 import cv2
+
+# 硬样本录制器：识别失败时保存前后若干帧（仅图片）
+from .screenshot_collector import HardCaseFrameRecorder
 
 # Tkinter 和 PIL 用于调试窗口
 import tkinter as tk
@@ -42,6 +51,15 @@ from PIL import Image, ImageTk, ImageDraw, ImageFont
 # 注意：Tkinter GUI 在 MaaFramework Agent 环境中可能导致崩溃
 # 如果遇到"调试适配器意外终止"错误，请设置为 False
 DEBUG_ENABLED = True 
+
+# 调试显示模式：
+# - "scrcpy": 使用 scrcpy 以 30fps 转播画面 + 透明 overlay 画框画字（推荐，低开销）
+# - "opencv": 使用 OpenCV cv2.imshow 显示 ADB 截图，并用 cv2 直接画框（兼容，无需 scrcpy）
+# - "tk": 旧版 Tkinter+PIL 合成显示（开销大，仅保留兼容）
+DEBUG_VIEW_MODE = "scrcpy"
+
+# scrcpy 窗口标题（用于定位窗口并对齐 overlay）
+SCRCPY_WINDOW_TITLE = "MAA_for_Millennium_Tour Debug View"
 
 # 调试输出目录（相对于项目根目录）
 DEBUG_OUTPUT_DIR = "assets/debug/farm_debug"
@@ -110,6 +128,16 @@ PLOT_WET_COUNT = 25  # 40x25=1000 像素，命中阈值取较小即可
 # 以坑位中心为圆心、半径 150px 的外接方作为 ROI（300x300）
 MOISTURE_OCR_RADIUS = 150
 
+# 坑位“湿润”检测（TemplateMatch，替代 ColorMatch）
+# 通过匹配“湿润状态下坑位底部水面”的模板判断是否湿润：
+# - 模板：farm/水坑截图（判断湿润）.png
+# - 位置：位于坑位中心点下方约 20px 左右
+# - 由于坑位周围都是水，可能出现重复命中；只要命中一次即可认为“湿润”
+PLOT_WET_WATER_TEMPLATE = f"{_FARM_IMG_DIR}/水坑截图（判断湿润）.png"
+PLOT_WET_TEMPLATE_OFFSET_Y = 20
+PLOT_WET_TEMPLATE_MARGIN = 50  # 以 (center_x, center_y+offset) 为中心，向外扩张的 ROI 半径
+PLOT_WET_TEMPLATE_THRESHOLD = 0.7
+
 # 农场坑位中心坐标（16个）
 # 用户提供格式为 [x, y, ?, ?]，这里仅使用 x、y
 FARM_PLOT_CENTERS: List[Tuple[int, int]] = [
@@ -140,9 +168,45 @@ YOLO_THRESHOLD = 0.3  # 检测置信度阈值（降低以提高检测率）
 
 # 移动控制参数
 MOVE_TOLERANCE = 26  # 到达目标位置的容差（像素）
+MOVE_NEAR_DISTANCE = 60  # 进入近距离阈值（像素）
 MOVE_CHECK_INTERVAL = 0.1  # 移动过程中检测间隔（秒）- 降低以提高帧率
 MOVE_TIMEOUT = 15  # 移动超时时间（秒）
 SWIPE_DURATION = 500  # 摇杆滑动持续时间（毫秒）
+SWIPE_DURATION_FINE = 250  # 近距离精定位摇杆持续时间（毫秒）
+NEAR_DEBOUNCE_WAIT = 0.2  # 进入近距离后的防抖等待（秒）
+GIRL_POS_EMA_ALPHA = 0.35  # 角色脚底点 EMA 平滑系数
+GIRL_PREDICT_STEP = 10     # 角色丢失时沿移动方向预测步长（像素）
+GIRL_POS_EMA_MAX_DELTA = 35  # EMA 与原始位置偏差过大时回退原始位置（像素）
+
+
+@dataclass
+class YoloDet:
+    """单个 YOLO 检测结果（与 MaaFramework reco_result 字段对齐）。"""
+    box: List[int]
+    cls_index: int
+    score: float
+    label: str = ""
+
+
+@dataclass
+class YoloFrameResults:
+    """单帧 YOLO 解析结果（用于复用，避免重复推理）。"""
+    all: List[YoloDet] = field(default_factory=list)
+    girls: List[YoloDet] = field(default_factory=list)
+    bugs: List[YoloDet] = field(default_factory=list)
+    girl_best: Optional[YoloDet] = None
+
+
+@dataclass
+class FrameContext:
+    """
+    单帧上下文：同一张截图内复用所有识别结果，确保“截一次图 -> 跑完必要检测 -> 动作/循环”。\n
+    - image: 本帧截图（BGR）\n
+    - cache: 同帧缓存（包含 YOLO、OCR、TemplateMatch 等 run_recognition 结果）\n
+    """
+    image: np.ndarray
+    cache: Dict[str, Any] = field(default_factory=dict)
+    t_capture: float = field(default_factory=time.time)
 
 # 默认等待时间
 DEFAULT_WAIT = 1.0  # 默认等待时间（秒）
@@ -651,24 +715,634 @@ class TkDebugViewer:
         self._tkinter_thread()
 
 
+class ScrcpyOverlayDebugViewer:
+    """
+    scrcpy 画面转播 + 透明 overlay 叠加绘制（框、文字、目标点等）。
+
+    设计目标：
+    - 显示侧尽可能低开销：不显示 ADB 截图，不做 PIL 合成。
+    - 任务逻辑与 ADB 截图/识别完全不变：主线程仍用 MaaFramework API。
+    - overlay 只消费主线程 push 的“检测结果/目标/文字”等，并与 scrcpy 窗口客户区对齐。
+    """
+
+    def __init__(self, *, adb_serial: Optional[str] = None):
+        # scrcpy 进程
+        self._scrcpy_proc: Optional[subprocess.Popen] = None
+        # 绑定的 ADB 设备 serial（多开模拟器时用于指定目标设备）
+        self._adb_serial = adb_serial
+
+        # 线程控制
+        self._stop_flag = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+
+        # 共享状态（线程安全）
+        self._lock = threading.Lock()
+        self._detections: List[dict] = []
+        self._target_pos: Optional[Tuple[int, int]] = None
+        self._info_text: str = ""
+        self._frame_count = 0
+
+        # Tkinter overlay（在 Tk 线程中初始化）
+        self._root: Optional[tk.Tk] = None
+        self._canvas: Optional[tk.Canvas] = None
+
+        # scrcpy 窗口句柄与映射参数
+        self._scrcpy_hwnd: Optional[int] = None
+        self._client_w = SCREEN_WIDTH
+        self._client_h = SCREEN_HEIGHT
+        self._scale = 1.0
+        self._pad_x = 0.0
+        self._pad_y = 0.0
+
+        # FPS 统计（overlay 更新频率）
+        self._last_fps_time = time.time()
+        self._overlay_frames = 0
+        self._overlay_fps = 0.0
+
+    # -------------------- 主线程推送 API --------------------
+    def push_frame(self, image: np.ndarray):
+        """
+        scrcpy 模式下不显示 ADB 截图，因此不存储图像。
+        但仍统计 frame_count，便于显示“主线程推送帧数”的 proxy 指标。
+        """
+        with self._lock:
+            self._frame_count += 1
+
+    def push_detections(self, detections: List[dict]):
+        with self._lock:
+            self._detections = detections.copy() if detections else []
+
+    def set_target(self, pos: Optional[Tuple[int, int]]):
+        with self._lock:
+            self._target_pos = pos
+
+    def set_info(self, text: str):
+        with self._lock:
+            self._info_text = text or ""
+
+    # -------------------- 生命周期 --------------------
+    def start(self):
+        if self._thread and self._thread.is_alive():
+            print("[ScrcpyOverlayDebugViewer] 已在运行")
+            return
+
+        # 先启动 scrcpy（外部工具，不打包）
+        self._start_scrcpy()
+
+        print("[ScrcpyOverlayDebugViewer] 启动 overlay...")
+        self._stop_flag.clear()
+        self._thread = threading.Thread(target=self._tk_thread, name="ScrcpyOverlayDebugViewer", daemon=True)
+        self._thread.start()
+        time.sleep(0.3)
+
+    def stop(self):
+        print("[ScrcpyOverlayDebugViewer] 请求停止...")
+        self._stop_flag.set()
+
+        # 关闭 overlay
+        if self._root:
+            try:
+                self._root.quit()
+            except Exception:
+                pass
+
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=2.0)
+
+        self._thread = None
+        self._root = None
+        self._canvas = None
+
+        # 关闭 scrcpy
+        self._stop_scrcpy()
+        print("[ScrcpyOverlayDebugViewer] 已停止")
+
+    def is_running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
+    def _check_stopping(self) -> bool:
+        return self._stop_flag.is_set()
+
+    # -------------------- scrcpy 管理 --------------------
+    def _start_scrcpy(self):
+        # scrcpy 查找策略（按优先级，符合你的发布计划）：
+        # 1) 项目根目录下 scrcpy/ 文件夹内递归搜索 scrcpy*.exe（GitHub Action 可放这里）
+        # 2) 环境变量 SCRCPY_PATH 指向 scrcpy.exe
+        # 不再依赖 PATH（避免用户环境差异）
+
+        scrcpy_path = None
+
+        # 1) 项目根目录 scrcpy/ 目录
+        try:
+            project_root = Path(__file__).resolve().parents[3]
+            scrcpy_dir = project_root / "scrcpy"
+            if scrcpy_dir.exists() and scrcpy_dir.is_dir():
+                # 常见候选优先级（若你未来直接把 exe 放在 scrcpy/ 根目录）
+                preferred = [
+                    scrcpy_dir / "scrcpy.exe",
+                    scrcpy_dir / "scrcpy-noconsole.exe",
+                    scrcpy_dir / "scrcpy-console.exe",
+                ]
+                for p in preferred:
+                    if p.exists():
+                        scrcpy_path = str(p)
+                        break
+
+                # 若根目录没有，则递归搜索（适配 scrcpy-win64-vX.Y.Z/ 这种解压结构）
+                if not scrcpy_path:
+                    candidates = []
+                    for root, _, files in os.walk(scrcpy_dir):
+                        for fn in files:
+                            low = fn.lower()
+                            if low.startswith("scrcpy") and low.endswith(".exe"):
+                                candidates.append(Path(root) / fn)
+                    # 更偏好 scrcpy.exe / scrcpy-noconsole.exe
+                    def _score(p: Path) -> int:
+                        n = p.name.lower()
+                        if n == "scrcpy.exe":
+                            return 0
+                        if n == "scrcpy-noconsole.exe":
+                            return 1
+                        if n == "scrcpy-console.exe":
+                            return 2
+                        return 10
+                    if candidates:
+                        candidates.sort(key=_score)
+                        scrcpy_path = str(candidates[0])
+        except Exception:
+            scrcpy_path = None
+
+        # 2) 环境变量覆盖（开发者/高级用户可用）
+        if not scrcpy_path:
+            try:
+                env_path = os.environ.get("SCRCPY_PATH")
+                if env_path and os.path.exists(env_path):
+                    scrcpy_path = env_path
+            except Exception:
+                pass
+
+        if not scrcpy_path:
+            raise FileNotFoundError(
+                "scrcpy not found. Put scrcpy.exe under <project_root>/scrcpy/, "
+                "or set SCRCPY_PATH."
+            )
+
+        cmd = [
+            scrcpy_path,
+        ]
+        # 绑定到当前 MAA 使用的设备（避免多开模拟器时 scrcpy 选错）
+        if self._adb_serial:
+            cmd += ["-s", str(self._adb_serial)]
+
+        cmd += [
+            "--no-audio",
+            "--max-fps", "30",
+            # scrcpy 3.x 起废弃 --bit-rate，改为 --video-bit-rate / --audio-bit-rate
+            "--video-bit-rate", "4M",
+            "--max-size", str(SCREEN_WIDTH),
+            "--window-title", SCRCPY_WINDOW_TITLE,
+        ]
+        self._scrcpy_proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print(f"[ScrcpyOverlayDebugViewer] scrcpy 已启动: title={SCRCPY_WINDOW_TITLE}")
+
+    def _stop_scrcpy(self):
+        if self._scrcpy_proc is None:
+            return
+        try:
+            self._scrcpy_proc.terminate()
+            self._scrcpy_proc.wait(timeout=2.0)
+        except Exception:
+            try:
+                self._scrcpy_proc.kill()
+            except Exception:
+                pass
+        finally:
+            self._scrcpy_proc = None
+
+    # -------------------- Windows 窗口对齐 --------------------
+    def _find_scrcpy_window(self) -> Optional[int]:
+        try:
+            hwnd = ctypes.windll.user32.FindWindowW(None, SCRCPY_WINDOW_TITLE)
+            if hwnd:
+                return int(hwnd)
+        except Exception:
+            pass
+        return None
+
+    def _get_client_rect_screen(self, hwnd: int) -> Optional[Tuple[int, int, int, int]]:
+        """
+        获取窗口客户区在屏幕坐标系下的 (left, top, width, height)。
+        """
+        try:
+            rect = wintypes.RECT()
+            if not ctypes.windll.user32.GetClientRect(hwnd, ctypes.byref(rect)):
+                return None
+
+            pt = wintypes.POINT(0, 0)
+            if not ctypes.windll.user32.ClientToScreen(hwnd, ctypes.byref(pt)):
+                return None
+
+            w = int(rect.right - rect.left)
+            h = int(rect.bottom - rect.top)
+            return (int(pt.x), int(pt.y), w, h)
+        except Exception:
+            return None
+
+    def _sync_overlay_geometry(self):
+        if self._root is None:
+            return
+
+        if not self._scrcpy_hwnd:
+            self._scrcpy_hwnd = self._find_scrcpy_window()
+            if not self._scrcpy_hwnd:
+                return
+
+        info = self._get_client_rect_screen(self._scrcpy_hwnd)
+        if not info:
+            return
+        left, top, w, h = info
+        if w <= 0 or h <= 0:
+            return
+
+        self._client_w = w
+        self._client_h = h
+
+        # letterbox：保持比例
+        sx = w / float(SCREEN_WIDTH)
+        sy = h / float(SCREEN_HEIGHT)
+        scale = min(sx, sy)
+        video_w = SCREEN_WIDTH * scale
+        video_h = SCREEN_HEIGHT * scale
+        self._scale = scale
+        self._pad_x = (w - video_w) / 2.0
+        self._pad_y = (h - video_h) / 2.0
+
+        try:
+            self._root.geometry(f"{w}x{h}+{left}+{top}")
+            # 成功对齐后显示 overlay（启动时会先 withdraw）
+            try:
+                self._root.deiconify()
+            except Exception:
+                pass
+        except Exception:
+            pass
+        if self._canvas is not None:
+            try:
+                self._canvas.config(width=w, height=h)
+            except Exception:
+                pass
+
+    def _map_point(self, x: int, y: int) -> Tuple[int, int]:
+        mx = int(self._pad_x + x * self._scale)
+        my = int(self._pad_y + y * self._scale)
+        return mx, my
+
+    # -------------------- overlay 绘制 --------------------
+    def _tk_thread(self):
+        print("[ScrcpyOverlayDebugViewer] Tk 线程启动")
+        try:
+            self._root = tk.Tk()
+            self._root.title("Farm Debug Overlay")
+            self._root.overrideredirect(True)
+            self._root.attributes("-topmost", True)
+            # 启动时先隐藏，等定位到 scrcpy 窗口后再显示，避免跑到屏幕左上角挡住视线
+            try:
+                self._root.withdraw()
+            except Exception:
+                pass
+
+            transparent_color = "#ff00ff"
+            self._root.configure(bg=transparent_color)
+            try:
+                self._root.wm_attributes("-transparentcolor", transparent_color)
+            except Exception:
+                pass
+
+            self._canvas = tk.Canvas(self._root, bg=transparent_color, highlightthickness=0, bd=0)
+            self._canvas.pack(fill=tk.BOTH, expand=True)
+
+            self._try_set_clickthrough()
+
+            self._schedule_refresh()
+            self._root.mainloop()
+        except Exception as e:
+            print(f"[ScrcpyOverlayDebugViewer] Tk 线程异常: {e}")
+        finally:
+            self._root = None
+            self._canvas = None
+            print("[ScrcpyOverlayDebugViewer] Tk 线程退出")
+
+    def _try_set_clickthrough(self):
+        """
+        Windows 点击穿透：WS_EX_LAYERED + WS_EX_TRANSPARENT。
+        失败不影响功能（最多就是挡住鼠标）。
+        """
+        try:
+            hwnd = self._root.winfo_id()
+            GWL_EXSTYLE = -20
+            WS_EX_LAYERED = 0x00080000
+            WS_EX_TRANSPARENT = 0x00000020
+            WS_EX_TOOLWINDOW = 0x00000080
+            exstyle = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+            exstyle |= (WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW)
+            ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, exstyle)
+        except Exception:
+            pass
+
+    def _schedule_refresh(self):
+        if self._root and not self._check_stopping():
+            self._refresh_overlay()
+            self._root.after(33, self._schedule_refresh)
+
+    def _refresh_overlay(self):
+        if self._check_stopping() or self._root is None or self._canvas is None:
+            return
+
+        self._sync_overlay_geometry()
+
+        # overlay fps
+        self._overlay_frames += 1
+        now = time.time()
+        if now - self._last_fps_time >= 1.0:
+            self._overlay_fps = self._overlay_frames / (now - self._last_fps_time)
+            self._overlay_frames = 0
+            self._last_fps_time = now
+
+        with self._lock:
+            detections = self._detections.copy()
+            target = self._target_pos
+            info = self._info_text
+            frame_count = self._frame_count
+
+        self._canvas.delete("all")
+
+        # 框与标签
+        for det in detections:
+            label = det.get("label", "unknown")
+            box = det.get("box", [0, 0, 0, 0])
+            conf = float(det.get("confidence", 0.0) or 0.0)
+            color = DEBUG_COLORS.get(label, (0, 255, 0))  # RGB
+            x, y, w, h = [int(v) for v in box]
+            x1, y1 = self._map_point(x, y)
+            x2, y2 = self._map_point(x + w, y + h)
+            hex_color = f"#{color[0]:02x}{color[1]:02x}{color[2]:02x}"
+            self._canvas.create_rectangle(x1, y1, x2, y2, outline=hex_color, width=2)
+            text = f"{label} {conf:.2f}" if conf > 0 else str(label)
+            self._canvas.create_text(x1 + 3, y1 - 12, text=text, fill=hex_color, anchor="nw")
+
+        # 目标点
+        if target:
+            tx, ty = int(target[0]), int(target[1])
+            x, y = self._map_point(tx, ty)
+            tcolor = DEBUG_COLORS.get("target", (255, 0, 255))
+            thex = f"#{tcolor[0]:02x}{tcolor[1]:02x}{tcolor[2]:02x}"
+            self._canvas.create_line(x - 20, y, x + 20, y, fill=thex, width=2)
+            self._canvas.create_line(x, y - 20, x, y + 20, fill=thex, width=2)
+
+        # 信息
+        info_text = (
+            f"Farm Debug [scrcpy+overlay] | OverlayFPS:{self._overlay_fps:.1f} | "
+            f"PushFrameCount:{frame_count} | Dets:{len(detections)}"
+        )
+        if info:
+            info_text += f" | {info}"
+        self._canvas.create_text(10, 10, text=info_text, fill="#ffffff", anchor="nw")
+
+
+class OpenCVDebugViewer:
+    """
+    OpenCV 调试查看器：显示 ADB 截图并用 cv2 直接画框画字。
+    用于 scrcpy 不可用时的兼容/回退。
+    """
+
+    def __init__(self):
+        self._stop_flag = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+
+        self._lock = threading.Lock()
+        self._current_image: Optional[np.ndarray] = None
+        self._detections: List[dict] = []
+        self._target_pos: Optional[Tuple[int, int]] = None
+        self._info_text: str = ""
+        self._frame_count = 0
+
+        self._window_name = "Farm Debug Viewer - OpenCV"
+        self._last_fps_time = time.time()
+        self._show_frames = 0
+        self._show_fps = 0.0
+
+    def push_frame(self, image: np.ndarray):
+        if image is None or getattr(image, "size", 0) == 0:
+            return
+        with self._lock:
+            self._current_image = image.copy()
+            self._frame_count += 1
+
+    def push_detections(self, detections: List[dict]):
+        with self._lock:
+            self._detections = detections.copy() if detections else []
+
+    def set_target(self, pos: Optional[Tuple[int, int]]):
+        with self._lock:
+            self._target_pos = pos
+
+    def set_info(self, text: str):
+        with self._lock:
+            self._info_text = text or ""
+
+    def start(self):
+        if self._thread and self._thread.is_alive():
+            print("[OpenCVDebugViewer] 已在运行")
+            return
+        print("[OpenCVDebugViewer] 启动...")
+        self._stop_flag.clear()
+        self._thread = threading.Thread(target=self._loop, name="OpenCVDebugViewer", daemon=True)
+        self._thread.start()
+        time.sleep(0.2)
+
+    def stop(self):
+        print("[OpenCVDebugViewer] 请求停止...")
+        self._stop_flag.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=2.0)
+        self._thread = None
+        try:
+            cv2.destroyWindow(self._window_name)
+        except Exception:
+            pass
+        print("[OpenCVDebugViewer] 已停止")
+
+    def is_running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
+    def _loop(self):
+        try:
+            cv2.namedWindow(self._window_name, cv2.WINDOW_NORMAL)
+        except Exception:
+            pass
+
+        while not self._stop_flag.is_set():
+            with self._lock:
+                img = None if self._current_image is None else self._current_image.copy()
+                dets = self._detections.copy()
+                target = self._target_pos
+                info = self._info_text
+                frame_count = self._frame_count
+
+            if img is None:
+                time.sleep(0.05)
+                continue
+
+            for det in dets:
+                label = det.get("label", "unknown")
+                box = det.get("box", [0, 0, 0, 0])
+                conf = float(det.get("confidence", 0.0) or 0.0)
+                color = DEBUG_COLORS.get(label, (0, 255, 0))  # RGB
+                bgr = (int(color[2]), int(color[1]), int(color[0]))
+                x, y, w, h = [int(v) for v in box]
+                cv2.rectangle(img, (x, y), (x + w, y + h), bgr, 2)
+                text = f"{label} {conf:.2f}" if conf > 0 else str(label)
+                cv2.putText(img, text, (x, max(0, y - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, bgr, 1, cv2.LINE_AA)
+
+            if target:
+                tx, ty = int(target[0]), int(target[1])
+                tcolor = DEBUG_COLORS.get("target", (255, 0, 255))
+                tbgr = (int(tcolor[2]), int(tcolor[1]), int(tcolor[0]))
+                cv2.drawMarker(img, (tx, ty), tbgr, markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2)
+
+            self._show_frames += 1
+            now = time.time()
+            if now - self._last_fps_time >= 1.0:
+                self._show_fps = self._show_frames / (now - self._last_fps_time)
+                self._show_frames = 0
+                self._last_fps_time = now
+
+            header = f"OpenCVFPS:{self._show_fps:.1f} PushFrameCount:{frame_count} Dets:{len(dets)}"
+            if info:
+                header += f" | {info}"
+            cv2.putText(img, header, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2, cv2.LINE_AA)
+
+            try:
+                cv2.imshow(self._window_name, img)
+                cv2.waitKey(1)
+            except Exception:
+                time.sleep(0.05)
+
+
 # ==================== 全局调试实例管理 ====================
 
-_debug_viewer: Optional[TkDebugViewer] = None
+_debug_viewer = None
 
 
-def get_debug_viewer() -> Optional[TkDebugViewer]:
+def get_debug_viewer():
     """获取当前调试查看器实例"""
     return _debug_viewer
 
 
-def start_debug_viewer() -> Optional[TkDebugViewer]:
+def _get_current_adb_serial(context: Optional[Context]) -> Optional[str]:
+    """
+    尝试从当前 MAA Controller 中提取 ADB serial/address，用于 scrcpy 的 -s 参数。
+    兼容常见形式：
+    - 127.0.0.1:16384（模拟器常见）
+    - emulator-5554（Android emulator）
+    - 设备序列号（USB）
+    """
+    if context is None:
+        return None
+
+    # 0) 环境变量兜底（一些工具链会设置）
+    try:
+        env_serial = os.environ.get("ANDROID_SERIAL") or os.environ.get("ADB_SERIAL")
+        if env_serial:
+            return str(env_serial)
+    except Exception:
+        pass
+
+    # 1) 优先尝试从当前 Controller 取（但注意：maa.controller.AdbController 通常不暴露 address）
+    try:
+        controller = context.tasker.controller
+    except Exception:
+        controller = None
+
+    # 常见字段名尝试（属性或无参方法）
+    if controller is not None:
+        for key in ("address", "adb_address", "serial", "device_serial"):
+            try:
+                val = getattr(controller, key)
+                if callable(val):
+                    val = val()
+                if val:
+                    return str(val)
+            except Exception:
+                continue
+
+    # 兜底：尝试从 config / extras 中找
+    if controller is not None:
+        try:
+            cfg = getattr(controller, "config", None)
+            if isinstance(cfg, dict):
+                addr = cfg.get("address") or cfg.get("adb_address") or cfg.get("serial")
+                if addr:
+                    return str(addr)
+        except Exception:
+            pass
+
+    # 2) 优先从 maa.ToolKit 获取（纯 maa 侧信息）
+    # - 若当前仅有 1 个 ADB 设备，直接使用它（最常见）
+    # - 若有多个设备，无法从 controller 精确反查“当前使用的是哪一个”，此时继续走后续兜底
+    try:
+        from maa.toolkit import Toolkit
+
+        devs = Toolkit.find_adb_devices()
+        if len(devs) == 1:
+            addr = getattr(devs[0], "address", None)
+            if addr:
+                return str(addr)
+    except Exception:
+        pass
+
+    # 再兜底：从 .nicegui/storage-general.json 读取（GUI 场景下通常会有）
+    try:
+        project_root = Path(__file__).resolve().parents[3]
+        storage_path = project_root / ".nicegui" / "storage-general.json"
+        if storage_path.exists():
+            raw = storage_path.read_text(encoding="utf-8")
+            data = json.loads(raw)
+            addr = data.get("adb_address")
+            if addr:
+                return str(addr)
+    except Exception:
+        pass
+
+    return None
+
+
+def start_debug_viewer(context: Optional[Context] = None):
     """启动调试查看器（非阻塞）"""
     global _debug_viewer
     if not DEBUG_ENABLED:
         return None
     if _debug_viewer and _debug_viewer.is_running():
         return _debug_viewer
-    _debug_viewer = TkDebugViewer()
+    # 优先 scrcpy+overlay；失败则回退到 OpenCV（避免 Tkinter+PIL 合成带来的性能开销）
+    mode = (DEBUG_VIEW_MODE or "scrcpy").lower()
+
+    if mode == "scrcpy":
+        try:
+            adb_serial = _get_current_adb_serial(context)
+            if adb_serial:
+                print(f"[DebugViewer] scrcpy 绑定设备: {adb_serial}")
+            else:
+                print("[DebugViewer] scrcpy 未获取到设备 serial，将由 scrcpy 自行选择（多设备时可能选错）")
+            _debug_viewer = ScrcpyOverlayDebugViewer(adb_serial=adb_serial)
+            _debug_viewer.start()
+            return _debug_viewer
+        except Exception as e:
+            print(f"[DebugViewer] scrcpy 模式启动失败，回退到 OpenCV：{e}")
+            mode = "opencv"
+
+    # 任何非 scrcpy 模式都用 OpenCV viewer（更轻量）
+    _debug_viewer = OpenCVDebugViewer()
     _debug_viewer.start()
     return _debug_viewer
 
@@ -720,7 +1394,7 @@ def get_debug_visualizer():
 
 def start_debug_visualizer(context: Context = None):
     """兼容旧 API"""
-    return start_debug_viewer()
+    return start_debug_viewer(context)
 
 
 def stop_debug_visualizer():
@@ -816,13 +1490,24 @@ class FarmEventHandler(CustomAction):
         # 启动调试可视化（数据推送模式）
         if DEBUG_ENABLED:
             print("[FarmEventHandler] 调试模式已启用，启动 Tkinter 调试窗口...")
-            start_debug_viewer()  # 非阻塞，在独立线程运行
+            start_debug_viewer(context)  # 非阻塞，在独立线程运行（绑定当前 ADB 设备）
             time.sleep(0.5)  # 等待窗口创建
             print("[FarmEventHandler] 调试窗口已启动")
         
         # 解析参数
         params = _parse_param(argv.custom_action_param)
         event_type = params.get("event_type", "waterwheel")
+
+        # 硬样本录制器（用于保存“识别丢失/误检导致动作失败”时的前后帧）
+        # 低开销：常态仅保留最近 5 帧的环形缓冲；仅在失败触发时写盘。
+        self._hardcase_recorder = HardCaseFrameRecorder(
+            prefix="farm_fix",
+            save_dir="training/hard cases",
+            img_format="jpg",
+            quality=95,
+            pre_frames=5,
+            post_frames=5,
+        )
         
         print(f"[FarmEventHandler] 事件类型: {event_type}")
         print(f"[FarmEventHandler] 完整参数: {params}")
@@ -855,8 +1540,154 @@ class FarmEventHandler(CustomAction):
             if DEBUG_ENABLED:
                 print("[FarmEventHandler] 停止调试可视化窗口...")
                 stop_debug_viewer()
+
+    def _hardcase_push(self, image: np.ndarray):
+        """向硬样本录制器推入一帧（不影响主流程）。"""
+        try:
+            if hasattr(self, "_hardcase_recorder") and self._hardcase_recorder is not None:
+                self._hardcase_recorder.push_frame(image)
+        except Exception:
+            pass
+
+    def _hardcase_trigger_and_capture_post(
+        self,
+        context: Context,
+        *,
+        reason: str,
+        post_frames: int = 5,
+        delay_s: float = 0.03,
+    ):
+        """
+        触发保存“前后帧”并同步补齐后续帧（避免失败后立刻 return 导致拿不到 post 帧）。
+        仅保存图片到 training/hard cases。
+        """
+        try:
+            if not hasattr(self, "_hardcase_recorder") or self._hardcase_recorder is None:
+                return
+            self._hardcase_recorder.trigger(reason=reason)
+
+            # 同步补齐后续帧：失败发生后，额外截取 post_frames 次
+            for _ in range(max(0, int(post_frames))):
+                try:
+                    controller = context.tasker.controller
+                    controller.post_screencap().wait()
+                    time.sleep(max(0.0, float(delay_s)))
+                    img = controller.cached_image
+                    if img is not None:
+                        self._hardcase_recorder.push_frame(img)
+                except Exception:
+                    break
+        except Exception:
+            pass
+
+    def _run_recognition_cached(
+        self,
+        context: Context,
+        *,
+        task_name: str,
+        image: np.ndarray,
+        pipeline_override: dict,
+        frame: Optional[FrameContext] = None,
+    ):
+        """
+        同帧缓存版 run_recognition：在同一张 image 上重复调用相同识别时，直接复用结果。\n
+        说明：缓存粒度以 (task_name + pipeline_override) 为 key；只在 frame 提供时启用缓存。
+        """
+        if frame is None:
+            return context.run_recognition(task_name, image, pipeline_override)
+
+        try:
+            key = f"reco::{task_name}::{json.dumps(pipeline_override, sort_keys=True, ensure_ascii=False)}"
+        except Exception:
+            # 兜底：不可序列化就不缓存
+            return context.run_recognition(task_name, image, pipeline_override)
+
+        if key in frame.cache:
+            return frame.cache[key]
+
+        res = context.run_recognition(task_name, image, pipeline_override)
+        frame.cache[key] = res
+        return res
+
+    def _yolo_detect_all_once(self, context: Context, frame: FrameContext) -> YoloFrameResults:
+        """
+        单帧仅一次 YOLO 推理：不传 expected，让 NeuralNetworkDetect 返回所有类别的结果。\n
+        解析策略：优先 reco_result.all_results；否则回退 best_result。\n
+        结果会缓存在 frame.cache['yolo']，确保同一帧复用不重复推理。
+        """
+        cached = frame.cache.get("yolo")
+        if isinstance(cached, YoloFrameResults):
+            return cached
+
+        # 统计：用于验证“每帧仅一次 YOLO 推理调用”
+        try:
+            self._yolo_invoke_total = getattr(self, "_yolo_invoke_total", 0) + 1
+            if DEBUG_ENABLED:
+                print(f"[FarmEventHandler][YOLO] invoked total={self._yolo_invoke_total}")
+        except Exception:
+            pass
+
+        pipeline_override = {
+            "Farm_YOLO_All": {
+                "recognition": "NeuralNetworkDetect",
+                "model": FARMING_MODEL_PATH,
+                "labels": YOLO_LABELS,
+                "threshold": YOLO_THRESHOLD,
+                "roi": [0, 0, SCREEN_WIDTH, SCREEN_HEIGHT],
+                "order_by": "Score",
+                "index": 0,
+            }
+        }
+
+        reco_result = self._run_recognition_cached(
+            context,
+            task_name="Farm_YOLO_All",
+            image=frame.image,
+            pipeline_override=pipeline_override,
+            frame=frame,
+        )
+
+        parsed = YoloFrameResults()
+
+        if not _reco_hit(reco_result):
+            frame.cache["yolo"] = parsed
+            return parsed
+
+        det_list = []
+        # 多框优先：all_results
+        if hasattr(reco_result, "all_results") and reco_result.all_results:
+            try:
+                for r in reco_result.all_results:
+                    box = getattr(r, "box", None)
+                    if box is None:
+                        continue
+                    cls_index = int(getattr(r, "cls_index", -1))
+                    score = float(getattr(r, "score", 0.0))
+                    label = str(getattr(r, "label", "")) if getattr(r, "label", None) is not None else ""
+                    det_list.append(YoloDet(box=list(box), cls_index=cls_index, score=score, label=label))
+            except Exception:
+                det_list = []
+
+        # 兜底：仅 best_result
+        if not det_list and hasattr(reco_result, "best_result") and reco_result.best_result:
+            r = reco_result.best_result
+            box = getattr(r, "box", None)
+            if box is not None:
+                cls_index = int(getattr(r, "cls_index", -1))
+                score = float(getattr(r, "score", 0.0))
+                label = str(getattr(r, "label", "")) if getattr(r, "label", None) is not None else ""
+                det_list.append(YoloDet(box=list(box), cls_index=cls_index, score=score, label=label))
+
+        parsed.all = det_list
+        parsed.girls = [d for d in det_list if d.cls_index == YOLO_GIRL_INDEX or d.label == "girl"]
+        parsed.bugs = [d for d in det_list if d.cls_index == YOLO_BUGS_INDEX or d.label == "bugs"]
+        if parsed.girls:
+            parsed.girl_best = max(parsed.girls, key=lambda d: d.score)
+
+        frame.cache["yolo"] = parsed
+        return parsed
     
-    def _detect_girl_position(self, context: Context, image=None) -> tuple:
+    def _detect_girl_position(self, context: Context, image=None, *, frame: Optional[FrameContext] = None) -> tuple:
         """
         使用 YOLOv8 模型检测角色位置
 
@@ -880,9 +1711,6 @@ class FarmEventHandler(CustomAction):
         if DEBUG_ENABLED and image is not None:
             update_debug_frame(image)
         
-        # 使用 MaaFramework run_recognition 进行检测
-        print("[FarmEventHandler] 使用 MaaFramework run_recognition 检测角色...")
-        
         # 保存调试截图到文件（仅第一次）
         if DEBUG_FILE_MODE and not hasattr(self, '_debug_screenshot_saved'):
             import os
@@ -893,60 +1721,33 @@ class FarmEventHandler(CustomAction):
             print(f"[FarmEventHandler] 调试截图已保存到: {debug_path}")
             self._debug_screenshot_saved = True
 
-        print("[FarmEventHandler] 使用 YOLOv8 检测角色位置...")
-        print(f"[FarmEventHandler] 图像尺寸: {image.shape if image is not None else 'None'}")
-        print(f"[FarmEventHandler] 模型路径: {FARMING_MODEL_PATH}")
-        print(f"[FarmEventHandler] 检测阈值: {YOLO_THRESHOLD}")
-        print(f"[FarmEventHandler] 期望类别: girl (index={YOLO_GIRL_INDEX})")
+        frame_ctx = frame if frame is not None else FrameContext(image=image)
+        yolo = self._yolo_detect_all_once(context, frame_ctx)
 
-        # 使用 expected 参数指定只检测 girl 类别
-        # 注意：不指定 expected 时，best_result 会返回所有类别中置信度最高的结果
-        # 这会导致 bugs 置信度略高时返回 bugs 而不是 girl
-        reco_result = context.run_recognition(
-            "Farm_DetectGirl",
-            image,
-            {
-                "Farm_DetectGirl": {
-                    "recognition": "NeuralNetworkDetect",
-                    "model": FARMING_MODEL_PATH,
-                    "expected": [YOLO_GIRL_INDEX],  # 关键：只期望检测 girl 类别
-                    "threshold": YOLO_THRESHOLD,
-                    "roi": [0, 0, SCREEN_WIDTH, SCREEN_HEIGHT],
-                }
-            }
-        )
-
-        # 调试：打印识别结果
-        print(f"[FarmEventHandler] 识别结果: hit={reco_result.hit if reco_result else 'None'}")
-        if reco_result and hasattr(reco_result, 'best_result') and reco_result.best_result:
-            print(f"[FarmEventHandler] best_result: label={reco_result.best_result.label}, "
-                  f"cls_index={reco_result.best_result.cls_index}, score={reco_result.best_result.score:.3f}")
-
-        if _reco_hit(reco_result):
-            box = _reco_box(reco_result)
-            center = _box_center(box)
-            confidence = reco_result.best_result.score if hasattr(reco_result.best_result, 'score') else 0.0
-
-            print(f"[FarmEventHandler] ✓ 检测到角色 (girl): box={box}, center={center}, confidence={confidence:.3f}")
-
-            # 更新调试可视化检测结果
+        if yolo.girl_best is None:
+            print("[FarmEventHandler] 未检测到角色")
             if DEBUG_ENABLED:
-                update_debug_detections([{
-                    "label": "girl",
-                    "box": list(box),
-                    "confidence": confidence
-                }])
+                update_debug_detections([])
+                update_debug_frame()
+            return None
 
-            return center
+        box = yolo.girl_best.box
+        center = _box_center(box)
+        confidence = yolo.girl_best.score
+        print(f"[FarmEventHandler] ✓ 检测到角色 (girl): box={box}, center={center}, confidence={confidence:.3f}")
 
-        print("[FarmEventHandler] 未检测到角色")
-        # 清空调试检测结果
         if DEBUG_ENABLED:
-            update_debug_detections([])
-            update_debug_frame()
-        return None
+            update_debug_detections([{"label": "girl", "box": list(box), "confidence": confidence}])
 
-    def _detect_girl_box_and_center(self, context: Context, image=None) -> Tuple[Optional[list], Optional[tuple]]:
+        return center
+
+    def _detect_girl_box_and_center(
+        self,
+        context: Context,
+        image=None,
+        *,
+        frame: Optional[FrameContext] = None,
+    ) -> Tuple[Optional[list], Optional[tuple]]:
         """
         检测角色 box 与中心点。
 
@@ -966,39 +1767,24 @@ class FarmEventHandler(CustomAction):
         if DEBUG_ENABLED and image is not None:
             update_debug_frame(image)
 
-        reco_result = context.run_recognition(
-            "Farm_DetectGirl",
-            image,
-            {
-                "Farm_DetectGirl": {
-                    "recognition": "NeuralNetworkDetect",
-                    "model": FARMING_MODEL_PATH,
-                    "expected": [YOLO_GIRL_INDEX],
-                    "threshold": YOLO_THRESHOLD,
-                    "roi": [0, 0, SCREEN_WIDTH, SCREEN_HEIGHT],
-                }
-            },
-        )
+        frame_ctx = frame if frame is not None else FrameContext(image=image)
+        yolo = self._yolo_detect_all_once(context, frame_ctx)
 
-        if _reco_hit(reco_result):
-            box = _reco_box(reco_result)
-            center = _box_center(box)
-            confidence = reco_result.best_result.score if hasattr(reco_result.best_result, 'score') else 0.0
-
+        if yolo.girl_best is None:
             if DEBUG_ENABLED:
-                update_debug_detections([{
-                    "label": "girl",
-                    "box": list(box),
-                    "confidence": confidence
-                }])
+                update_debug_detections([])
+            return None, None
 
-            return box, center
+        box = yolo.girl_best.box
+        center = _box_center(box)
+        confidence = yolo.girl_best.score
 
         if DEBUG_ENABLED:
-            update_debug_detections([])
-        return None, None
+            update_debug_detections([{"label": "girl", "box": list(box), "confidence": confidence}])
+
+        return box, center
     
-    def _detect_all_objects(self, context: Context, image=None) -> dict:
+    def _detect_all_objects(self, context: Context, image=None, *, frame: Optional[FrameContext] = None) -> dict:
         """
         使用 YOLOv8 模型检测所有对象（角色和虫子）
         
@@ -1017,44 +1803,21 @@ class FarmEventHandler(CustomAction):
         if DEBUG_ENABLED and image is not None:
             update_debug_frame(image)
         
-        results = {"girl": [], "bugs": []}
-        debug_detections = []
-        
-        # 检测所有类别
-        for label_idx, label_name in enumerate(YOLO_LABELS):
-            reco_result = context.run_recognition(
-                f"Farm_Detect_{label_name}",
-                image,
-                {
-                    f"Farm_Detect_{label_name}": {
-                        "recognition": "NeuralNetworkDetect",
-                        "model": FARMING_MODEL_PATH,
-                        "labels": YOLO_LABELS,
-                        "expected": [label_idx],
-                        "threshold": YOLO_THRESHOLD,
-                        "roi": [0, 0, SCREEN_WIDTH, SCREEN_HEIGHT],
-                    }
-                }
-            )
-            
-            if _reco_hit(reco_result):
-                box = _reco_box(reco_result)
-                confidence = 0.0
-                if hasattr(reco_result.best_result, 'score'):
-                    confidence = reco_result.best_result.score
-                
-                results[label_name].append((box, confidence))
-                debug_detections.append({
-                    "label": label_name,
-                    "box": list(box),
-                    "confidence": confidence
-                })
-        
-        # 更新调试可视化并刷新画面
+        frame_ctx = frame if frame is not None else FrameContext(image=image)
+        yolo = self._yolo_detect_all_once(context, frame_ctx)
+
+        results = {
+            "girl": [(d.box, d.score) for d in yolo.girls],
+            "bugs": [(d.box, d.score) for d in yolo.bugs],
+        }
+
         if DEBUG_ENABLED:
+            debug_detections = [{"label": d.label or (YOLO_LABELS[d.cls_index] if 0 <= d.cls_index < len(YOLO_LABELS) else "unknown"),
+                                 "box": list(d.box),
+                                 "confidence": float(d.score)} for d in yolo.all]
             update_debug_detections(debug_detections)
             update_debug_frame()
-        
+
         return results
     
     def _move_character_to_target(
@@ -1078,6 +1841,8 @@ class FarmEventHandler(CustomAction):
             bool: 是否成功到达目标位置
         """
         start_time = time.time()
+        # 记录“本次移动到达”的原因，供外层逻辑判断（如浇水流程）
+        self._last_move_reach_reason = None
 
         target_pos = (int(target_pos[0] + target_offset[0]), int(target_pos[1] + target_offset[1]))
         print(f"[FarmEventHandler] 开始移动角色到目标位置: {target_pos} (use_feet={use_feet})")
@@ -1093,6 +1858,8 @@ class FarmEventHandler(CustomAction):
                 initial_image = controller.cached_image
                 if initial_image is not None:
                     push_debug_frame(initial_image)
+                    # 硬样本环形缓冲：推入初始帧
+                    self._hardcase_push(initial_image)
                     print("[FarmEventHandler] 初始帧已推送")
             except Exception as e:
                 print(f"[FarmEventHandler] 初始截图失败: {e}")
@@ -1107,6 +1874,10 @@ class FarmEventHandler(CustomAction):
         max_lost_count = 3  # 允许连续丢失3次
         screencap_fail_count = 0
         max_screencap_fail_count = 20  # 连续截图失败上限（避免死循环/刷屏）
+        # 角色位置平滑与预测（基于“脚底点”）
+        ema_pos: Optional[Tuple[float, float]] = None
+        last_seen_pos: Optional[Tuple[int, int]] = None
+        last_move_dir: Optional[Tuple[float, float]] = None
 
         while time.time() - start_time < MOVE_TIMEOUT:
             # 先截图
@@ -1118,6 +1889,10 @@ class FarmEventHandler(CustomAction):
                 current_image = controller.cached_image
                 # 成功后重置连续失败计数
                 screencap_fail_count = 0
+
+                # 硬样本环形缓冲：每次截图都推入一帧（低开销，常态只保留最近 5 帧）
+                if current_image is not None:
+                    self._hardcase_push(current_image)
 
                 # 调试窗口强制推送当前帧（避免由于后续识别分支导致不刷新）
                 if DEBUG_ENABLED and current_image is not None:
@@ -1133,6 +1908,8 @@ class FarmEventHandler(CustomAction):
                     print("[FarmEventHandler] 连续截图失败过多，放弃移动以避免卡死")
                     if DEBUG_ENABLED:
                         set_debug_target(None)
+                    # 触发硬样本保存：截图失败导致动作失败
+                    self._hardcase_trigger_and_capture_post(context, reason="screencap_fail")
                     return False
 
                 # 退避等待（逐步加长），减少 IPC/截图压力
@@ -1140,8 +1917,28 @@ class FarmEventHandler(CustomAction):
                 time.sleep(backoff)
                 continue
             
-            # 检测当前角色位置（传入截图避免内部再次截图）
-            box, center_pos = self._detect_girl_box_and_center(context, current_image)
+            # 检测当前角色位置：单帧仅一次 YOLO 推理，并复用结果
+            frame_ctx = FrameContext(image=current_image)
+            yolo = self._yolo_detect_all_once(context, frame_ctx)
+            box = yolo.girl_best.box if yolo.girl_best is not None else None
+            # 推送当前帧的检测结果到调试 overlay（scrcpy 模式下用于画框）
+            if DEBUG_ENABLED:
+                debug_detections = []
+                for d in yolo.all:
+                    label = d.label or (YOLO_LABELS[d.cls_index] if 0 <= d.cls_index < len(YOLO_LABELS) else "unknown")
+                    debug_detections.append(
+                        {
+                            "label": label,
+                            "box": list(d.box),
+                            "confidence": float(d.score),
+                        }
+                    )
+                update_debug_detections(debug_detections)
+            if box is not None:
+                # 记录最后一次看到的 box，供 OCR ROI 等后续逻辑复用（避免额外 YOLO）
+                self._last_girl_box = list(box)
+            center_pos = _box_center(box) if box is not None else None
+
             if box is not None and use_feet:
                 # feet 点：box 底部中心
                 current_pos = (int(box[0] + box[2] // 2), int(box[1] + box[3]))
@@ -1154,12 +1951,51 @@ class FarmEventHandler(CustomAction):
                 if DEBUG_ENABLED:
                     set_debug_info(f"Character not detected ({lost_count}/{max_lost_count})")
 
+                # 1) 基于“最后一次看到的位置 + 移动方向”做位置预测
+                predicted_pos = None
+                if last_seen_pos is not None and last_move_dir is not None:
+                    px = int(last_seen_pos[0] + last_move_dir[0] * GIRL_PREDICT_STEP)
+                    py = int(last_seen_pos[1] + last_move_dir[1] * GIRL_PREDICT_STEP)
+                    predicted_pos = (px, py)
+
+                # 2) 如果预测位置已进入容差范围，视为到达（可能被 UI 遮挡）
+                if predicted_pos is not None:
+                    pred_dist = _distance(predicted_pos, target_pos)
+                    if pred_dist <= MOVE_TOLERANCE:
+                        print(f"[FarmEventHandler] 预测位置已进入容差范围，判定到达: {predicted_pos}")
+                        if DEBUG_ENABLED:
+                            set_debug_info(f"Predicted reach: {predicted_pos}")
+                            set_debug_target(None)
+                        self._last_move_reach_reason = "predicted"
+                        return True
+
+                # 3) 若 OCR 能识别出坑位文字（湿润/缺水/干燥），也视为已到达交互范围
+                try:
+                    ocr_state = self._detect_soil_moisture_state(
+                        context,
+                        target_pos,
+                        current_image,
+                        girl_box=box,
+                        frame=frame_ctx,
+                    )
+                    if ocr_state != "unknown":
+                        print(f"[FarmEventHandler] OCR 命中文字({ocr_state})，判定已到达坑位交互范围")
+                        if DEBUG_ENABLED:
+                            set_debug_info(f"OCR hit: {ocr_state}")
+                            set_debug_target(None)
+                        self._last_move_reach_reason = "ocr"
+                        return True
+                except Exception:
+                    pass
+
                 # 复用捉虫逻辑：检测不到角色时，先向上轻推摇杆两次尝试把角色拉回视野
                 _joystick_nudge_up(context, times=2, duration_ms=500, wait_s=0.2)
 
                 # 如果连续丢失次数过多，放弃
                 if lost_count >= max_lost_count:
                     print(f"[FarmEventHandler] 连续 {lost_count} 次无法检测到角色，放弃移动")
+                    # 触发硬样本保存：识别丢失导致动作失败
+                    self._hardcase_trigger_and_capture_post(context, reason="girl_lost")
                     return False
 
                 time.sleep(MOVE_CHECK_INTERVAL)
@@ -1167,6 +2003,23 @@ class FarmEventHandler(CustomAction):
             
             # 检测到角色，重置丢失计数器
             lost_count = 0
+
+            # 使用 EMA 平滑“脚底点”位置（基于 current_pos）
+            raw_pos = (int(current_pos[0]), int(current_pos[1]))
+            if ema_pos is None:
+                ema_pos = (float(raw_pos[0]), float(raw_pos[1]))
+            else:
+                ema_pos = (
+                    GIRL_POS_EMA_ALPHA * raw_pos[0] + (1.0 - GIRL_POS_EMA_ALPHA) * ema_pos[0],
+                    GIRL_POS_EMA_ALPHA * raw_pos[1] + (1.0 - GIRL_POS_EMA_ALPHA) * ema_pos[1],
+                )
+            smooth_pos = (int(round(ema_pos[0])), int(round(ema_pos[1])))
+            # 若 EMA 偏差过大，回退原始位置，避免水平偏差累积
+            if abs(smooth_pos[0] - raw_pos[0]) > GIRL_POS_EMA_MAX_DELTA or abs(smooth_pos[1] - raw_pos[1]) > GIRL_POS_EMA_MAX_DELTA:
+                current_pos = raw_pos
+            else:
+                current_pos = smooth_pos
+            last_seen_pos = current_pos
             
             # 计算与目标的距离
             dist = _distance(current_pos, target_pos)
@@ -1183,18 +2036,48 @@ class FarmEventHandler(CustomAction):
                 if DEBUG_ENABLED:
                     set_debug_info("Target reached!")
                     set_debug_target(None)  # 清除目标标记
+                self._last_move_reach_reason = "distance"
                 return True
+
+            # 进入近距离：先防抖等待并立即识别“坑位 UI 是否弹出”（OCR 信号）
+            if dist <= MOVE_NEAR_DISTANCE:
+                time.sleep(NEAR_DEBOUNCE_WAIT)
+                try:
+                    ocr_state = self._detect_soil_moisture_state(
+                        context,
+                        target_pos,
+                        current_image,
+                        girl_box=box,
+                        frame=frame_ctx,
+                    )
+                    if ocr_state != "unknown":
+                        print(f"[FarmEventHandler] 近距离 OCR 命中文字({ocr_state})，判定已到达")
+                        if DEBUG_ENABLED:
+                            set_debug_info(f"Near OCR hit: {ocr_state}")
+                            set_debug_target(None)
+                        self._last_move_reach_reason = "ocr"
+                        return True
+                except Exception:
+                    pass
             
             # 计算摇杆滑动方向
             joystick_end = _calculate_joystick_direction(current_pos, target_pos)
             print(f"[FarmEventHandler] 摇杆滑动: {JOYSTICK_CENTER} -> {joystick_end}")
+
+            # 记录当前移动方向，用于丢失时的位置预测
+            dx = target_pos[0] - current_pos[0]
+            dy = target_pos[1] - current_pos[1]
+            d = math.sqrt(dx * dx + dy * dy)
+            if d > 1e-3:
+                last_move_dir = (dx / d, dy / d)
             
             # 执行摇杆滑动操作 - 确保所有参数都是整数类型
             x1 = int(JOYSTICK_CENTER[0])
             y1 = int(JOYSTICK_CENTER[1])
             x2 = int(joystick_end[0])
             y2 = int(joystick_end[1])
-            duration = int(SWIPE_DURATION)
+            # 两段式：远距离用粗定位时长，近距离用精定位时长
+            duration = int(SWIPE_DURATION_FINE if dist <= MOVE_NEAR_DISTANCE else SWIPE_DURATION)
             
             print(f"[FarmEventHandler] 执行摇杆操作: ({x1},{y1}) -> ({x2},{y2}), duration={duration}ms")
             
@@ -1213,9 +2096,11 @@ class FarmEventHandler(CustomAction):
         if DEBUG_ENABLED:
             set_debug_info("Move timeout!")
             set_debug_target(None)
+        # 触发硬样本保存：移动超时往往由误检/漏检/控制抖动引起
+        self._hardcase_trigger_and_capture_post(context, reason="move_timeout")
         return False
     
-    def _check_repair_button(self, context: Context, image=None) -> tuple:
+    def _check_repair_button(self, context: Context, image=None, *, frame: Optional[FrameContext] = None) -> tuple:
         """
         检测修理按钮是否出现
         
@@ -1232,17 +2117,19 @@ class FarmEventHandler(CustomAction):
         
         print("[FarmEventHandler] 检测修理按钮...")
         
-        reco_result = context.run_recognition(
-            "Farm_CheckRepairButton",
-            image,
-            {
+        reco_result = self._run_recognition_cached(
+            context,
+            task_name="Farm_CheckRepairButton",
+            image=image,
+            pipeline_override={
                 "Farm_CheckRepairButton": {
                     "recognition": "TemplateMatch",
                     "template": REPAIR_BUTTON_TEMPLATE,
                     "roi": REPAIR_BUTTON_ROI,
                     "threshold": 0.7,
                 }
-            }
+            },
+            frame=frame,
         )
         
         if _reco_hit(reco_result):
@@ -1276,7 +2163,7 @@ class FarmEventHandler(CustomAction):
         time.sleep(POST_ACTION_WAIT)
         return True
 
-    def _check_water_button(self, context: Context, image=None) -> Tuple[bool, Optional[list]]:
+    def _check_water_button(self, context: Context, image=None, *, frame: Optional[FrameContext] = None) -> Tuple[bool, Optional[list]]:
         """
         检测浇水按钮是否出现
 
@@ -1287,10 +2174,11 @@ class FarmEventHandler(CustomAction):
             context.tasker.controller.post_screencap().wait()
             image = context.tasker.controller.cached_image
 
-        reco_result = context.run_recognition(
-            "Farm_CheckWaterButton",
-            image,
-            {
+        reco_result = self._run_recognition_cached(
+            context,
+            task_name="Farm_CheckWaterButton",
+            image=image,
+            pipeline_override={
                 "Farm_CheckWaterButton": {
                     "recognition": "TemplateMatch",
                     "template": WATER_BUTTON_TEMPLATE,
@@ -1298,6 +2186,7 @@ class FarmEventHandler(CustomAction):
                     "threshold": WATER_BUTTON_THRESHOLD,
                 }
             },
+            frame=frame,
         )
 
         if _reco_hit(reco_result):
@@ -1319,45 +2208,60 @@ class FarmEventHandler(CustomAction):
         time.sleep(POST_ACTION_WAIT)
         return True
 
-    def _is_plot_wet(self, context: Context, plot_pos: Tuple[int, int], image=None) -> bool:
+    def _is_plot_wet(
+        self,
+        context: Context,
+        plot_pos: Tuple[int, int],
+        image=None,
+        *,
+        frame: Optional[FrameContext] = None,
+    ) -> bool:
         """
-        使用 ColorMatch 判断坑位是否已湿润。
+        判断坑位是否已湿润（TemplateMatch，替代原 ColorMatch）。
 
-        ROI：以坑位中心为左上角，宽 40 高 25。
-        满足任意一组颜色范围即视为湿润。
+        思路：
+        - 使用“湿润状态下坑位底部水面”模板进行匹配
+        - 只要在坑位附近 ROI 内命中一次，就认为该坑位已湿润
+        - 由于坑位周围都是水，可能出现多个命中；重复命中可忽略（只看 hit）
         """
         if image is None:
             context.tasker.controller.post_screencap().wait()
             time.sleep(0.03)
             image = context.tasker.controller.cached_image
 
-        x, y = int(plot_pos[0]), int(plot_pos[1])
-        roi = _clamp_roi([x, y, PLOT_WET_ROI_W, PLOT_WET_ROI_H])
+        cx, cy = int(plot_pos[0]), int(plot_pos[1])
+        # 模板锚点：坑位中心下方约 20px（取水面位置）
+        anchor_x = cx
+        anchor_y = cy + int(PLOT_WET_TEMPLATE_OFFSET_Y)
+        m = int(PLOT_WET_TEMPLATE_MARGIN)
+        roi = _clamp_roi([anchor_x - m, anchor_y - m, m * 2, m * 2])
 
-        any_of = []
-        for upper, lower in PLOT_WET_COLOR_RANGES:
-            any_of.append({
-                "recognition": "ColorMatch",
-                "roi": roi,
-                "upper": upper,
-                "lower": lower,
-                "count": PLOT_WET_COUNT,
-            })
-
-        reco_result = context.run_recognition(
-            "Farm_PlotWetCheck",
-            image,
-            {
+        reco_result = self._run_recognition_cached(
+            context,
+            task_name="Farm_PlotWetCheck",
+            image=image,
+            pipeline_override={
                 "Farm_PlotWetCheck": {
-                    "recognition": "Or",
-                    "any_of": any_of,
+                    "recognition": "TemplateMatch",
+                    "template": PLOT_WET_WATER_TEMPLATE,
+                    "roi": roi,
+                    "threshold": PLOT_WET_TEMPLATE_THRESHOLD,
                 }
             },
+            frame=frame,
         )
 
         return _reco_hit(reco_result)
 
-    def _detect_soil_moisture_state(self, context: Context, plot_pos: Tuple[int, int], image=None) -> str:
+    def _detect_soil_moisture_state(
+        self,
+        context: Context,
+        plot_pos: Tuple[int, int],
+        image=None,
+        *,
+        girl_box: Optional[list] = None,
+        frame: Optional[FrameContext] = None,
+    ) -> str:
         """
         识别当前坑位土壤湿度状态。
 
@@ -1369,43 +2273,54 @@ class FarmEventHandler(CustomAction):
             time.sleep(0.03)
             image = context.tasker.controller.cached_image
 
-        x, y = int(plot_pos[0]), int(plot_pos[1])
-        # 以坑位中心为圆心、半径 MOISTURE_OCR_RADIUS 的外接方做 OCR（湿润/缺水/干燥）
-        # 当前浇水主逻辑以 ColorMatch 为主，OCR 作为辅助“湿润”判定（防止重复浇水）。
-        radius = int(MOISTURE_OCR_RADIUS)
-        roi = _clamp_roi([
-            x - radius,
-            y - radius,
-            radius * 2,
-            radius * 2,
-        ])
+        # OCR ROI：优先以“角色自身识别 box”为基础向外扩张（避免坑位中心大 ROI 识别不到）
+        # 为减少重复 YOLO 推理：girl_box 优先由上层（本帧 YOLO）传入；否则回退到 self._last_girl_box；
+        # 再失败才回退坑位中心的大 ROI。
+        if girl_box is None:
+            try:
+                girl_box = getattr(self, "_last_girl_box", None)
+            except Exception:
+                girl_box = None
+
+        if girl_box is not None:
+            x, y, w, h = [int(v) for v in girl_box]
+            roi = _clamp_roi([x - 50, y - 50, w + 100, h + 100])
+        else:
+            # 兜底：仍使用坑位中心的大 ROI（避免角色识别失败时 OCR 完全不可用）
+            px, py = int(plot_pos[0]), int(plot_pos[1])
+            radius = int(MOISTURE_OCR_RADIUS)
+            roi = _clamp_roi([px - radius, py - radius, radius * 2, radius * 2])
 
         # 优先判定“湿润”
-        wet_reco = context.run_recognition(
-            "Farm_Moisture_Wet",
-            image,
-            {
+        wet_reco = self._run_recognition_cached(
+            context,
+            task_name="Farm_Moisture_Wet",
+            image=image,
+            pipeline_override={
                 "Farm_Moisture_Wet": {
                     "recognition": "OCR",
                     "expected": ["湿润"],
                     "roi": roi,
                 }
             },
+            frame=frame,
         )
         if _reco_hit(wet_reco):
             return "wet"
 
         # 再判定“缺水/干燥”
-        dry_reco = context.run_recognition(
-            "Farm_Moisture_Dry",
-            image,
-            {
+        dry_reco = self._run_recognition_cached(
+            context,
+            task_name="Farm_Moisture_Dry",
+            image=image,
+            pipeline_override={
                 "Farm_Moisture_Dry": {
                     "recognition": "OCR",
-                    "expected": ["缺水", "干燥"],
+                    "expected": ["缺水", "干燥", "正常"],
                     "roi": roi,
                 }
             },
+            frame=frame,
         )
         if _reco_hit(dry_reco):
             return "dry"
@@ -1441,13 +2356,20 @@ class FarmEventHandler(CustomAction):
                 image = capture_image_safe()
             if image is None:
                 return False
+            frame_ctx = FrameContext(image=image)
             try:
-                if self._is_plot_wet(context, plot_xy, image):
+                if self._is_plot_wet(context, plot_xy, image, frame=frame_ctx):
                     return True
             except Exception:
                 pass
             try:
-                return self._detect_soil_moisture_state(context, plot_xy, image) == "wet"
+                return self._detect_soil_moisture_state(
+                    context,
+                    plot_xy,
+                    image,
+                    girl_box=getattr(self, "_last_girl_box", None),
+                    frame=frame_ctx,
+                ) == "wet"
             except Exception:
                 return False
 
@@ -1481,7 +2403,8 @@ class FarmEventHandler(CustomAction):
             print(f"\n[浇水] ({pass_name}) 坑位 {plot_idx}/16 -> {(plot_x, plot_y)}")
 
             # 任意时刻优先处理奖励弹窗（避免遮挡/误点）
-            if self._check_reward_popup(context):
+            reward_frame = capture_image_safe()
+            if reward_frame is not None and self._check_reward_popup(context, reward_frame, frame=FrameContext(image=reward_frame)):
                 print("[浇水] 检测到奖励弹窗，先领取奖励")
                 self._run_sub_getreward(context)
 
@@ -1494,6 +2417,9 @@ class FarmEventHandler(CustomAction):
             ):
                 entry["fail_reason"] = "move_failed"
                 return False
+
+            # 若移动阶段因 OCR/预测判定已到达，则不要再“向下走触发 UI”
+            reached_by_ui = getattr(self, "_last_move_reach_reason", None) in ("ocr", "predicted")
 
             time.sleep(0.35)
 
@@ -1515,7 +2441,10 @@ class FarmEventHandler(CustomAction):
                     return True
 
             # 走到容差范围内但还没触发 UI：向下走一段补救
-            _joystick_nudge_down(context, times=1, duration_ms=500, wait_s=0.25)
+            if not reached_by_ui:
+                _joystick_nudge_down(context, times=1, duration_ms=500, wait_s=0.25)
+            else:
+                print("[浇水] 已由移动阶段 OCR/预测确认到达，跳过向下推动以避免互斥逻辑")
             try:
                 controller.post_click(int(plot_x), int(plot_y)).wait()
             except Exception:
@@ -1525,19 +2454,35 @@ class FarmEventHandler(CustomAction):
             # 3) 浇水直到 ColorMatch 判定湿润
             water_count = 0
             while water_count < max_water_per_plot:
-                if self._check_reward_popup(context):
+                # 单帧：每轮循环只截一次图，然后复用该帧进行所有检测
+                frame_img = capture_image_safe()
+                if frame_img is None:
+                    time.sleep(0.1)
+                    continue
+                frame_ctx = FrameContext(image=frame_img)
+
+                if self._check_reward_popup(context, frame_ctx.image, frame=frame_ctx):
                     print("[浇水] 检测到奖励弹窗，先领取奖励")
                     self._run_sub_getreward(context)
+                    time.sleep(0.2)
+                    continue
 
-                found, box = self._check_water_button(context)
+                found, box = self._check_water_button(context, frame_ctx.image, frame=frame_ctx)
                 if not found:
-                    # 尝试点击坑位唤起按钮
+                    # 尝试点击坑位唤起按钮（会改变画面，因此这里不复用旧帧）
                     try:
                         controller.post_click(int(plot_x), int(plot_y)).wait()
                     except Exception:
                         pass
                     time.sleep(0.2)
-                    found, box = self._check_water_button(context)
+                    # 重新截一帧再检测
+                    frame_img2 = capture_image_safe()
+                    if frame_img2 is None:
+                        water_count += 1
+                        entry["attempts"] += 1
+                        continue
+                    frame_ctx = FrameContext(image=frame_img2)
+                    found, box = self._check_water_button(context, frame_ctx.image, frame=frame_ctx)
 
                 if not found:
                     water_count += 1
@@ -1555,17 +2500,22 @@ class FarmEventHandler(CustomAction):
                 entry["attempts"] += 1
                 time.sleep(WATER_CLICK_WAIT)
 
-                frame = capture_image_safe()
-                if is_wet_combined((plot_x, plot_y), frame):
+                frame_after = capture_image_safe()
+                if is_wet_combined((plot_x, plot_y), frame_after):
                     # 从未湿润 -> 湿润：按原需求额外再浇 1 次补满进度条
-                    found2, box2 = self._check_water_button(context)
+                    # 重新截一帧复用（避免 _check_water_button 内部截图）
+                    img2 = capture_image_safe()
+                    frame2 = FrameContext(image=img2) if img2 is not None else None
+                    found2, box2 = self._check_water_button(context, img2, frame=frame2) if img2 is not None else (False, None)
                     if not found2:
                         try:
                             controller.post_click(int(plot_x), int(plot_y)).wait()
                         except Exception:
                             pass
                         time.sleep(0.2)
-                        found2, box2 = self._check_water_button(context)
+                        img3 = capture_image_safe()
+                        frame3 = FrameContext(image=img3) if img3 is not None else None
+                        found2, box2 = self._check_water_button(context, img3, frame=frame3) if img3 is not None else (False, None)
 
                     if found2:
                         print("[浇水] 已湿润，额外再浇 1 次补满进度条")
@@ -1622,9 +2572,16 @@ class FarmEventHandler(CustomAction):
             bool: 是否成功
         """
         print("[FarmEventHandler] 调用 Sub_Getreward 获取奖励...")
-        
+
         try:
-            # 兼容不同 MaaFramework Python API：优先走 tasker，其次回退旧接口
+            # 优先使用 Context.run_task（对应 MaaContextRunTask，返回任务 id）
+            if hasattr(context, "run_task") and callable(getattr(context, "run_task")):
+                task_id = context.run_task("Sub_Getreward", None)
+                print(f"[FarmEventHandler] Sub_Getreward run_task 返回任务 id: {task_id}")
+                # MaaContextRunTask 执行失败会返回 MaaInvalidId，一般为负数或 0
+                return bool(task_id not in (None, -1, 0))
+
+            # 兼容旧版/自定义 binding：退回到 tasker 层
             result = None
             if hasattr(context, "tasker"):
                 tasker = context.tasker
@@ -1636,7 +2593,8 @@ class FarmEventHandler(CustomAction):
                     job = tasker.post_pipeline("Sub_Getreward")
                     result = job.wait() if job is not None else None
 
-            print(f"[FarmEventHandler] Sub_Getreward 执行结果: {result}")
+            print(f"[FarmEventHandler] Sub_Getreward 兼容模式执行结果: {result}")
+            # 这里无法可靠判断 result 语义，保持“只要不抛异常就视为成功”
             return True
         except Exception as e:
             print(f"[FarmEventHandler] Sub_Getreward 执行失败: {e}")
@@ -1767,17 +2725,35 @@ class FarmEventHandler(CustomAction):
         
         caught_count = 0  # 已捕捉的虫子数量
         no_bugs_rounds = 0  # 连续无虫子的检测轮数
+
+        def capture_frame_safe() -> Optional[FrameContext]:
+            """单帧截图：一轮循环内复用该帧进行 reward/OCR/YOLO 等检测。"""
+            try:
+                context.tasker.controller.post_screencap().wait()
+                time.sleep(0.05)
+                img = context.tasker.controller.cached_image
+                if img is None:
+                    return None
+                return FrameContext(image=img)
+            except Exception:
+                return None
         
         while True:
+            # 单帧：截一次图 -> 在这一帧上跑完必要检测
+            frame = capture_frame_safe()
+            if frame is None:
+                time.sleep(0.2)
+                continue
+
             # ========== 全局终止条件：奖励弹窗/可执行 Sub_Getreward ==========
             # 用户要求：验证到奖励弹窗也就是 "Sub_Getreward" 节点成功执行意味着虫子已捉完，可直接结束捉虫任务
-            if self._check_reward_popup(context):
+            if self._check_reward_popup(context, frame.image, frame=frame):
                 print("[捉虫] 检测到奖励弹窗（可领取奖励），直接结束捉虫任务")
                 self._run_sub_getreward(context)
                 return True
 
             # 检测场上所有目标
-            girl_pos, bugs_list = self._detect_all_targets(context)
+            girl_pos, bugs_list = self._detect_all_targets(context, frame.image)
             
             # ========== 角色检测失败处理（避免卡死） ==========
             if girl_pos is None:
@@ -1785,8 +2761,9 @@ class FarmEventHandler(CustomAction):
                 if len(bugs_list) > 0:
                     _joystick_nudge_up(context, times=2, duration_ms=300, wait_s=0.2)
 
-                    # 重新检测一次
-                    girl_pos, bugs_list = self._detect_all_targets(context)
+                    # 重新截一帧再检测一次
+                    frame2 = capture_frame_safe()
+                    girl_pos, bugs_list = self._detect_all_targets(context, frame2.image) if frame2 else (None, [])
                     if girl_pos is None:
                         print("[捉虫] 错误：检测到虫子但连续尝试后仍无法检测到角色，退出捉虫任务")
                         return False
@@ -1794,7 +2771,7 @@ class FarmEventHandler(CustomAction):
                     # 情况B：角色和虫子都检测不到 -> 尝试执行 Sub_Getreward，能执行说明虫子已捉完
                     print("[捉虫] 角色与虫子均未检测到，尝试执行 Sub_Getreward 判断是否已结束...")
                     try:
-                        if self._check_reward_popup(context):
+                        if self._check_reward_popup(context, frame.image, frame=frame):
                             self._run_sub_getreward(context)
                             return True
                         # 即便 OCR 未命中，也尝试直接 run_pipeline（用户要求以其成功作为最终判定）
@@ -1812,7 +2789,7 @@ class FarmEventHandler(CustomAction):
                 print(f"[捉虫] 未检测到虫子 (第 {no_bugs_rounds}/{NO_BUGS_CHECK_ROUNDS} 轮)")
                 
                 # 检查是否匹配到 Sub_Getreward（奖励弹窗）-> 直接结束
-                if self._check_reward_popup(context):
+                if self._check_reward_popup(context, frame.image, frame=frame):
                     print("[捉虫] 检测到奖励弹窗，捉虫任务完成！")
                     self._run_sub_getreward(context)
                     return True
@@ -1873,51 +2850,26 @@ class FarmEventHandler(CustomAction):
         if DEBUG_ENABLED and image is not None:
             update_debug_frame(image)
         
-        girl_pos = None
-        bugs_list = []
-        debug_detections = []
-        
-        # 检测所有目标（不指定 expected，获取所有类别）
-        reco_result = context.run_recognition(
-            "Farm_DetectAll",
-            image,
-            {
-                "Farm_DetectAll": {
-                    "recognition": "NeuralNetworkDetect",
-                    "model": FARMING_MODEL_PATH,
-                    "threshold": YOLO_THRESHOLD,
-                    "roi": [0, 0, SCREEN_WIDTH, SCREEN_HEIGHT],
-                }
-            }
-        )
-        
-        if reco_result and hasattr(reco_result, 'all_results') and reco_result.all_results:
-            for result in reco_result.all_results:
-                box = result.box
-                center = (box[0] + box[2] // 2, box[1] + box[3] // 2)
-                confidence = result.score if hasattr(result, 'score') else 0.0
-                label = result.label if hasattr(result, 'label') else 'unknown'
-                cls_index = result.cls_index if hasattr(result, 'cls_index') else -1
-                
-                if cls_index == YOLO_GIRL_INDEX or label == 'girl':
-                    girl_pos = center
-                    debug_detections.append({
-                        "label": "girl",
-                        "box": list(box),
-                        "confidence": confidence
-                    })
-                elif cls_index == YOLO_BUGS_INDEX or label == 'bugs':
-                    bugs_list.append(center)
-                    debug_detections.append({
-                        "label": "bugs",
-                        "box": list(box),
-                        "confidence": confidence
-                    })
-        
-        # 更新调试可视化
+        frame_ctx = FrameContext(image=image)
+        yolo = self._yolo_detect_all_once(context, frame_ctx)
+
+        girl_pos: Optional[tuple] = None
+        if yolo.girl_best is not None:
+            b = yolo.girl_best.box
+            girl_pos = (int(b[0] + b[2] // 2), int(b[1] + b[3] // 2))
+
+        bugs_list: List[tuple] = []
+        for d in yolo.bugs:
+            b = d.box
+            bugs_list.append((int(b[0] + b[2] // 2), int(b[1] + b[3] // 2)))
+
         if DEBUG_ENABLED:
+            debug_detections = []
+            for d in yolo.all:
+                label = d.label or (YOLO_LABELS[d.cls_index] if 0 <= d.cls_index < len(YOLO_LABELS) else "unknown")
+                debug_detections.append({"label": label, "box": list(d.box), "confidence": float(d.score)})
             update_debug_detections(debug_detections)
-        
+
         return girl_pos, bugs_list
     
     def _find_nearest_bug(self, girl_pos: tuple, bugs_list: List[tuple]) -> Tuple[tuple, float]:
@@ -1948,7 +2900,13 @@ class FarmEventHandler(CustomAction):
         
         return nearest_bug, nearest_distance
     
-    def _check_catch_button(self, context: Context, image=None) -> Tuple[bool, Optional[list]]:
+    def _check_catch_button(
+        self,
+        context: Context,
+        image=None,
+        *,
+        frame: Optional[FrameContext] = None,
+    ) -> Tuple[bool, Optional[list]]:
         """
         检测捕捉按钮是否出现
         
@@ -1963,17 +2921,19 @@ class FarmEventHandler(CustomAction):
             context.tasker.controller.post_screencap().wait()
             image = context.tasker.controller.cached_image
         
-        reco_result = context.run_recognition(
-            "Farm_CheckCatchButton",
-            image,
-            {
+        reco_result = self._run_recognition_cached(
+            context,
+            task_name="Farm_CheckCatchButton",
+            image=image,
+            pipeline_override={
                 "Farm_CheckCatchButton": {
                     "recognition": "TemplateMatch",
                     "template": CATCH_BUTTON_TEMPLATE,
                     "roi": CATCH_BUTTON_ROI,
                     "threshold": 0.7,
                 }
-            }
+            },
+            frame=frame,
         )
         
         if _reco_hit(reco_result):
@@ -1982,7 +2942,7 @@ class FarmEventHandler(CustomAction):
         
         return (False, None)
     
-    def _check_reward_popup(self, context: Context) -> bool:
+    def _check_reward_popup(self, context: Context, image=None, *, frame: Optional[FrameContext] = None) -> bool:
         """
         检查是否出现奖励弹窗（Sub_Getreward）
         
@@ -1992,19 +2952,24 @@ class FarmEventHandler(CustomAction):
         返回:
             bool: 是否出现奖励弹窗
         """
-        context.tasker.controller.post_screencap().wait()
-        image = context.tasker.controller.cached_image
+        if image is None:
+            context.tasker.controller.post_screencap().wait()
+            image = context.tasker.controller.cached_image
+        if image is None:
+            return False
         
-        reco_result = context.run_recognition(
-            "Farm_CheckReward",
-            image,
-            {
+        reco_result = self._run_recognition_cached(
+            context,
+            task_name="Farm_CheckReward",
+            image=image,
+            pipeline_override={
                 "Farm_CheckReward": {
                     "recognition": "OCR",
                     "expected": ["获得物品", "获得道具"],
                     "roi": [78, 15, 1014, 254],
                 }
-            }
+            },
+            frame=frame,
         )
         
         return _reco_hit(reco_result)

@@ -1,7 +1,6 @@
 [remote.github]
-owner = "MaaXYZ"
-repo = "MaaPracticeBoilerplate"
-#自用时换成自己的仓库owner和repo
+owner = "Ostwind23"
+repo = "MAA-for-Millennium-Tour"
 #注意，本地git user需与github一致才能实现成功@
 [changelog]
 # 标题

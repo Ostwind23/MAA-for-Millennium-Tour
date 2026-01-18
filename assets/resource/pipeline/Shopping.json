@@ -116,7 +116,8 @@
         "next": [
             "[JumpBack]maxPurchase",
             "buy_Stamina_Divisionstore",
-            "buy_Fertilizer_Divisionstore"
+            "buy_Fertilizer_Divisionstore",
+            "open_Seedstore"
         ]
     },
     "PoorCancle": {
@@ -206,6 +207,7 @@
         "action": "Click",
         "next": [
             "[JumpBack]maxPurchase",
+            "Findseed",
             "buy_Fertilizer_Divisionstore",
             "Homeflag4"
         ]
@@ -222,10 +224,14 @@
         "action": "Click",
         "next": [
             "[JumpBack]maxPurchase",
+            "Findseed",
+            "Swipetootherside1",
             "Homeflag4"
         ]
     },
     "Swipetootherside1": {
+        "recognition": "DirectHit",
+        "max_hit": 1,
         "action": "Swipe",
         "begin": [
             1207,
@@ -246,6 +252,8 @@
         ]
     },
     "Swipetootherside2": {
+        "recognition": "DirectHit",
+        "max_hit": 1,
         "action": "Swipe",
         "begin": [
             1200,

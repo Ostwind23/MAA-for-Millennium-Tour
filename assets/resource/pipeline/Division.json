@@ -302,7 +302,21 @@
         "next": [
             "[JumpBack]Farm_HarvestAll",
             "[JumpBack]Farm_Plant",
-            "[JumpBack]returnHome",
+            "Farm_Enter_Harvest_Backup",
+            "Subreturn_back"
+        ]
+    },
+    "Farm_Enter_Harvest_Backup": {
+        "action": "Click",
+        "target": [
+            757,
+            407,
+            1,
+            0
+        ],
+        "next": [
+            "[JumpBack]Farm_HarvestAll",
+            "[JumpBack]Farm_Plant",
             "Subreturn_back"
         ]
     },
@@ -346,6 +360,7 @@
             "[JumpBack]Sub_Getreward",
             "CanFertilize",
             "[JumpBack]ClosePage",
+            "[JumpBack]CheckWhetherWatered",
             "Homeflag3"
         ]
     },
@@ -492,22 +507,13 @@
         "recognition": "Or",
         "any_of": [
             {
-                "recognition": "ColorMatch",
-                "lower": [
-                    150,
-                    107,
-                    82
-                ],
-                "upper": [
-                    170,
-                    127,
-                    102
-                ],
+                "recognition": "TemplateMatch",
+                "template": "farm/水坑截图（判断湿润）.png",
                 "roi": [
-                    264,
-                    314,
-                    705,
-                    325
+                    248,
+                    196,
+                    789,
+                    451
                 ]
             },
             {

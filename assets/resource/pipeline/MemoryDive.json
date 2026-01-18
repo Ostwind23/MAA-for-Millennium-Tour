@@ -1,0 +1,281 @@
+{
+    "$section_memory_config": "========== 回忆深潜任务配置节点 ==========",
+    "memoryBattleModeConfig": {
+        "doc": "[配置节点] 回忆深潜战斗模式配置 - 在任务链开始时覆盖 BattleMode_Check 的参数，强制回忆深潜战斗使用自动模式（不使用手动跳过）",
+        "recognition": "DirectHit",
+        "action": "Custom",
+        "custom_action": "BattleModeConfigOverride",
+        "custom_action_param": {
+            "target_mode": "auto"
+        },
+        "max_hit": 1,
+        "next": [
+            "memoryOpenBattle"
+        ]
+    },
+    "taskMemoryDive": {
+        "doc": "回忆深潜主任务入口。采用 JumpBack 混合模式：线性流程由各节点自身的 next 串联，入口节点通过 [JumpBack] 链统一兜底异常弹窗和战斗流程",
+        "next": [
+            "[JumpBack]memoryBattleModeConfig",
+            "[JumpBack]memoryOpenBattle",
+            "[JumpBack]openMemoryDive",
+            "[JumpBack]memoryFindDungeonByOcr",
+            "[JumpBack]memoryFindDungeonByFeature",
+            "[JumpBack]memorySwipeDungeonList",
+            "[JumpBack]memoryEnterDungeon",
+            "[JumpBack]memoryFindPhase",
+            "[JumpBack]memoryLaunchBattle",
+            "[JumpBack]memorySelectTeam",
+            "[JumpBack]memoryLaunchBattleInTeam",
+            "[JumpBack]BattleMode_Check",
+            "[JumpBack]memoryWaitBattleEnd",
+            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]Failure_Return_noNext",
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]CloseNotification",
+            "[JumpBack]ClickEmptyArea",
+            "[JumpBack]HomeButton",
+            "EndonHome"
+        ]
+    },
+    "memoryOpenBattle": {
+        "doc": "从主界面点击右下角“出击”按钮进入挑战关卡页面，ROI 与 battle.json 中 openBattle 一致但后续流程进入回忆深潜",
+        "recognition": "OCR",
+        "expected": "出击",
+        "roi": [
+            1021,
+            476,
+            207,
+            244
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "openMemoryDiveinChallenge"
+        ]
+    },
+    "openMemoryDiveinChallenge": {
+        "recognition": "TemplateMatch",
+        "template": "battle/挑战关卡.png",
+        "roi": [
+            771,
+            656,
+            256,
+            63
+        ],
+        "action": "Click",
+        "next": [
+            "openMemoryDive"
+        ]
+    },
+    "openMemoryDive": {
+        "doc": "在挑战关卡页面底部点击“回忆深潜”入口，进入回忆深潜主界面（与深渊、地牢同页）",
+        "recognition": "TemplateMatch",
+        "template": "memorydive/回忆深潜入口.png",
+        "roi": [
+            340,
+            159,
+            421,
+            490
+        ],
+        "action": "Click",
+        "post_delay": 3000,
+        "next": [
+            "memoryFindDungeonByOcr"
+        ]
+    },
+    "memoryFindDungeonByOcr": {
+        "doc": "在回忆深潜六个入口卡片中使用全屏 OCR 查找目标关卡名（镜中异相/内陆国度/悖逆之城/狂号风暴/洞悉之瞳/深暗魔井），命中后点击该卡片使其居中，关卡名由 interface.json 选项通过 pipeline_override 写入 expected",
+        "recognition": "OCR",
+        "roi": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "expected": [
+            "悖逆之城"
+        ],
+        "order_by": "Horizontal",
+        "index": -1,
+        "action": "Click",
+        "post_delay": 800,
+        "timeout": 6000,
+        "next": [
+            "memoryEnterDungeon"
+        ],
+        "on_error": [
+            "memoryFindDungeonByFeature"
+        ]
+    },
+    "memoryFindDungeonByFeature": {
+        "doc": "当 OCR 找不到目标关卡名时，使用特征匹配查找目标关卡卡片，支持“未选中”和“选中高亮”两种状态模板，模板列表由 interface.json 选项通过 pipeline_override 写入",
+        "recognition": "FeatureMatch",
+        "template": [],
+        "roi": [
+            2,
+            115,
+            1270,
+            453
+        ],
+        "action": "Click",
+        "post_delay": 800,
+        "timeout": 6000,
+        "next": [
+            "memoryEnterDungeon"
+        ],
+        "on_error": [
+            "memorySwipeDungeonList"
+        ]
+    },
+    "memorySwipeDungeonList": {
+        "doc": "在回忆深潜入口界面水平滑动卡片列表以查找目标关卡，构成“查找 → 模板匹配 → 滑动 → 重新查找”的循环",
+        "action": "Swipe",
+        "begin": [
+            1100,
+            360,
+            1,
+            1
+        ],
+        "end": [
+            300,
+            360,
+            1,
+            1
+        ],
+        "duration": 500,
+        "post_delay": 800,
+        "next": [
+            "memoryFindDungeonByOcr"
+        ]
+    },
+    "memoryEnterDungeon": {
+        "doc": "检测是否已经进入回忆深潜内部关卡选关界面；若仍停留在入口卡片界面，则通过 memoryClickCenterCard 点击居中的关卡卡片进入内部选关（可跳过）",
+        "recognition": "TemplateMatch",
+        "template": "memorydive/phase列表标记.png",
+        "roi": [
+            448,
+            0,
+            419,
+            126
+        ],
+        "action": "DoNothing",
+        "timeout": 10000,
+        "next": [
+            "memoryFindPhase"
+        ],
+        "on_error": [
+            "memoryClickCenterCard"
+        ]
+    },
+    "memoryClickCenterCard": {
+        "doc": "在回忆深潜入口页面点击当前居中的关卡卡片以进入内部选关界面，适配默认悖逆之城与目标关卡相同时只需一次点击的情况",
+        "recognition": "DirectHit",
+        "action": "Click",
+        "target": [
+            640,
+            360,
+            1,
+            1
+        ],
+        "post_delay": 1000,
+        "next": [
+            "memoryEnterDungeon"
+        ]
+    },
+    "memoryFindPhase": {
+        "doc": "在回忆深潜内部选关界面中使用 OCR 查找 phase 为 5 的倍数（5/10/15…）的关卡，优先选择当前页中数字最大的一个",
+        "recognition": "OCR",
+        "roi": [
+            88,
+            69,
+            360,
+            649
+        ],
+        "expected": [
+            "^[0-9]*[05]$"
+        ],
+        "order_by": "Vertical",
+        "index": -1,
+        "action": "Click",
+        "post_delay": 500,
+        "timeout": 8000,
+        "next": [
+            "memoryLaunchBattle"
+        ]
+    },
+    "memoryLaunchBattle": {
+        "doc": "在选定的 phase 关卡详情界面点击“出击”按钮，进入选队界面",
+        "recognition": "TemplateMatch",
+        "template": "battle/launch battle.png",
+        "roi": [
+            826,
+            575,
+            281,
+            143
+        ],
+        "action": "Click",
+        "post_wait_freezes": 2000,
+        "next": [
+            "memorySelectTeam"
+        ]
+    },
+    "memorySelectTeam": {
+        "doc": "在选队界面底部点击玩家指定的出战队伍（1–4 队），默认点击队伍1，队伍位置由 interface.json 选项通过 pipeline_override 写入 target 坐标",
+        "recognition": "DirectHit",
+        "action": "Click",
+        "target": [
+            37,
+            663,
+            112,
+            34
+        ],
+        "post_delay": 500,
+        "next": [
+            "memoryLaunchBattleInTeam"
+        ]
+    },
+    "memoryLaunchBattleInTeam": {
+        "doc": "在选队界面确认队伍后再次点击“出击”按钮进入战斗，并触发战斗模式配置与检测",
+        "recognition": "TemplateMatch",
+        "template": "battle/launch battle.png",
+        "roi": [
+            1003,
+            633,
+            251,
+            83
+        ],
+        "action": "Click",
+        "post_delay": 5000,
+        "next": [
+            "[JumpBack]memoryBattleModeConfig",
+            "[JumpBack]BattleMode_Check",
+            "memoryWaitBattleEnd",
+            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]Failure_Return_noNext"
+        ]
+    },
+    "memoryWaitBattleEnd": {
+        "doc": "战斗中等待结束：通过自动/手动战斗状态图标监控画面静止，结算后交给 Victory/Failure 处理",
+        "recognition": "TemplateMatch",
+        "template": [
+            "battle/自动战斗状态.png",
+            "battle/手动战斗状态.png"
+        ],
+        "roi": [
+            901,
+            0,
+            378,
+            263
+        ],
+        "post_wait_freezes": {
+            "time": 5000
+        },
+        "rate_limit": 15000,
+        "timeout": 300000,
+        "next": [
+            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]Failure_Return_noNext"
+        ]
+    }
+}

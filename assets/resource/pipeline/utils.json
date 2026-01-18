@@ -5,6 +5,7 @@
         "expected": [
             "获得物品",
             "获得道具",
+            "道具",
             "本勒",
             "LEVEL",
             "等级提升"
@@ -83,10 +84,33 @@
         "action": "Click",
         "post_delay": 2000
     },
+    "EndonHome": {
+        "recognition": "TemplateMatch",
+        "template": "summon.png",
+        "roi": [
+            0,
+            530,
+            250,
+            190
+        ],
+        "action": "StopTask"
+    },
     "Victory_Return_noNext": {
         "doc": "战斗结束并检测到战斗胜利界面，点击继续",
         "recognition": "OCR",
         "expected": "战斗胜利",
+        "roi": [
+            738,
+            16,
+            438,
+            218
+        ],
+        "action": "Click"
+    },
+    "Failure_Return_noNext": {
+        "doc": "战斗结束并检测到战斗失败界面，点击继续",
+        "recognition": "OCR",
+        "expected": "战斗失败",
         "roi": [
             738,
             16,

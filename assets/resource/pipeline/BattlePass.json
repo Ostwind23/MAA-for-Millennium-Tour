@@ -38,7 +38,17 @@
         ]
     },
     "endBattlePass": {
-        "_doc": "通行证任务结束",
-        "action": "StopTask"
+        "_doc": "通行证任务结束，返回主界面",
+        "recognition": "TemplateMatch",
+        "template": "home.png",
+        "roi": [
+            74,
+            0,
+            202,
+            140
+        ],
+        "action": "Click",
+        "post_delay": 2000,
+        "next": "EndonHome"
     }
 }

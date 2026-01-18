@@ -24,6 +24,8 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
+from collections import deque
+from typing import Deque, Optional, Tuple
 
 from maa.custom_action import CustomAction
 from maa.context import Context
@@ -31,6 +33,176 @@ from maa.context import Context
 # 获取项目根目录（agent 文件夹的父目录的父目录）
 AGENT_DIR = Path(__file__).parent.parent.parent
 PROJECT_ROOT = AGENT_DIR.parent
+
+
+def _sanitize_token(token: str) -> str:
+    """
+    将字符串清洗为文件名安全 token（仅保留字母数字与下划线）。
+    """
+    if not token:
+        return "unknown"
+    out = []
+    for ch in str(token):
+        if ch.isalnum():
+            out.append(ch)
+        else:
+            out.append("_")
+    # 合并连续下划线
+    cleaned = []
+    prev_us = False
+    for ch in out:
+        if ch == "_":
+            if not prev_us:
+                cleaned.append(ch)
+            prev_us = True
+        else:
+            cleaned.append(ch)
+            prev_us = False
+    return "".join(cleaned).strip("_") or "unknown"
+
+
+class HardCaseFrameRecorder:
+    """
+    低开销“硬样本”录制器：实时保留最近 pre_frames 帧（环形缓冲），
+    在触发时将“前 pre_frames 帧 + 当前帧 + 后 post_frames 帧”保存到磁盘。
+
+    仅保存图片（不保存 label / txt），用于后续在 Roboflow 中统一打标。
+
+    文件命名遵循 YOLO 系列通用的图片命名习惯（任意唯一文件名即可）：
+    {prefix}_{timestamp}_{case:06d}_{reason}_{pos}.jpg
+    - pos: m05..m01, p00(触发帧), p01..p05
+    例：farm_fix_20260114_153012_000001_girl_lost_m05.jpg
+    """
+
+    _case_counter = 0
+
+    def __init__(
+        self,
+        *,
+        prefix: str = "farm_fix",
+        save_dir: str = "training/hard cases",
+        img_format: str = "jpg",
+        quality: int = 95,
+        pre_frames: int = 5,
+        post_frames: int = 5,
+        project_root: Optional[Path] = None,
+    ):
+        self.prefix = prefix
+        self.save_dir = save_dir
+        self.img_format = (img_format or "jpg").lower()
+        self.quality = int(quality)
+        self.pre_frames = int(pre_frames)
+        self.post_frames = int(post_frames)
+        self.project_root = project_root or PROJECT_ROOT
+
+        # 缓冲中包含“最近 pre_frames 帧 + 当前帧”（触发帧）
+        self._buf: Deque[Tuple[float, object]] = deque(maxlen=max(1, self.pre_frames + 1))
+
+        # 触发后的状态
+        self._active_case_id: Optional[int] = None
+        self._active_case_ts: Optional[str] = None
+        self._active_reason: Optional[str] = None
+        self._pending_post: int = 0
+        self._post_index: int = 0
+
+        # 预创建输出目录（允许包含空格）
+        self._output_path = (self.project_root / self.save_dir)
+        self._output_path.mkdir(parents=True, exist_ok=True)
+
+    def push_frame(self, image) -> None:
+        """
+        推入一帧（建议在每次截图后调用）。为保证“事前帧”可靠，默认会复制图像。
+        注意：这里的 image 应为 numpy.ndarray (BGR)。
+        """
+        if image is None:
+            return
+
+        try:
+            # 复制以避免后续 cached_image 复用导致内容变化
+            frame = image.copy()
+        except Exception:
+            # 保底：即使 copy 失败也不要影响主流程
+            frame = image
+
+        now = time.time()
+        self._buf.append((now, frame))
+
+        # 若处于“事后帧捕获”阶段，则立刻保存本帧并递减计数
+        if self._pending_post > 0 and self._active_case_id is not None:
+            self._post_index += 1
+            self._save_image(frame, pos=f"p{self._post_index:02d}")
+            self._pending_post -= 1
+
+            if self._pending_post <= 0:
+                # 结束本次 case
+                self._active_case_id = None
+                self._active_case_ts = None
+                self._active_reason = None
+                self._post_index = 0
+
+    def trigger(self, reason: str = "reco_fail") -> None:
+        """
+        触发一次硬样本保存：保存缓冲中的 pre + current，并开始捕获 post_frames。
+        如果当前正在捕获上一轮的 post 帧，则不会重复触发（避免频繁写盘）。
+        """
+        if self._active_case_id is not None and self._pending_post > 0:
+            return
+
+        HardCaseFrameRecorder._case_counter += 1
+        self._active_case_id = HardCaseFrameRecorder._case_counter
+        self._active_case_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self._active_reason = _sanitize_token(reason)
+        self._pending_post = max(0, self.post_frames)
+        self._post_index = 0
+
+        # 保存缓冲：最后一帧视为触发帧 p00；之前为 mXX
+        frames = list(self._buf)
+        if not frames:
+            return
+
+        # frames: [..., (t, img_trigger)]
+        trigger_idx = len(frames) - 1
+        for idx, (_, img) in enumerate(frames):
+            if idx == trigger_idx:
+                self._save_image(img, pos="p00")
+            else:
+                # 距离触发帧的偏移（负数）
+                dist = trigger_idx - idx
+                # dist=1 -> m01, dist=5 -> m05
+                self._save_image(img, pos=f"m{dist:02d}")
+
+    def is_capturing_post(self) -> bool:
+        return self._active_case_id is not None and self._pending_post > 0
+
+    def _save_image(self, image, *, pos: str) -> None:
+        """
+        保存单张图片到 hard cases 目录。失败时不抛异常，避免影响主流程。
+        """
+        if image is None or self._active_case_id is None or self._active_case_ts is None:
+            return
+
+        reason = self._active_reason or "reco_fail"
+        pos = _sanitize_token(pos)
+
+        filename = (
+            f"{self.prefix}_{self._active_case_ts}_{self._active_case_id:06d}_{reason}_{pos}.{self.img_format}"
+        )
+        filepath = self._output_path / filename
+
+        try:
+            # 延用 ScreenshotCollector 的保存方式：OpenCV 直接写 BGR
+            import cv2
+
+            if self.img_format == "jpg":
+                params = [cv2.IMWRITE_JPEG_QUALITY, self.quality]
+            else:
+                params = [cv2.IMWRITE_PNG_COMPRESSION, 3]
+
+            ok = cv2.imwrite(str(filepath), image, params)
+            if not ok:
+                print(f"[HardCaseFrameRecorder] 保存失败: {filepath}")
+        except Exception as e:
+            print(f"[HardCaseFrameRecorder] 保存异常: {e}")
 
 
 class ScreenshotCollector(CustomAction):

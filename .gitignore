@@ -447,6 +447,9 @@ install
 # Training data
 training
 
+# SCRCPY
+scrcpy
+
 # Tools
 tools/ImageCropper/**/*.png
 
