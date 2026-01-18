@@ -121,11 +121,15 @@ jobs:
 
       - name: Setup Embed Python
         shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
         run: |
           python tools/ci/setup_embed_python.py --output-dir install/python
 
       - name: Download Python dependencies
         shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
         run: |
           ./install/python/python.exe tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
 
@@ -216,6 +220,8 @@ jobs:
 
       - name: Download Python dependencies
         shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
         run: |
           python tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
 
@@ -303,11 +309,15 @@ jobs:
 
       - name: Setup Embed Python
         shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
         run: |
           python3 tools/ci/setup_embed_python.py --output-dir install/python
 
       - name: Download Python dependencies
         shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
         run: |
           if [ -f "./install/python/bin/python3" ]; then
             chmod +x ./install/python/bin/python3
