@@ -101,17 +101,19 @@ def download_deps(requirements_file: Path, deps_dir: Path, python_exe: str = Non
     for f in downloaded:
         print(f"  - {f.name}")
     
-    # 安装依赖到 deps 目录（解压 wheel）
-    print("\n[信息] 正在安装依赖到目标目录...")
+    # 安装依赖到目标目录（包含依赖的依赖）
+    print("\n[信息] 正在安装依赖到目标目录（包含所有依赖）...")
     install_cmd = [
         python_exe, "-m", "pip", "install",
         "--target", str(deps_dir),
-        "--no-deps",  # 不安装依赖的依赖（已经下载了）
         "-r", str(requirements_file),
     ]
     
     print(f"[执行] {' '.join(install_cmd)}")
-    subprocess.run(install_cmd, capture_output=False)
+    result = subprocess.run(install_cmd, capture_output=False)
+    if result.returncode != 0:
+        print(f"[错误] pip install 返回非零状态: {result.returncode}")
+        sys.exit(result.returncode)
     
     # 清理 wheel 文件（已经安装）
     for whl in deps_dir.glob("*.whl"):
