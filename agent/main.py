@@ -6,11 +6,12 @@ MAA Agent Server 入口点
 import sys
 from pathlib import Path
 
-# 优先把打包好的 Python 依赖目录加入 sys.path（如 MAA/deps）
+# 当前脚本所在目录（打包后为 install/agent）
 _script_dir = Path(__file__).parent.resolve()
-_deps_dir = _script_dir.parent / "deps"
-if _deps_dir.exists() and str(_deps_dir) not in sys.path:
-    sys.path.insert(0, str(_deps_dir))
+
+# 确保 agent 目录本身在 sys.path 中，便于导入同目录下的 agent_register 等模块
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
 
 from maa.agent.agent_server import AgentServer
 from maa.toolkit import Toolkit
