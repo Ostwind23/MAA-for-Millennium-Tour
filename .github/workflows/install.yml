@@ -79,11 +79,6 @@ jobs:
             runner: windows-latest
             python_version: "3.12.4"
             python_arch: x64
-          - os: win
-            arch: aarch64
-            runner: windows-11-arm
-            python_version: "3.12.10"
-            python_arch: arm64
           - os: macos
             arch: x86_64
             runner: ubuntu-latest
@@ -247,7 +242,7 @@ jobs:
           }
 
       - name: Download Python dependencies (Windows)
-        if: matrix.os == 'win'
+        if: matrix.os == 'win' && matrix.arch == 'x86_64'
         shell: bash
         run: |
           python tools/ci/download_deps.py \
@@ -255,6 +250,33 @@ jobs:
             --os ${{ matrix.os }} \
             --arch ${{ matrix.arch }} \
             --requirements agent/requirements.txt
+
+      - name: Prepare Windows ARM64 requirements
+        if: matrix.os == 'win' && matrix.arch == 'aarch64'
+        shell: bash
+        run: |
+          python - << 'PY'
+          from pathlib import Path
+
+          src = Path("agent/requirements.txt")
+          dst = Path("agent/requirements.win-arm64.txt")
+          lines = src.read_text(encoding="utf-8").splitlines()
+          filtered = [
+              line
+              for line in lines
+              if line.strip() and not line.strip().startswith("opencv-python")
+          ]
+          dst.write_text("\n".join(filtered) + "\n", encoding="utf-8")
+          print(f"Wrote {dst} without opencv-python")
+          PY
+
+      - name: Download Python dependencies (Windows ARM64)
+        if: matrix.os == 'win' && matrix.arch == 'aarch64'
+        shell: bash
+        run: |
+          python tools/ci/download_deps.py \
+            --deps-dir ./install/python/Lib/site-packages \
+            --requirements agent/requirements.win-arm64.txt
 
       - name: Download Python dependencies (macOS)
         if: matrix.os == 'macos'
