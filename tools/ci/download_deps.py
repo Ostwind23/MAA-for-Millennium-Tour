@@ -8,6 +8,11 @@ import subprocess
 import argparse
 from pathlib import Path
 
+try:
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+except AttributeError:
+    pass
+
 
 def get_platform_tag(os_name: str, arch: str) -> str:
     target = (os_name, arch)
