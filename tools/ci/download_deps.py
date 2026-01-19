@@ -29,7 +29,7 @@ def get_platform_tag(os_name: str, arch: str) -> str:
             sys.exit(1)
 
 
-def download_dependencies(requirements_file: Path, deps_dir: Path, platform_tag: str):
+def download_cross_platform(requirements_file: Path, deps_dir: Path, platform_tag: str):
     deps_dir.mkdir(parents=True, exist_ok=True)
 
     if not requirements_file.exists():
@@ -66,16 +66,65 @@ def download_dependencies(requirements_file: Path, deps_dir: Path, platform_tag:
     print(f"依赖已经下载到目录: {deps_dir}")
 
 
+def download_native(requirements_file: Path, deps_dir: Path):
+    deps_dir.mkdir(parents=True, exist_ok=True)
+
+    if not requirements_file.exists():
+        print(f"错误: requirements.txt 文件不存在: {requirements_file}")
+        sys.exit(1)
+
+    cmd = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        str(requirements_file),
+        "--only-binary",
+        ":all:",
+        "--target",
+        str(deps_dir),
+    ]
+
+    print(f"执行下载命令: {' '.join(cmd)}")
+    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr)
+
+    if result.returncode != 0:
+        print("检测到失败，尝试不限制 binary 重新下载...")
+        cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-r",
+            str(requirements_file),
+            "--target",
+            str(deps_dir),
+        ]
+        result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        print(result.stdout)
+        if result.stderr:
+            print(result.stderr)
+
+    if result.returncode != 0:
+        print(f"依赖下载失败: {result.returncode}")
+        sys.exit(result.returncode)
+
+    print(f"依赖已经下载到目录: {deps_dir}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="下载 Python 依赖到目标目录")
     parser.add_argument("--deps-dir", default="deps", help="依赖下载目录")
     parser.add_argument("--requirements", default=None, help="依赖文件路径")
-    parser.add_argument("--os", required=True, help="目标系统 (win/macos/linux)")
-    parser.add_argument("--arch", required=True, help="目标架构 (x86_64/aarch64)")
+    parser.add_argument("--os", default=None, help="目标系统 (win/macos/linux)")
+    parser.add_argument("--arch", default=None, help="目标架构 (x86_64/aarch64)")
 
     args = parser.parse_args()
-    platform_tag = get_platform_tag(args.os, args.arch)
-
     script_dir = Path(__file__).resolve().parent
     project_root = script_dir.parent.parent
     requirements_file = (
@@ -84,7 +133,11 @@ def main():
         else project_root / "agent" / "requirements.txt"
     )
 
-    download_dependencies(requirements_file, Path(args.deps_dir), platform_tag)
+    if args.os and args.arch:
+        platform_tag = get_platform_tag(args.os, args.arch)
+        download_cross_platform(requirements_file, Path(args.deps_dir), platform_tag)
+    else:
+        download_native(requirements_file, Path(args.deps_dir))
 
 
 if __name__ == "__main__":

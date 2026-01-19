@@ -77,21 +77,33 @@ jobs:
           - os: win
             arch: x86_64
             runner: windows-latest
+            python_version: "3.12.4"
+            python_arch: x64
           - os: win
             arch: aarch64
             runner: windows-11-arm
+            python_version: "3.12.10"
+            python_arch: arm64
           - os: macos
             arch: x86_64
             runner: ubuntu-latest
+            python_version: "3.12.4"
+            python_arch: x64
           - os: macos
             arch: aarch64
             runner: ubuntu-latest
+            python_version: "3.12.4"
+            python_arch: x64
           - os: linux
             arch: x86_64
             runner: ubuntu-latest
+            python_version: "3.12.4"
+            python_arch: x64
           - os: linux
             arch: aarch64
             runner: ubuntu-latest
+            python_version: "3.11.9"
+            python_arch: x64
       fail-fast: false
 
     steps:
@@ -101,7 +113,8 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12.4"
+          python-version: ${{ matrix.python_version }}
+          architecture: ${{ matrix.python_arch }}
 
       - name: Download MFAAvalonia
         if: matrix.os != 'android'
@@ -253,8 +266,16 @@ jobs:
             --arch ${{ matrix.arch }} \
             --requirements agent/requirements.txt
 
-      - name: Download Python dependencies (Linux)
-        if: matrix.os == 'linux'
+      - name: Download Python dependencies (Linux x86_64)
+        if: matrix.os == 'linux' && matrix.arch == 'x86_64'
+        shell: bash
+        run: |
+          python3 tools/ci/download_deps.py \
+            --deps-dir ./install/deps \
+            --requirements agent/requirements.txt
+
+      - name: Download Python dependencies (Linux aarch64)
+        if: matrix.os == 'linux' && matrix.arch == 'aarch64'
         shell: bash
         run: |
           python3 tools/ci/download_deps.py \

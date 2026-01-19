@@ -16,9 +16,15 @@ import sys
 import shutil
 import subprocess
 import urllib.request
+import urllib.error
 import zipfile
 import tarfile
 import stat
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+except AttributeError:
+    pass
 
 
 PYTHON_VERSION_TARGET = os.getenv("PYTHON_EMBED_VERSION", "3.12.4")
@@ -156,17 +162,30 @@ def setup_macos_embed(version, output_dir, arch):
         print(f"错误: 不支持的 macOS 架构: {arch} -> {pbs_arch}")
         return
 
-    pbs_filename = (
-        f"cpython-{version}+{PYTHON_BUILD_STANDALONE_RELEASE_TAG}-"
-        f"{pbs_arch}-apple-darwin-install_only.tar.gz"
-    )
-    download_url = (
-        "https://github.com/indygreg/python-build-standalone/releases/download/"
-        f"{PYTHON_BUILD_STANDALONE_RELEASE_TAG}/{pbs_filename}"
-    )
-    tar_filepath = os.path.join(output_dir, pbs_filename)
+    candidate_tags = [PYTHON_BUILD_STANDALONE_RELEASE_TAG, "20240415"]
+    candidate_tags = list(dict.fromkeys(candidate_tags))
+    tar_filepath = None
 
-    download_file(download_url, tar_filepath)
+    for tag in candidate_tags:
+        pbs_filename = (
+            f"cpython-{version}+{tag}-{pbs_arch}-apple-darwin-install_only.tar.gz"
+        )
+        download_url = (
+            "https://github.com/indygreg/python-build-standalone/releases/download/"
+            f"{tag}/{pbs_filename}"
+        )
+        tar_filepath = os.path.join(output_dir, pbs_filename)
+        try:
+            download_file(download_url, tar_filepath)
+            break
+        except urllib.error.HTTPError as err:
+            if err.code == 404:
+                print(f"未找到构建包（tag={tag}），尝试下一个标签。")
+                continue
+            raise
+    else:
+        print("错误: 无法找到匹配的 python-build-standalone 构建包。")
+        return
     temp_extract_dir = os.path.join(output_dir, "_temp_extract")
     os.makedirs(temp_extract_dir, exist_ok=True)
     extract_tar(tar_filepath, temp_extract_dir)
