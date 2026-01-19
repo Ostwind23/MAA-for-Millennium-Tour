@@ -23,7 +23,24 @@ from utils import working_dir  # type: ignore
 install_path = working_dir / "install"
 
 
-def install_maafw():
+def get_dotnet_platform_tag(os_name: str, arch: str) -> str:
+    if os_name == "win" and arch == "x86_64":
+        return "win-x64"
+    if os_name == "win" and arch == "aarch64":
+        return "win-arm64"
+    if os_name == "macos" and arch == "x86_64":
+        return "osx-x64"
+    if os_name == "macos" and arch == "aarch64":
+        return "osx-arm64"
+    if os_name == "linux" and arch == "x86_64":
+        return "linux-x64"
+    if os_name == "linux" and arch == "aarch64":
+        return "linux-arm64"
+    print(f"Unsupported OS or architecture: {os_name}-{arch}")
+    sys.exit(1)
+
+
+def install_maafw(os_name: str, arch: str):
     if not (working_dir / "deps" / "bin").exists():
         print('Please download the MaaFramework to "deps" first.')
         print('请先下载 MaaFramework 到 "deps"。')
@@ -31,18 +48,24 @@ def install_maafw():
 
     shutil.copytree(
         working_dir / "deps" / "bin",
-        install_path,
+        install_path
+        / "runtimes"
+        / get_dotnet_platform_tag(os_name, arch)
+        / "native",
         ignore=shutil.ignore_patterns(
             "*MaaDbgControlUnit*",
             "*MaaThriftControlUnit*",
             "*MaaRpc*",
             "*MaaHttp*",
+            "plugins",
+            "*.node",
+            "*MaaPiCli*",
         ),
         dirs_exist_ok=True,
     )
     shutil.copytree(
         working_dir / "deps" / "share" / "MaaAgentBinary",
-        install_path / "MaaAgentBinary",
+        install_path / "libs" / "MaaAgentBinary",
         dirs_exist_ok=True,
     )
 
@@ -123,7 +146,7 @@ if __name__ == "__main__":
     os_name = sys.argv[2]
     arch = sys.argv[3]
 
-    install_maafw()
+    install_maafw(os_name, arch)
     install_resource(version)
     install_chores()
     install_agent(os_name)
