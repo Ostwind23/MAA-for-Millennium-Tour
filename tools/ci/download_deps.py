@@ -52,7 +52,6 @@ def download_cross_platform(requirements_file: Path, deps_dir: Path, platform_ta
         platform_tag,
         "--only-binary",
         ":all:",
-        "--no-deps",
         "--target",
         str(deps_dir),
     ]
