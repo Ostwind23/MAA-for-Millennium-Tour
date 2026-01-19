@@ -42,9 +42,13 @@ import cv2
 # 硬样本录制器：识别失败时保存前后若干帧（仅图片）
 from .screenshot_collector import HardCaseFrameRecorder
 
-# Tkinter 和 PIL 用于调试窗口
-import tkinter as tk
-from PIL import Image, ImageTk, ImageDraw, ImageFont
+# Tkinter 和 PIL 用于调试窗口（在某些环境中可能不可用，例如嵌入式 Python）
+try:
+    import tkinter as tk
+    from PIL import Image, ImageTk, ImageDraw, ImageFont
+    _HAS_TKINTER = True
+except Exception:
+    _HAS_TKINTER = False
 
 # ==================== 调试配置 ====================
 # 全局调试开关 - 设置为 True 开启调试功能，False 关闭所有调试功能
@@ -435,9 +439,10 @@ class TkDebugViewer:
         self._need_refresh = False
         
         # Tkinter 相关（在 Tkinter 线程中初始化）
-        self._root: Optional[tk.Tk] = None
-        self._canvas: Optional[tk.Canvas] = None
-        self._photo_image: Optional[ImageTk.PhotoImage] = None
+        # 使用字符串类型注解以避免在缺失 Tkinter 的环境下导入失败
+        self._root: Optional["tk.Tk"] = None
+        self._canvas: Optional["tk.Canvas"] = None
+        self._photo_image: Optional["ImageTk.PhotoImage"] = None
         self._canvas_image_id = None
         
         # 窗口尺寸
@@ -743,8 +748,9 @@ class ScrcpyOverlayDebugViewer:
         self._frame_count = 0
 
         # Tkinter overlay（在 Tk 线程中初始化）
-        self._root: Optional[tk.Tk] = None
-        self._canvas: Optional[tk.Canvas] = None
+        # 使用字符串类型注解以避免在缺失 Tkinter 的环境下导入失败
+        self._root: Optional["tk.Tk"] = None
+        self._canvas: Optional["tk.Canvas"] = None
 
         # scrcpy 窗口句柄与映射参数
         self._scrcpy_hwnd: Optional[int] = None
@@ -1326,6 +1332,11 @@ def start_debug_viewer(context: Optional[Context] = None):
         return _debug_viewer
     # 优先 scrcpy+overlay；失败则回退到 OpenCV（避免 Tkinter+PIL 合成带来的性能开销）
     mode = (DEBUG_VIEW_MODE or "scrcpy").lower()
+
+    # 在缺失 Tkinter 的环境中，强制使用 OpenCV 调试或直接关闭调试，避免导入错误
+    if not _HAS_TKINTER and mode != "opencv":
+        print("[DebugViewer] 当前环境不支持 Tkinter，自动切换到 OpenCV 调试模式")
+        mode = "opencv"
 
     if mode == "scrcpy":
         try:

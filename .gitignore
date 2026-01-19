@@ -456,3 +456,8 @@ tools/ImageCropper/**/*.png
 config
 debug
 .github/workflows/install_example.yml
+
+# Yolov8
+yolov8n.pt
+yolov8s.pt
+runs

@@ -126,20 +126,29 @@ jobs:
           rm -f "${ARCHIVE_FILE_PATH}"
           echo "Archive cleanup command executed for MFAAvalonia."
 
-      - name: Setup Embed Python
+      - name: Copy full Python runtime into package
         shell: bash
         env:
           PYTHONIOENCODING: utf-8
         run: |
-          python tools/ci/setup_embed_python.py --version "${{ env.PYTHON_EMBED_VERSION }}" --output-dir install/python
+          python - << 'PY'
+          import sys
+          from pathlib import Path
+          import shutil
+
+          src = Path(sys.executable).parent
+          dst = Path("install/python").resolve()
+          print(f"[Python Runtime] Copying from {src} to {dst}")
+          shutil.copytree(src, dst, dirs_exist_ok=True)
+          PY
 
       - name: Download Python dependencies
         shell: bash
         env:
           PYTHONIOENCODING: utf-8
         run: |
-          # 使用外部 Python 下载并安装依赖到嵌入式 Python 的 Lib/site-packages（不再单独创建 install/deps）
-          python tools/ci/download_deps.py \
+          # 使用打包后的完整 Python 下载并安装依赖到其 Lib/site-packages
+          ./install/python/python.exe tools/ci/download_deps.py \
             --deps-dir ./install/python/Lib/site-packages \
             --requirements agent/requirements.txt
 
@@ -173,6 +182,30 @@ jobs:
           if [ -d "assets/Assets" ]; then
             cp -rv assets/Assets/* install/assets/
           fi
+
+      - name: Download scrcpy (Windows)
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: Genymobile/scrcpy
+          fileName: "scrcpy-win64-*.zip"
+          latest: true
+          out-file-path: "scrcpy_tmp"
+          extract: true
+
+      - name: Install scrcpy into package
+        shell: bash
+        run: |
+          mkdir -p install/scrcpy
+          # 查找解压后的 scrcpy-win64-* 目录
+          SCRCPY_DIR=$(find scrcpy_tmp -maxdepth 1 -type d -name "scrcpy-win64*" | head -n 1 || true)
+          if [ -z "$SCRCPY_DIR" ]; then
+            echo "Error: scrcpy directory not found under scrcpy_tmp"
+            ls -R scrcpy_tmp || true
+            exit 1
+          fi
+          echo "Using scrcpy directory: $SCRCPY_DIR"
+          # 将 scrcpy 内容扁平化复制到 install/scrcpy（不保留版本子目录）
+          cp -rp "$SCRCPY_DIR"/. install/scrcpy/
 
       - name: Configure agent for embedded Python
         shell: bash
