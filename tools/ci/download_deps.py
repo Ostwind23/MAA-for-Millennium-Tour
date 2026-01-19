@@ -1,159 +1,90 @@
 #!/usr/bin/env python3
 """
-下载 Python 依赖包到指定目录
-
-用于 CI 构建时预下载依赖，打包后用户无需联网安装。
-
-用法：
-    python download_deps.py --deps-dir install/deps [--requirements agent/requirements.txt]
+下载 Python 依赖到指定目录（用于 CI 打包）
 """
 
-import os
 import sys
 import subprocess
-import platform
+import argparse
 from pathlib import Path
 
 
-def get_platform_tag():
-    """获取当前平台的 pip wheel 标签"""
-    system = platform.system().lower()
-    machine = platform.machine().lower()
-    
-    if system == "windows":
-        if machine in ("x86_64", "amd64"):
+def get_platform_tag(os_name: str, arch: str) -> str:
+    target = (os_name, arch)
+    match target:
+        case ("win", "x86_64"):
             return "win_amd64"
-        elif machine in ("aarch64", "arm64"):
+        case ("win", "aarch64"):
             return "win_arm64"
-    elif system == "darwin":
-        if machine in ("x86_64", "amd64"):
-            return "macosx_10_9_x86_64"
-        elif machine in ("aarch64", "arm64"):
-            return "macosx_11_0_arm64"
-    elif system == "linux":
-        if machine in ("x86_64", "amd64"):
+        case ("macos", "x86_64"):
+            return "macosx_13_0_x86_64"
+        case ("macos", "aarch64"):
+            return "macosx_13_0_arm64"
+        case ("linux", "x86_64"):
             return "manylinux2014_x86_64"
-        elif machine in ("aarch64", "arm64"):
+        case ("linux", "aarch64"):
             return "manylinux2014_aarch64"
-    
-    return None
+        case _:
+            print(f"不支持的操作系统或架构: {os_name}-{arch}")
+            sys.exit(1)
 
 
-def download_deps(requirements_file: Path, deps_dir: Path, python_exe: str = None):
-    """下载依赖包到指定目录"""
-    
-    if not requirements_file.exists():
-        print(f"[错误] 依赖文件不存在: {requirements_file}")
-        sys.exit(1)
-    
-    # 创建目录
+def download_dependencies(requirements_file: Path, deps_dir: Path, platform_tag: str):
     deps_dir.mkdir(parents=True, exist_ok=True)
-    
-    # 确定 Python 可执行文件
-    if python_exe is None:
-        python_exe = sys.executable
-    
-    print(f"[信息] Python: {python_exe}")
-    print(f"[信息] 依赖文件: {requirements_file}")
-    print(f"[信息] 输出目录: {deps_dir}")
-    
-    # 读取依赖列表
-    with open(requirements_file, "r", encoding="utf-8") as f:
-        deps = [
-            line.strip() 
-            for line in f 
-            if line.strip() and not line.startswith("#")
-        ]
-    
-    print(f"[信息] 需要下载的依赖: {deps}")
-    
-    # 使用 pip download 下载依赖
-    # -d: 下载目录
-    # --only-binary :all: 只下载预编译的 wheel（避免编译）
-    # --platform: 目标平台
-    # --python-version: 目标 Python 版本
-    
+
+    if not requirements_file.exists():
+        print(f"错误: requirements.txt 文件不存在: {requirements_file}")
+        sys.exit(1)
+
     cmd = [
-        python_exe, "-m", "pip", "download",
-        "-d", str(deps_dir),
-        "--only-binary", ":all:",
-        "-r", str(requirements_file),
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        str(requirements_file),
+        "--platform",
+        platform_tag,
+        "--only-binary",
+        ":all:",
+        "--no-deps",
+        "--target",
+        str(deps_dir),
     ]
-    
-    print(f"[执行] {' '.join(cmd)}")
-    result = subprocess.run(cmd, capture_output=False)
-    
+
+    print(f"执行下载命令: {' '.join(cmd)}")
+    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+
+    print(result.stdout)
+    if result.stderr:
+        print(result.stderr)
+
     if result.returncode != 0:
-        print(f"[警告] pip download 返回非零状态: {result.returncode}")
-        print("[信息] 尝试不带 --only-binary 重新下载...")
-        
-        # 重试，不限制 binary
-        cmd = [
-            python_exe, "-m", "pip", "download",
-            "-d", str(deps_dir),
-            "-r", str(requirements_file),
-        ]
-        result = subprocess.run(cmd, capture_output=False)
-    
-    # 统计下载的文件
-    downloaded = list(deps_dir.glob("*.whl")) + list(deps_dir.glob("*.tar.gz"))
-    print(f"\n[完成] 已下载 {len(downloaded)} 个包到 {deps_dir}")
-    for f in downloaded:
-        print(f"  - {f.name}")
-    
-    # 安装依赖到目标目录（包含依赖的依赖）
-    print("\n[信息] 正在安装依赖到目标目录（包含所有依赖）...")
-    install_cmd = [
-        python_exe, "-m", "pip", "install",
-        "--target", str(deps_dir),
-        "-r", str(requirements_file),
-    ]
-    
-    print(f"[执行] {' '.join(install_cmd)}")
-    result = subprocess.run(install_cmd, capture_output=False)
-    if result.returncode != 0:
-        print(f"[错误] pip install 返回非零状态: {result.returncode}")
+        print(f"依赖下载失败: {result.returncode}")
         sys.exit(result.returncode)
-    
-    # 清理 wheel 文件（已经安装）
-    for whl in deps_dir.glob("*.whl"):
-        whl.unlink()
-    for tar in deps_dir.glob("*.tar.gz"):
-        tar.unlink()
-    
-    print(f"\n[完成] 依赖已安装到 {deps_dir}")
+
+    print(f"依赖已经下载到目录: {deps_dir}")
 
 
 def main():
-    import argparse
-    
-    # 获取脚本所在目录
-    script_dir = Path(__file__).parent.resolve()
-    project_root = script_dir.parent.parent
-    
-    parser = argparse.ArgumentParser(description="下载 Python 依赖包")
-    parser.add_argument(
-        "--deps-dir", 
-        default="install/deps", 
-        help="依赖包输出目录"
-    )
-    parser.add_argument(
-        "--requirements", 
-        default=str(project_root / "agent" / "requirements.txt"),
-        help="依赖文件路径"
-    )
-    parser.add_argument(
-        "--python",
-        default=None,
-        help="Python 可执行文件路径"
-    )
+    parser = argparse.ArgumentParser(description="下载 Python 依赖到目标目录")
+    parser.add_argument("--deps-dir", default="deps", help="依赖下载目录")
+    parser.add_argument("--requirements", default=None, help="依赖文件路径")
+    parser.add_argument("--os", required=True, help="目标系统 (win/macos/linux)")
+    parser.add_argument("--arch", required=True, help="目标架构 (x86_64/aarch64)")
+
     args = parser.parse_args()
-    
-    download_deps(
-        requirements_file=Path(args.requirements).resolve(),
-        deps_dir=Path(args.deps_dir).resolve(),
-        python_exe=args.python,
+    platform_tag = get_platform_tag(args.os, args.arch)
+
+    script_dir = Path(__file__).resolve().parent
+    project_root = script_dir.parent.parent
+    requirements_file = (
+        Path(args.requirements)
+        if args.requirements
+        else project_root / "agent" / "requirements.txt"
     )
+
+    download_dependencies(requirements_file, Path(args.deps_dir), platform_tag)
 
 
 if __name__ == "__main__":

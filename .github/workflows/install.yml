@@ -1,5 +1,11 @@
 name: install
 
+env:
+  MFAA_VERSION: "v2.5.6"
+  MAA_FRAMEWORK_VERSION: "v5.3.3"
+  PYTHON_EMBED_VERSION: "3.12.4"
+  PYTHON_BUILD_STANDALONE_RELEASE_TAG: "20240507"
+
 on:
   push:
     tags:
@@ -19,13 +25,6 @@ on:
       - "**.py"
   workflow_dispatch:
 
-env:
-  # 固定 MaaFramework 版本以确保构建稳定性
-  # MFAAvalonia 始终使用最新版（latest: true）
-  MAA_FRAMEWORK_VERSION: "v5.3.3"
-  # 嵌入式 Python 版本（用于打包的运行时）
-  PYTHON_EMBED_VERSION: "3.12.4"
-
 permissions:
   contents: write
   actions: write
@@ -39,7 +38,6 @@ jobs:
           fetch-depth: 0
       - id: set_tag
         run: |
-          # 检查标签格式
           is_release=${{ startsWith(github.ref, 'refs/tags/v') }}
           tag=$(git describe --tags --match "v*" ${{ github.ref }} || true)
           if [[ $tag != v* ]]; then
@@ -56,7 +54,6 @@ jobs:
             tag="$prefix-ci.$suffix"
           fi
 
-          # 检查是否为预发布版本
           is_prerelease=false
           if [[ $tag =~ .*alpha.* || $tag =~ .*beta.* || $tag =~ .*rc.* || $tag =~ .*dev.* || $tag =~ .*-ci.* ]]; then
             is_prerelease=true
@@ -71,13 +68,30 @@ jobs:
       is_release: ${{ steps.set_tag.outputs.is_release }}
       is_prerelease: ${{ steps.set_tag.outputs.is_prerelease }}
 
-  # ========== Windows 构建 ==========
-  windows:
+  install:
     needs: meta
-    runs-on: windows-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        arch: [x86_64]
+        include:
+          - os: win
+            arch: x86_64
+            runner: windows-latest
+          - os: win
+            arch: aarch64
+            runner: windows-11-arm
+          - os: macos
+            arch: x86_64
+            runner: ubuntu-latest
+          - os: macos
+            arch: aarch64
+            runner: ubuntu-latest
+          - os: linux
+            arch: x86_64
+            runner: ubuntu-latest
+          - os: linux
+            arch: aarch64
+            runner: ubuntu-latest
       fail-fast: false
 
     steps:
@@ -85,105 +99,100 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup Python 3.12.4
-        uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12.4"
 
-      - name: Set platform variables
-        id: platform
-        shell: bash
-        run: |
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-            echo "tag=x64" >> $GITHUB_OUTPUT
-          else
-            echo "tag=arm64" >> $GITHUB_OUTPUT
-          fi
+      - name: Download MFAAvalonia
+        if: matrix.os != 'android'
+        id: download_mfa
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: SweetSmellFox/MFAAvalonia
+          fileName: "MFAAvalonia-*-${{ (matrix.os == 'win' && 'win') || (matrix.os == 'macos' && 'osx') || (matrix.os == 'linux' && 'linux') }}-${{ (matrix.arch == 'x86_64' && 'x64') || (matrix.arch == 'aarch64' && 'arm64') }}*"
+          tag: ${{ env.MFAA_VERSION }}
+          out-file-path: "MFA"
+          extract: true
 
       - name: Download MaaFramework
         uses: robinraju/release-downloader@v1
         with:
           repository: MaaXYZ/MaaFramework
-          fileName: "MAA-win-${{ matrix.arch }}*"
+          fileName: "MAA-${{ matrix.os }}-${{ matrix.arch }}*"
           tag: ${{ env.MAA_FRAMEWORK_VERSION }}
           out-file-path: "deps"
           extract: true
 
-      - name: Download MFAAvalonia
-        id: download_mfa
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: SweetSmellFox/MFAAvalonia
-          fileName: "MFAAvalonia-*-win-${{ steps.platform.outputs.tag }}*"
-          latest: true
-          out-file-path: "MFA"
-          extract: true
-
       - name: Clean up MFAAvalonia archive
+        if: matrix.os != 'android'
         shell: bash
         run: |
           ARCHIVE_FILE_PATH="${{ fromJson(steps.download_mfa.outputs.downloaded_files)[0] }}"
           rm -f "${ARCHIVE_FILE_PATH}"
           echo "Archive cleanup command executed for MFAAvalonia."
 
-      - name: Copy full Python runtime into package
-        shell: bash
-        env:
-          PYTHONIOENCODING: utf-8
-        run: |
-          python - << 'PY'
-          import sys
-          from pathlib import Path
-          import shutil
-
-          src = Path(sys.executable).parent
-          dst = Path("install/python").resolve()
-          print(f"[Python Runtime] Copying from {src} to {dst}")
-          shutil.copytree(src, dst, dirs_exist_ok=True)
-          PY
-
-      - name: Download Python dependencies
-        shell: bash
-        env:
-          PYTHONIOENCODING: utf-8
-        run: |
-          # 使用打包后的完整 Python 下载并安装依赖到其 Lib/site-packages
-          ./install/python/python.exe tools/ci/download_deps.py \
-            --deps-dir ./install/python/Lib/site-packages \
-            --requirements agent/requirements.txt
-
-      - name: Install resources
+      - name: Setup Embed Python
+        if: matrix.os != 'linux'
         shell: bash
         run: |
-          cd tools/
-          python -m pip install -r ./requirements.txt
-          python ./install.py ${{ needs.meta.outputs.tag }}
-          cd ..
+          python tools/ci/setup_embed_python.py ${{ matrix.os }} ${{ matrix.arch }} \
+            --version ${{ env.PYTHON_EMBED_VERSION }} \
+            --output-dir install/python
 
-      - name: Copy MFA files
+      - name: Fix permissions on unix
+        if: matrix.os != 'win'
+        shell: bash
+        run: |
+          if [ -d "./install/python/bin" ]; then
+            chmod +x ./install/python/bin/* 2>/dev/null || true
+          fi
+          if [ -d "./install" ]; then
+            find ./install -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+          fi
+
+      - name: Install on unix
+        if: matrix.os != 'win'
         shell: bash
         run: |
           if [ -d "MFA" ]; then
             echo "Copying MFA files to install directory..."
             mkdir -p install
-            cp -rpvn MFA/. install/ || rsync -av --ignore-existing MFA/ install/
+            rsync -av --ignore-existing MFA/ install/
+          else
+            echo "MFA directory not found, skipping copy."
           fi
+
+          python3 -m pip install -r tools/requirements.txt
+          python3 tools/ci/install.py ${{ needs.meta.outputs.tag }} ${{ matrix.os }} ${{ matrix.arch }}
+
+      - name: Install on windows
+        if: matrix.os == 'win'
+        shell: bash
+        run: |
+          if [ -d "MFA" ]; then
+            echo "Copying MFA files to install directory..."
+            mkdir -p install
+            cp -r MFA/* install/
+          else
+            echo "MFA directory not found, skipping copy."
+          fi
+
+          python -m pip install -r tools/requirements.txt
+          python tools/ci/install.py ${{ needs.meta.outputs.tag }} ${{ matrix.os }} ${{ matrix.arch }}
 
       - name: Setup custom Assets
         shell: bash
         run: |
-          # 删除 MFA 自带的 Assets
           if [ -d "install/Assets" ]; then
             rm -rf install/Assets
           fi
-          
-          # 创建 assets 目录并复制自定义图标
           mkdir -p install/assets
           if [ -d "assets/Assets" ]; then
             cp -rv assets/Assets/* install/assets/
           fi
 
-      - name: Download scrcpy (Windows)
+      - name: Download scrcpy (Windows x64)
+        if: matrix.os == 'win' && matrix.arch == 'x86_64'
         uses: robinraju/release-downloader@v1
         with:
           repository: Genymobile/scrcpy
@@ -193,58 +202,27 @@ jobs:
           extract: true
 
       - name: Install scrcpy into package
+        if: matrix.os == 'win' && matrix.arch == 'x86_64'
         shell: bash
         run: |
           mkdir -p install/scrcpy
-          # 查找解压后的 scrcpy-win64-* 目录
           SCRCPY_DIR=$(find scrcpy_tmp -maxdepth 1 -type d -name "scrcpy-win64*" | head -n 1 || true)
           if [ -z "$SCRCPY_DIR" ]; then
             echo "Error: scrcpy directory not found under scrcpy_tmp"
             ls -R scrcpy_tmp || true
             exit 1
           fi
-          echo "Using scrcpy directory: $SCRCPY_DIR"
-          # 将 scrcpy 内容扁平化复制到 install/scrcpy（不保留版本子目录）
           cp -rp "$SCRCPY_DIR"/. install/scrcpy/
 
-      - name: Configure agent for embedded Python
-        shell: bash
-        run: |
-          python - << 'PY'
-          import json
-          from pathlib import Path
-
-          interface_path = Path("install/interface.json")
-          if interface_path.exists():
-              with open(interface_path, "r", encoding="utf-8") as f:
-                  data = json.load(f)
-
-              # Windows: 使用打包的嵌入式 Python
-              data["agent"] = {
-                  "child_exec": "python/python.exe",
-                  "child_args": ["agent/main.py"],
-              }
-
-              with open(interface_path, "w", encoding="utf-8") as f:
-                  json.dump(data, f, ensure_ascii=False, indent=4)
-
-              print("Agent configuration updated for Windows embedded Python")
-          else:
-              print("Warning: interface.json not found")
-          PY
-
       - name: Replace MFAAvalonia.exe icon
+        if: matrix.os == 'win' && matrix.arch == 'x86_64'
         shell: pwsh
         run: |
-          # 下载 rcedit 工具
           $rceditUrl = "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe"
           $rceditPath = "rcedit-x64.exe"
           Invoke-WebRequest -Uri $rceditUrl -OutFile $rceditPath
-          
-          # 查找 MFAAvalonia.exe
           $exePath = "install/MFAAvalonia.exe"
           $icoPath = "assets/Assets/logo.ico"
-          
           if ((Test-Path $exePath) -and (Test-Path $icoPath)) {
             Write-Host "Replacing icon for MFAAvalonia.exe..."
             & .\$rceditPath $exePath --set-icon $icoPath
@@ -255,256 +233,44 @@ jobs:
             Write-Host "  ICO exists: $(Test-Path $icoPath)"
           }
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Maa-Millennium-Tour-win-${{ matrix.arch }}
-          path: "install"
-
-  # ========== Linux 构建 ==========
-  linux:
-    needs: meta
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: [x86_64]
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Set platform variables
-        id: platform
+      - name: Download Python dependencies (Windows)
+        if: matrix.os == 'win'
         shell: bash
         run: |
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-            echo "tag=x64" >> $GITHUB_OUTPUT
-          else
-            echo "tag=arm64" >> $GITHUB_OUTPUT
-          fi
+          python tools/ci/download_deps.py \
+            --deps-dir ./install/python/Lib/site-packages \
+            --os ${{ matrix.os }} \
+            --arch ${{ matrix.arch }} \
+            --requirements agent/requirements.txt
 
-      - name: Download MaaFramework
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: MaaXYZ/MaaFramework
-          fileName: "MAA-linux-${{ matrix.arch }}*"
-          tag: ${{ env.MAA_FRAMEWORK_VERSION }}
-          out-file-path: "deps"
-          extract: true
-
-      - name: Download MFAAvalonia
-        id: download_mfa
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: SweetSmellFox/MFAAvalonia
-          fileName: "MFAAvalonia-*-linux-${{ steps.platform.outputs.tag }}*"
-          latest: true
-          out-file-path: "MFA"
-          extract: true
-
-      - name: Clean up MFAAvalonia archive
+      - name: Download Python dependencies (macOS)
+        if: matrix.os == 'macos'
         shell: bash
         run: |
-          ARCHIVE_FILE_PATH="${{ fromJson(steps.download_mfa.outputs.downloaded_files)[0] }}"
-          rm -f "${ARCHIVE_FILE_PATH}"
+          python tools/ci/download_deps.py \
+            --deps-dir ./install/python/lib/python3.12/site-packages \
+            --os ${{ matrix.os }} \
+            --arch ${{ matrix.arch }} \
+            --requirements agent/requirements.txt
 
-      - name: Download Python dependencies
-        shell: bash
-        env:
-          PYTHONIOENCODING: utf-8
-        run: |
-          python tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
-
-      - name: Install resources
+      - name: Download Python dependencies (Linux)
+        if: matrix.os == 'linux'
         shell: bash
         run: |
-          cd tools/
-          python -m pip install -r ./requirements.txt
-          python ./install.py ${{ needs.meta.outputs.tag }}
-          cd ..
-
-      - name: Copy MFA files
-        shell: bash
-        run: |
-          if [ -d "MFA" ]; then
-            echo "Copying MFA files to install directory..."
-            mkdir -p install
-            rsync -av --ignore-existing MFA/ install/
-          fi
-
-      - name: Setup custom Assets
-        shell: bash
-        run: |
-          if [ -d "install/Assets" ]; then
-            rm -rf install/Assets
-          fi
-          mkdir -p install/assets
-          if [ -d "assets/Assets" ]; then
-            cp -rv assets/Assets/* install/assets/
-          fi
-
-      - name: Configure agent for system Python
-        shell: bash
-        run: |
-          python - << 'PY'
-          import json
-          from pathlib import Path
-
-          interface_path = Path("install/interface.json")
-          if interface_path.exists():
-              with open(interface_path, "r", encoding="utf-8") as f:
-                  data = json.load(f)
-
-              # Linux: 使用系统 Python，依赖通过 PYTHONPATH 加载
-              data["agent"] = {
-                  "child_exec": "python3",
-                  "child_args": ["agent/main.py"],
-              }
-
-              with open(interface_path, "w", encoding="utf-8") as f:
-                  json.dump(data, f, ensure_ascii=False, indent=4)
-
-              print("Agent configuration updated for Linux system Python")
-          else:
-              print("Warning: interface.json not found")
-          PY
+          python3 tools/ci/download_deps.py \
+            --deps-dir ./install/deps \
+            --os ${{ matrix.os }} \
+            --arch ${{ matrix.arch }} \
+            --requirements agent/requirements.txt
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Maa-Millennium-Tour-linux-${{ matrix.arch }}
+          name: Maa-Millennium-Tour-${{ matrix.os }}-${{ matrix.arch }}
           path: "install"
 
-  # ========== macOS 构建 ==========
-  macos:
-    needs: meta
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        arch: [aarch64]
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Set platform variables
-        id: platform
-        shell: bash
-        run: |
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-            echo "tag=x64" >> $GITHUB_OUTPUT
-          else
-            echo "tag=arm64" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Download MaaFramework
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: MaaXYZ/MaaFramework
-          fileName: "MAA-macos-${{ matrix.arch }}*"
-          tag: ${{ env.MAA_FRAMEWORK_VERSION }}
-          out-file-path: "deps"
-          extract: true
-
-      - name: Download MFAAvalonia
-        id: download_mfa
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: SweetSmellFox/MFAAvalonia
-          fileName: "MFAAvalonia-*-osx-${{ steps.platform.outputs.tag }}*"
-          latest: true
-          out-file-path: "MFA"
-          extract: true
-
-      - name: Clean up MFAAvalonia archive
-        shell: bash
-        run: |
-          ARCHIVE_FILE_PATH="${{ fromJson(steps.download_mfa.outputs.downloaded_files)[0] }}"
-          rm -f "${ARCHIVE_FILE_PATH}"
-
-      - name: Setup Embed Python
-        shell: bash
-        env:
-          PYTHONIOENCODING: utf-8
-        run: |
-          python3 tools/ci/setup_embed_python.py --output-dir install/python
-
-      - name: Download Python dependencies
-        shell: bash
-        env:
-          PYTHONIOENCODING: utf-8
-        run: |
-          if [ -f "./install/python/bin/python3" ]; then
-            chmod +x ./install/python/bin/python3
-            ./install/python/bin/python3 tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
-          else
-            python3 tools/ci/download_deps.py --deps-dir install/deps --requirements agent/requirements.txt
-          fi
-
-      - name: Install resources
-        shell: bash
-        run: |
-          cd tools/
-          python3 -m pip install --break-system-packages -r ./requirements.txt
-          python3 ./install.py ${{ needs.meta.outputs.tag }}
-          cd ..
-
-      - name: Copy MFA files
-        shell: bash
-        run: |
-          if [ -d "MFA" ]; then
-            echo "Copying MFA files to install directory..."
-            mkdir -p install
-            rsync -av --ignore-existing MFA/ install/
-          fi
-
-      - name: Setup custom Assets
-        shell: bash
-        run: |
-          if [ -d "install/Assets" ]; then
-            rm -rf install/Assets
-          fi
-          mkdir -p install/assets
-          if [ -d "assets/Assets" ]; then
-            cp -rv assets/Assets/* install/assets/
-          fi
-
-      - name: Configure agent for embedded Python
-        shell: bash
-        run: |
-          python3 - << 'PY'
-          import json
-          from pathlib import Path
-
-          interface_path = Path("install/interface.json")
-          if interface_path.exists():
-              with open(interface_path, "r", encoding="utf-8") as f:
-                  data = json.load(f)
-
-              # macOS: 使用打包的嵌入式 Python
-              data["agent"] = {
-                  "child_exec": "python/bin/python3",
-                  "child_args": ["agent/main.py"],
-              }
-
-              with open(interface_path, "w", encoding="utf-8") as f:
-                  json.dump(data, f, ensure_ascii=False, indent=4)
-
-              print("Agent configuration updated for macOS embedded Python")
-          else:
-              print("Warning: interface.json not found")
-          PY
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Maa-Millennium-Tour-macos-${{ matrix.arch }}
-          path: "install"
-
-  # ========== Changelog 生成 ==========
   changelog:
     name: Generate changelog
+    needs: meta
     runs-on: ubuntu-latest
     outputs:
       release_body: ${{ steps.git-cliff.outputs.content }}
@@ -524,10 +290,9 @@ jobs:
           OUTPUT: CHANGES.md
           GITHUB_REPO: ${{ github.repository }}
 
-  # ========== 发布 ==========
   release:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
-    needs: [meta, windows, linux, macos, changelog]
+    needs: [meta, install, changelog]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -541,7 +306,6 @@ jobs:
             if [[ $f == *"win"* ]]; then
               (cd "$f" && zip -r "../$f-${{ needs.meta.outputs.tag }}.zip" .)
             else
-              # Unix: 设置执行权限并打包为 tar.gz
               if [[ -f "$f/MaaPiCli" ]]; then
                 chmod +x "$f/MaaPiCli"
               fi
@@ -558,15 +322,3 @@ jobs:
           body: ${{ needs.changelog.outputs.release_body }}
           draft: false
           prerelease: ${{ needs.meta.outputs.is_prerelease == 'true' }}
-
-        # Mirror酱为第三方分发服务，新项目默认关闭
-        # 若有需要请联系 Mirror酱 开通，直接自行开启是无法使用的
-        # https://mirrorchyan.com/
-      - name: Trigger MirrorChyanUploading
-        if: false
-        shell: bash
-        run: |
-          gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_release.yml -f tag=${{ needs.meta.outputs.tag }}
-          gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_release_note.yml -f tag=${{ needs.meta.outputs.tag }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
