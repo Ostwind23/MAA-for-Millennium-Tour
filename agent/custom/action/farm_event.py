@@ -114,50 +114,19 @@ def _emit_focus_callback(message: str, context: Optional[Context] = None) -> Non
     msg = str(message)
     if not msg:
         return
-    ctx = context or _get_focus_context()
-    if ctx is None:
-        return
-
     detail = {"focus": msg}
     detail_json = json.dumps(detail, ensure_ascii=False)
 
-    targets = [ctx, getattr(ctx, "tasker", None)]
-    method_names = [
-        "notify",
-        "send_notification",
-        "post_notification",
-        "emit_notification",
-        "focus",
-        "send_focus",
-        "post_focus",
-        "send_event",
-        "post_event",
-        "emit_event",
-        "callback",
-        "report_message",
-        "report_event",
-    ]
+    # 通过 Toolkit.report_message 走官方回调通道
+    # 《2.3-回调协议》约定：type 使用 "Custom.*" 前缀，detail 为 JSON 字符串。
+    try:
+        from maa.toolkit import Toolkit
 
-    for target in targets:
-        if target is None:
-            continue
-        for name in method_names:
-            method = getattr(target, name, None)
-            if not callable(method):
-                continue
-            for args in (
-                (_FOCUS_MESSAGE_TYPE, detail_json),
-                (_FOCUS_MESSAGE_TYPE, detail),
-                (detail_json,),
-                (detail,),
-            ):
-                try:
-                    method(*args)
-                    return
-                except TypeError:
-                    continue
-                except Exception:
-                    return
+        # 按协议：type + detail(JSON 字符串)
+        Toolkit.report_message(_FOCUS_MESSAGE_TYPE, detail_json)
+    except Exception:
+        # 若 Toolkit 或 report_message 不存在，直接忽略，不影响主流程
+        return
 
 
 def _focus_print(*args, **kwargs):
@@ -202,6 +171,14 @@ WATERWHEEL_TARGET_POS = (1035, 243)  # 角色需要移动到的目标位置
 REPAIR_BUTTON_ROI = [1022, 435, 206, 244]  # 修理按钮检测区域
 REPAIR_BUTTON_TEMPLATE = f"{_FARM_IMG_DIR}/修理按钮.png"
 
+# 风车修理路径点
+WINDMILL_TARGET_POS = (1157, 457)  # 风车附近目标位置（靠近修理按钮）
+WINDMILL_ENTRY_POS = (1063, 295)   # 右侧栅栏上方入口点（再往右为空气墙）
+FARM_WATERING_START_POS = (627, 287)  # 农场右上方默认站位，用于修理后回到浇水起点
+
+# 风车修理相关
+WINDMILL_TARGET_POS = (1157, 457)  # 角色需要移动到的目标位置
+
 # 浇水相关
 WATER_BUTTON_ROI = [1022, 435, 206, 244]  # 右下角浇水按钮区域
 WATER_BUTTON_TEMPLATE = f"{_FARM_IMG_DIR}/浇水按钮.png"
@@ -223,6 +200,15 @@ PLOT_WET_COUNT = 25  # 40x25=1000 像素，命中阈值取较小即可
 # 土壤湿度 OCR 辅助检测（用于避免对同一坑位反复浇水）
 # 以坑位中心为圆心、半径 150px 的外接方作为 ROI（300x300）
 MOISTURE_OCR_RADIUS = 150
+# 土壤湿度 OCR UI 的精确 ROI（基于用户标注）
+# 对于中心点 (752, 348)，[651, 235, 186, 124] 能完整覆盖“湿润/缺水/正常”文本区域。
+# 推导得到的通用偏移关系：
+#   ROI 宽度:  186, 高度: 124
+#   ROI 中心相对坑位中心: Δx ≈ -8, Δy ≈ -51
+MOISTURE_OCR_ROI_W = 186
+MOISTURE_OCR_ROI_H = 124
+MOISTURE_OCR_OFFSET_X = -8
+MOISTURE_OCR_OFFSET_Y = -51
 
 # 坑位“湿润”检测（TemplateMatch，替代 ColorMatch）
 # 通过匹配“湿润状态下坑位底部水面”的模板判断是否湿润：
@@ -381,6 +367,26 @@ def _clamp_roi(roi: List[int]) -> List[int]:
     if y + h > SCREEN_HEIGHT:
         h = max(1, SCREEN_HEIGHT - y)
     return [x, y, w, h]
+
+
+def _build_moisture_ocr_roi(plot_pos: Tuple[int, int]) -> List[int]:
+    """
+    根据坑位中心构建土壤湿度 OCR 的精确 ROI。
+    
+    依据用户提供样本：
+        坑位中心 (752, 348) -> ROI [651, 235, 186, 124]
+    推导出通用关系:
+        ROI 宽度:  MOISTURE_OCR_ROI_W
+        ROI 高度:  MOISTURE_OCR_ROI_H
+        ROI 中心 = 坑位中心 + (MOISTURE_OCR_OFFSET_X, MOISTURE_OCR_OFFSET_Y)
+    """
+    px, py = int(plot_pos[0]), int(plot_pos[1])
+    w, h = int(MOISTURE_OCR_ROI_W), int(MOISTURE_OCR_ROI_H)
+    cx = px + MOISTURE_OCR_OFFSET_X
+    cy = py + MOISTURE_OCR_OFFSET_Y
+    x = cx - w // 2
+    y = cy - h // 2
+    return _clamp_roi([x, y, w, h])
 
 
 def _calculate_joystick_direction(current_pos: tuple, target_pos: tuple) -> tuple:
@@ -1571,6 +1577,8 @@ class FarmEventHandler(CustomAction):
     
     通过参数区分不同的事件类型:
     - event_type: "waterwheel" - 水车修理
+    - event_type: "windmill" - 风车修理
+    - event_type: "watering" - 全农场浇水
     - event_type: "worms" - 捉虫
     
     Pipeline 调用示例:
@@ -1620,6 +1628,9 @@ class FarmEventHandler(CustomAction):
             if event_type == "waterwheel":
                 # 水车修理
                 success = self._handle_waterwheel_repair(context)
+            elif event_type == "windmill":
+                # 风车修理
+                success = self._handle_windmill_repair(context)
             elif event_type == "watering":
                 # 全农场浇水（16坑位遍历）
                 success = self._handle_watering_all_plots(context)
@@ -2369,7 +2380,10 @@ class FarmEventHandler(CustomAction):
     ) -> str:
         """
         识别当前坑位土壤湿度状态。
-
+        
+        优先使用基于坑位中心推导出的精确 OCR ROI，
+        再退回到以角色 box / 大圆形 ROI 为兜底。
+        
         Returns:
             "wet" | "dry" | "unknown"
         """
@@ -2378,57 +2392,71 @@ class FarmEventHandler(CustomAction):
             time.sleep(0.03)
             image = context.tasker.controller.cached_image
 
-        # OCR ROI：优先以“角色自身识别 box”为基础向外扩张（避免坑位中心大 ROI 识别不到）
-        # 为减少重复 YOLO 推理：girl_box 优先由上层（本帧 YOLO）传入；否则回退到 self._last_girl_box；
-        # 再失败才回退坑位中心的大 ROI。
+        def _ocr_state_with_roi(roi: List[int]) -> str:
+            """在指定 ROI 内识别土壤湿度状态。"""
+            # 优先判定“湿润”
+            wet_reco = self._run_recognition_cached(
+                context,
+                task_name="Farm_Moisture_Wet",
+                image=image,
+                pipeline_override={
+                    "Farm_Moisture_Wet": {
+                        "recognition": "OCR",
+                        "expected": ["湿润"],
+                        "roi": roi,
+                    }
+                },
+                frame=frame,
+            )
+            if _reco_hit(wet_reco):
+                return "wet"
+
+            # 再判定“缺水/干燥/正常”
+            dry_reco = self._run_recognition_cached(
+                context,
+                task_name="Farm_Moisture_Dry",
+                image=image,
+                pipeline_override={
+                    "Farm_Moisture_Dry": {
+                        "recognition": "OCR",
+                        "expected": ["缺水", "干燥", "正常"],
+                        "roi": roi,
+                    }
+                },
+                frame=frame,
+            )
+            if _reco_hit(dry_reco):
+                return "dry"
+
+            return "unknown"
+
+        # 1) 首选：基于坑位中心的精确 ROI（用户标注的 UI 区域）
+        primary_roi = _build_moisture_ocr_roi(plot_pos)
+        state = _ocr_state_with_roi(primary_roi)
+        if state != "unknown":
+            return state
+
+        # 2) 备选：以角色识别 box 为中心扩张的 ROI
         if girl_box is None:
             try:
                 girl_box = getattr(self, "_last_girl_box", None)
             except Exception:
                 girl_box = None
 
+        backup_rois: List[List[int]] = []
         if girl_box is not None:
             x, y, w, h = [int(v) for v in girl_box]
-            roi = _clamp_roi([x - 50, y - 50, w + 100, h + 100])
-        else:
-            # 兜底：仍使用坑位中心的大 ROI（避免角色识别失败时 OCR 完全不可用）
-            px, py = int(plot_pos[0]), int(plot_pos[1])
-            radius = int(MOISTURE_OCR_RADIUS)
-            roi = _clamp_roi([px - radius, py - radius, radius * 2, radius * 2])
+            backup_rois.append(_clamp_roi([x - 50, y - 50, w + 100, h + 100]))
 
-        # 优先判定“湿润”
-        wet_reco = self._run_recognition_cached(
-            context,
-            task_name="Farm_Moisture_Wet",
-            image=image,
-            pipeline_override={
-                "Farm_Moisture_Wet": {
-                    "recognition": "OCR",
-                    "expected": ["湿润"],
-                    "roi": roi,
-                }
-            },
-            frame=frame,
-        )
-        if _reco_hit(wet_reco):
-            return "wet"
+        # 3) 最后兜底：以坑位中心为圆心的大 ROI（原始实现）
+        px, py = int(plot_pos[0]), int(plot_pos[1])
+        radius = int(MOISTURE_OCR_RADIUS)
+        backup_rois.append(_clamp_roi([px - radius, py - radius, radius * 2, radius * 2]))
 
-        # 再判定“缺水/干燥”
-        dry_reco = self._run_recognition_cached(
-            context,
-            task_name="Farm_Moisture_Dry",
-            image=image,
-            pipeline_override={
-                "Farm_Moisture_Dry": {
-                    "recognition": "OCR",
-                    "expected": ["缺水", "干燥", "正常"],
-                    "roi": roi,
-                }
-            },
-            frame=frame,
-        )
-        if _reco_hit(dry_reco):
-            return "dry"
+        for roi in backup_rois:
+            state = _ocr_state_with_roi(roi)
+            if state != "unknown":
+                return state
 
         return "unknown"
 
@@ -2841,6 +2869,118 @@ class FarmEventHandler(CustomAction):
         self._run_sub_getreward(context)
         
         print("\n[水车修理] 水车修理完成！")
+        return True
+    
+    def _handle_windmill_repair(self, context: Context) -> bool:
+        """
+        处理风车修理事件
+        
+        流程:
+        1. 使用 YOLOv8 检测角色位置
+        2. 先移动到右侧栅栏上方入口点 [1063, 295]
+        3. 再从入口点移动到风车附近 [1157, 457]
+        4. 检测并点击修理按钮（必要时向下轻推一次补救）
+        5. 调用 Sub_Getreward 获取奖励
+        6. 修理完成后，从风车位置回到入口点
+        7. 再从入口点回到农场右上方默认站位 [627, 287]，方便衔接后续浇水
+        """
+        print("\n" + "=" * 40)
+        print("[风车修理] 开始处理风车修理事件")
+        print("=" * 40)
+        
+        # 步骤 1: 先移动到右侧栅栏上方入口点，避免从农田区域直接撞栅栏
+        print("\n[风车修理] 步骤 1: 移动到右侧栅栏上方入口点...")
+        if not self._move_character_to_target(context, WINDMILL_ENTRY_POS):
+            print("[风车修理] 移动到入口点失败")
+            return False
+        
+        # 步骤 2: 从入口点移动到风车附近
+        print("\n[风车修理] 步骤 2: 从入口点移动到风车位置...")
+        if not self._move_character_to_target(context, WINDMILL_TARGET_POS):
+            print("[风车修理] 移动到风车位置失败")
+            return False
+        
+        # 等待界面稳定
+        time.sleep(DEFAULT_WAIT)
+        
+        # 步骤 3: 检测修理按钮（原地尝试3次）
+        print("\n[风车修理] 步骤 3: 检测修理按钮...")
+        max_static_attempts = 3  # 原地检测次数
+        found = False
+        box = None
+        
+        print(f"[风车修理] 在当前位置尝试检测修理按钮（最多{max_static_attempts}次）...")
+        for attempt in range(max_static_attempts):
+            found, box = self._check_repair_button(context)
+            if found:
+                print(f"[风车修理] 第 {attempt + 1} 次检测到修理按钮！")
+                break
+            print(f"[风车修理] 第 {attempt + 1}/{max_static_attempts} 次，未检测到修理按钮")
+            time.sleep(0.3)
+        
+        # 如果原地没找到，尝试向下移动一步并检测
+        if not found:
+            print("[风车修理] 原地未检测到修理按钮，尝试向下移动一步...")
+            joystick_down_end = (JOYSTICK_CENTER[0], JOYSTICK_CENTER[1] + JOYSTICK_RADIUS)
+            move_duration = 500  # 每次移动持续时间（毫秒）
+            
+            # 执行向下移动 - 使用安全滑动函数
+            x1 = int(JOYSTICK_CENTER[0])
+            y1 = int(JOYSTICK_CENTER[1])
+            x2 = int(joystick_down_end[0])
+            y2 = int(joystick_down_end[1])
+            
+            if _safe_swipe(context, x1, y1, x2, y2, move_duration):
+                print("[风车修理] 摇杆向下操作完成")
+            else:
+                print("[风车修理] 摇杆操作失败")
+            
+            # 等待移动完成
+            time.sleep(0.5)
+            
+            # 再次检测修理按钮（向下移动后尝试最多2次）
+            max_move_attempts = 2
+            for move_attempt in range(max_move_attempts):
+                found, box = self._check_repair_button(context)
+                if found:
+                    print(f"[风车修理] 向下移动后第 {move_attempt + 1} 次检测到修理按钮！")
+                    break
+                print(f"[风车修理] 向下移动后第 {move_attempt + 1} 次仍未检测到修理按钮")
+                time.sleep(0.3)
+        
+        # 如果所有尝试后仍未找到修理按钮，返回失败
+        if not found:
+            print("[风车修理] 尝试所有方法后仍未检测到修理按钮")
+            return False
+        
+        # 步骤 4: 点击修理按钮
+        print("\n[风车修理] 步骤 4: 点击修理按钮...")
+        if not self._click_repair_button(context, box):
+            print("[风车修理] 点击修理按钮失败")
+            return False
+        
+        # 等待修理完成和奖励弹窗
+        time.sleep(DEFAULT_WAIT)
+        
+        # 步骤 5: 获取奖励
+        print("\n[风车修理] 步骤 5: 获取奖励...")
+        self._run_sub_getreward(context)
+        
+        # 步骤 6: 从风车位置回到入口点，避免停在栅栏内侧
+        print("\n[风车修理] 步骤 6: 修理完成后回到入口点...")
+        if not self._move_character_to_target(context, WINDMILL_ENTRY_POS):
+            print("[风车修理] 回到入口点失败（忽略并继续返回起始位置）")
+        else:
+            time.sleep(DEFAULT_WAIT * 0.5)
+        
+        # 步骤 7: 从入口点回到农场右上方默认站位，方便衔接后续浇水逻辑
+        print("\n[风车修理] 步骤 7: 从入口点回到农场右上方默认站位...")
+        if not self._move_character_to_target(context, FARM_WATERING_START_POS):
+            print("[风车修理] 回到默认站位失败")
+        else:
+            time.sleep(DEFAULT_WAIT * 0.5)
+        
+        print("\n[风车修理] 风车修理完成！")
         return True
     
     def _handle_worm_catching(self, context: Context, params: dict) -> bool:
@@ -3297,6 +3437,26 @@ class FarmWaterwheelRepair(FarmEventHandler):
     ) -> CustomAction.RunResult:
         # 强制设置 event_type 为 waterwheel
         argv.custom_action_param = json.dumps({"event_type": "waterwheel"})
+        return super().run(context, argv)
+
+
+class FarmWindmillRepair(FarmEventHandler):
+    """
+    风车修理专用 Action（简化调用）
+    
+    Pipeline 调用示例:
+    {
+        "custom_action": "FarmWindmillRepair"
+    }
+    """
+    
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        # 强制设置 event_type 为 windmill
+        argv.custom_action_param = json.dumps({"event_type": "windmill"})
         return super().run(context, argv)
 
 

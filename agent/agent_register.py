@@ -80,6 +80,10 @@ AgentServer.register_custom_action("FarmEventHandler", FarmEventHandler())
 # Pipeline 调用示例: {"custom_action": "FarmWaterwheelRepair"}
 AgentServer.register_custom_action("FarmWaterwheelRepair", FarmWaterwheelRepair())
 
+# 风车修理专用 - 简化调用，无需传参
+# Pipeline 调用示例: {"custom_action": "FarmWindmillRepair"}
+AgentServer.register_custom_action("FarmWindmillRepair", FarmWindmillRepair())
+
 # 捉虫专用 - 简化调用（待实现）
 # Pipeline 调用示例: {"custom_action": "FarmWormCatching"}
 AgentServer.register_custom_action("FarmWormCatching", FarmWormCatching())
@@ -113,10 +117,11 @@ REGISTERED_ACTIONS = [
     "BatchScreenshotCollector",
     "ConditionalScreenshotCollector",
     # 农场事件处理
-    "FarmEventHandler",  # 通用入口
-    "FarmWaterwheelRepair",  # 水车修理
-    "FarmWormCatching",  # 捉虫（待实现）
-    "FarmWateringAll",  # 全农场浇水
+    "FarmEventHandler",       # 通用入口
+    "FarmWaterwheelRepair",   # 水车修理
+    "FarmWindmillRepair",     # 风车修理
+    "FarmWormCatching",       # 捉虫（待实现）
+    "FarmWateringAll",        # 全农场浇水
     # 测试工具
     "TestRunRecoHandler",  # 测试 NeuralNetworkDetect
 ]

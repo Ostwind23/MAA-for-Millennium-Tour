@@ -27,10 +27,11 @@ from .screenshot_collector import (
     ConditionalScreenshotCollector,
 )
 from .farm_event import (
-    FarmEventHandler,  # 农场事件处理器（通用入口）
+    FarmEventHandler,      # 农场事件处理器（通用入口）
     FarmWaterwheelRepair,  # 水车修理专用
-    FarmWormCatching,  # 捉虫专用
-    FarmWateringAll,  # 全农场浇水专用
+    FarmWindmillRepair,    # 风车修理专用
+    FarmWormCatching,      # 捉虫专用
+    FarmWateringAll,       # 全农场浇水专用
 )
 from .test_run_reco import TestRunRecoHandler  # 测试 NeuralNetworkDetect
 
@@ -64,6 +65,7 @@ __all__ = [
     # 农场事件处理
     "FarmEventHandler",
     "FarmWaterwheelRepair",
+    "FarmWindmillRepair",
     "FarmWormCatching",
     "FarmWateringAll",
     # 测试工具

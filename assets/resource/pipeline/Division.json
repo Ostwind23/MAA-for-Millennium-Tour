@@ -233,6 +233,7 @@
         "next": [
             "Farm_Emergency_Annoying",
             "Farm_Emergency_Waterwheel",
+            "Farm_Emergency_Windmill",
             "Farm_Emergency_Worms"
         ]
     },
@@ -272,6 +273,27 @@
         "custom_action": "FarmWaterwheelRepair",
         "custom_action_param": {
             "event_type": "waterwheel"
+        },
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
+    "Farm_Emergency_Windmill": {
+        "doc": "农场风车故障事件 - 使用 YOLOv8 检测角色位置，操控移动到风车附近修理",
+        "recognition": "TemplateMatch",
+        "template": "farm/风车故障.png",
+        "roi": [
+            1103,
+            160,
+            172,
+            93
+        ],
+        "action": "Custom",
+        "custom_action": "FarmWindmillRepair",
+        "custom_action_param": {
+            "event_type": "windmill"
         },
         "post_delay": 1000,
         "next": [
@@ -504,29 +526,14 @@
         ]
     },
     "CheckWhetherWatered": {
-        "doc": "检查是否都浇过水，如果都浇过水，则直接返回主界面",
-        "recognition": "Or",
-        "any_of": [
-            {
-                "recognition": "TemplateMatch",
-                "template": "farm/水坑截图（判断湿润）.png",
-                "roi": [
-                    248,
-                    196,
-                    789,
-                    451
-                ]
-            },
-            {
-                "recognition": "TemplateMatch",
-                "template": "farm/干涸标志.png",
-                "roi": [
-                    248,
-                    196,
-                    789,
-                    451
-                ]
-            }
+        "doc": "检查是否都浇过水，如果存在干涸标志则进入全场浇水，否则跳过",
+        "recognition": "TemplateMatch",
+        "template": "farm/干涸标志.png",
+        "roi": [
+            248,
+            196,
+            789,
+            451
         ],
         "next": [
             "Farm_Watering",
