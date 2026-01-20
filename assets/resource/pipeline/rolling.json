@@ -1,7 +1,12 @@
 {
   "rolling": {
+    "_doc": "投骰子入口。采用 JumpBack 混合模式：主流程通过 next 链式执行，入口节点包含关键场景 JumpBack 用于异常恢复",
     "next": [
-      "OpenRollingPanel"
+      "[JumpBack]OpenRollingPanel",
+      "[JumpBack]DoRolling",
+      "[JumpBack]ClaimRollingReward",
+      "[JumpBack]OutofDice",
+      "[JumpBack]BackToHome"
     ],
     "on_error": [
       "EndRolling"

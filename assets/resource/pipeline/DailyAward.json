@@ -24,8 +24,8 @@
     "findAccessibleTask": {
         "_doc": "交日常周常任务，最后返回主菜单",
         "next": [
-            "dailyTaskAward",
-            "weeklyTaskAward",
+            "[JumpBack]dailyTaskAward",
+            "[JumpBack]weeklyTaskAward",
             "endDailyAward"
         ]
     },

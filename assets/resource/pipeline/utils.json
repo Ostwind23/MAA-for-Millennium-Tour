@@ -19,10 +19,10 @@
         "pre_wait_freezes": 500,
         "action": "Click",
         "target": [
-            161,
-            510,
-            1,
-            1
+            621,
+            616,
+            2,
+            4
         ],
         "post_delay": 1000
     },

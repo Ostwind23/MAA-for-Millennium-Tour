@@ -1,9 +1,23 @@
 {
     "Task_Store": {
-        "doc": "【任务】商店购买",
+        "doc": "【任务】商店购买。采用 JumpBack 混合模式：主流程通过 next 链式执行，入口节点包含关键场景 JumpBack 用于异常恢复",
         "next": [
             "[JumpBack]Seed_custom",
-            "openStore"
+            "[JumpBack]openStore",
+            "[JumpBack]openGiftstore",
+            "[JumpBack]Sub_getGift",
+            "[JumpBack]Sub_buy",
+            "[JumpBack]openDailystore",
+            "[JumpBack]buy_Stamina_Divisionstore",
+            "[JumpBack]maxPurchase",
+            "[JumpBack]confirmPurchase",
+            "[JumpBack]open_Seedstore",
+            "[JumpBack]buy_Fertilizer_Divisionstore",
+            "[JumpBack]Findseed",
+            "[JumpBack]Swipetootherside1",
+            "[JumpBack]Swipetootherside2",
+            "[JumpBack]Homeflag4",
+            "EndOnHome"
         ]
     },
     "openStore": {

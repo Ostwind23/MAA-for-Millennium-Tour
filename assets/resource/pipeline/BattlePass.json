@@ -1,8 +1,11 @@
 {
     "battlePass": {
-        "_doc": "通行证入口节点",
+        "_doc": "通行证入口节点。采用 JumpBack 混合模式：主流程通过 next 链式执行，入口节点包含关键场景 JumpBack 用于异常恢复",
         "next": [
-            "accessBattlePass"
+            "[JumpBack]accessBattlePass",
+            "[JumpBack]gainPassAward",
+            "[JumpBack]endBattlePass",
+            "EndonHome"
         ]
     },
     "accessBattlePass": {
@@ -15,6 +18,8 @@
             317,
             225
         ],
+        "order_by": "Vertical",
+        "index": -1,
         "action": "Click",
         "next": [
             "gainPassAward"

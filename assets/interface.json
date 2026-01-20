@@ -131,18 +131,18 @@
             "description": "自动领取当期赛季通行证奖励",
             "entry": "battlePass"
         },
-        {
-            "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后再选择此任务）",
-            "entry": "consecration_tower"
-        },
-        {
-            "name": "自动收取勋章",
-            "entry": "enterCollectMedal"
-        },
-        {
-            "name": "自动进入温泉点泡泡",
-            "entry": "openDivisionforhotspring"
-        },
+        // {
+        //     "name": "圣别之塔重复放弃刷积分（到32000停止。如若出现内存占用过大或者想停止的情况请关掉终端，请在所有任务都完成后再选择此任务）",
+        //     "entry": "consecration_tower"
+        // },
+        // {
+        //     "name": "自动收取勋章",
+        //     "entry": "enterCollectMedal"
+        // },
+        // {
+        //     "name": "自动进入温泉点泡泡",
+        //     "entry": "openDivisionforhotspring"
+        // },
         {
             "name": "自动推进主线战斗关卡（需要点进自己要打的主线章；目前只支持多关纯战斗自动连战）",
             "entry": "beginAutoPush",
@@ -151,21 +151,21 @@
                 "主线战斗模式选择"
             ]
         },
-        {
-            "name": "自动阵列（死循环，会无限自动匹配战斗，请分配到所有任务之后）",
-            "entry": "MatrixStartup"
-        },
-        {
-            "name": "自动识别钓鱼【暴力型，仅支持不需要拖拽也能把鱼钓上来的面板】（如需低面板自动化钓鱼请打开同目录下的低面板可用自动钓鱼程序",
-            "entry": "Start_autofishing",
-            "option": [
-                "请选择钓台"
-            ]
-        },
-        {
-            "name": "钓台入口自动钓鱼【适配公会钓鱼比赛】",
-            "entry": "autofishing"
-        },
+        // {
+        //     "name": "自动阵列（死循环，会无限自动匹配战斗，请分配到所有任务之后）",
+        //     "entry": "MatrixStartup"
+        // },
+        // {
+        //     "name": "自动识别钓鱼【暴力型，仅支持不需要拖拽也能把鱼钓上来的面板】（如需低面板自动化钓鱼请打开同目录下的低面板可用自动钓鱼程序",
+        //     "entry": "Start_autofishing",
+        //     "option": [
+        //         "请选择钓台"
+        //     ]
+        // },
+        // {
+        //     "name": "钓台入口自动钓鱼【适配公会钓鱼比赛】",
+        //     "entry": "autofishing"
+        // },
         {
             "name": "自动推图（自动主线的功能抽离,打开活动的战斗关卡,点进去到编队预备出击界面即可单独启动此任务以自动推进本页内的战斗关卡）",
             "entry": "Activityautopush"
@@ -572,6 +572,15 @@
                     "pipeline_override": {
                         "Farm_SelectCrop": {
                             "template": "seed/绿翠绒.png"
+                        }
+                    }
+                },
+                {
+                    "name": "自动选择种子数在16及以上的作物",
+                    "pipeline_override": {
+                        "Farm_SelectCrop": {
+                            "recognition": "OCR",
+                            "expected": "^(1[6-9]|[2-9]\\d|\\d{3,})$"
                         }
                     }
                 }

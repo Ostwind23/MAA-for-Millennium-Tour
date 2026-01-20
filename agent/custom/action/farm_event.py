@@ -32,6 +32,7 @@ import threading
 import subprocess
 import shutil
 import ctypes
+import builtins
 from ctypes import wintypes
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -84,6 +85,96 @@ DEBUG_COLORS = {
 DEBUG_SCREENCAP_INTERVAL = 0.05  # 截图间隔（秒），50ms
 DEBUG_STOPPING_CHECK_COUNT = 10  # 每多少次截图检查一次 stopping
 
+# ==================== focus 回调日志 ====================
+_RAW_PRINT = builtins.print
+_FOCUS_CONTEXT = None
+_FOCUS_CONTEXT_LOCK = threading.Lock()
+_FOCUS_MESSAGE_TYPE = "Custom.Focus"
+
+
+def _set_focus_context(context: Optional[Context]) -> Optional[Context]:
+    """设置当前 focus 回调上下文，返回之前的上下文。"""
+    global _FOCUS_CONTEXT
+    with _FOCUS_CONTEXT_LOCK:
+        prev = _FOCUS_CONTEXT
+        _FOCUS_CONTEXT = context
+    return prev
+
+
+def _get_focus_context() -> Optional[Context]:
+    """获取当前 focus 回调上下文。"""
+    with _FOCUS_CONTEXT_LOCK:
+        return _FOCUS_CONTEXT
+
+
+def _emit_focus_callback(message: str, context: Optional[Context] = None) -> None:
+    """尽量发送 focus 回调，不影响主流程。"""
+    if message is None:
+        return
+    msg = str(message)
+    if not msg:
+        return
+    ctx = context or _get_focus_context()
+    if ctx is None:
+        return
+
+    detail = {"focus": msg}
+    detail_json = json.dumps(detail, ensure_ascii=False)
+
+    targets = [ctx, getattr(ctx, "tasker", None)]
+    method_names = [
+        "notify",
+        "send_notification",
+        "post_notification",
+        "emit_notification",
+        "focus",
+        "send_focus",
+        "post_focus",
+        "send_event",
+        "post_event",
+        "emit_event",
+        "callback",
+        "report_message",
+        "report_event",
+    ]
+
+    for target in targets:
+        if target is None:
+            continue
+        for name in method_names:
+            method = getattr(target, name, None)
+            if not callable(method):
+                continue
+            for args in (
+                (_FOCUS_MESSAGE_TYPE, detail_json),
+                (_FOCUS_MESSAGE_TYPE, detail),
+                (detail_json,),
+                (detail,),
+            ):
+                try:
+                    method(*args)
+                    return
+                except TypeError:
+                    continue
+                except Exception:
+                    return
+
+
+def _focus_print(*args, **kwargs):
+    """保持 print 行为，并附加 focus 回调消息。"""
+    _RAW_PRINT(*args, **kwargs)
+    try:
+        sep = kwargs.get("sep", " ")
+        message = sep.join(str(arg) for arg in args)
+        if message:
+            _emit_focus_callback(message)
+    except Exception:
+        pass
+
+
+# 覆盖模块内 print，使所有日志附带 focus 回调
+print = _focus_print
+
 # ==================== 路径配置 ====================
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.abspath(os.path.join(_CURRENT_DIR, "..", "..", ".."))
@@ -116,6 +207,7 @@ WATER_BUTTON_ROI = [1022, 435, 206, 244]  # 右下角浇水按钮区域
 WATER_BUTTON_TEMPLATE = f"{_FARM_IMG_DIR}/浇水按钮.png"
 WATER_BUTTON_THRESHOLD = 0.7
 WATER_CLICK_WAIT = 0.8  # 点击浇水按钮后的等待时间（秒）
+SUB_GETREWARD_TARGET = (621, 616)  # 与 utils.json 的 Sub_Getreward 目标保持一致
 
 # 坑位“湿润”检测（ColorMatch）
 # ROI：以坑位中心为左上角，宽 40 高 25
@@ -1494,7 +1586,8 @@ class FarmEventHandler(CustomAction):
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
         """执行农场事件处理"""
-        
+        prev_focus_context = _set_focus_context(context)
+
         print("=" * 60)
         print("[FarmEventHandler] 农场事件处理器启动")
         
@@ -1551,6 +1644,7 @@ class FarmEventHandler(CustomAction):
             if DEBUG_ENABLED:
                 print("[FarmEventHandler] 停止调试可视化窗口...")
                 stop_debug_viewer()
+            _set_focus_context(prev_focus_context)
 
     def _hardcase_push(self, image: np.ndarray):
         """向硬样本录制器推入一帧（不影响主流程）。"""
@@ -2362,7 +2456,7 @@ class FarmEventHandler(CustomAction):
                 return None
 
         def is_wet_combined(plot_xy: Tuple[int, int], image=None) -> bool:
-            """湿润判定：ColorMatch OR OCR(湿润)"""
+            """湿润判定：模板匹配 OR OCR(湿润)"""
             if image is None:
                 image = capture_image_safe()
             if image is None:
@@ -2374,13 +2468,28 @@ class FarmEventHandler(CustomAction):
             except Exception:
                 pass
             try:
-                return self._detect_soil_moisture_state(
+                state = self._detect_soil_moisture_state(
                     context,
                     plot_xy,
                     image,
                     girl_box=getattr(self, "_last_girl_box", None),
                     frame=frame_ctx,
-                ) == "wet"
+                )
+                if state == "wet":
+                    return True
+            except Exception:
+                pass
+
+            # 兜底：强制使用坑位中心 ROI，避免 girl_box 过期导致 OCR 失效
+            try:
+                state = self._detect_soil_moisture_state(
+                    context,
+                    plot_xy,
+                    image,
+                    girl_box=None,
+                    frame=frame_ctx,
+                )
+                return state == "wet"
             except Exception:
                 return False
 
@@ -2546,8 +2655,13 @@ class FarmEventHandler(CustomAction):
             if not it.get("done"):
                 process_plot(it, "第一遍")
 
-        # 第二遍：只重试第一遍仍未完成的坑位
+        # 第一遍完成即可退出（所有坑位湿润）
         remaining = [it for it in plot_table if not it.get("done")]
+        if not remaining:
+            print("\n[浇水] 第一遍完成，全部坑位已湿润，结束浇水任务")
+            return True
+
+        # 第二遍：只重试第一遍仍未完成的坑位
         if remaining:
             print("\n[浇水] 第一遍仍未完成的坑位：")
             for it in remaining:
@@ -2560,6 +2674,17 @@ class FarmEventHandler(CustomAction):
         if self._check_reward_popup(context):
             print("[浇水] 结束前检测到奖励弹窗，领取奖励")
             self._run_sub_getreward(context)
+
+        # 终局复核：对仍未完成的坑位再做一次湿润检测（避免偶发识别失败导致误判）
+        still_left = [it for it in plot_table if not it.get("done")]
+        if still_left:
+            print("\n[浇水] 终局复核未完成坑位湿润状态...")
+            for it in still_left:
+                frame = capture_image_safe()
+                if is_wet_combined(it["pos"], frame):
+                    it["wet"] = True
+                    it["done"] = True
+                    it["fail_reason"] = None
 
         still_left = [it for it in plot_table if not it.get("done")]
         if still_left:
@@ -2585,26 +2710,34 @@ class FarmEventHandler(CustomAction):
         print("[FarmEventHandler] 调用 Sub_Getreward 获取奖励...")
 
         try:
-            # 优先使用 Context.run_task（对应 MaaContextRunTask，返回任务 id）
-            if hasattr(context, "run_task") and callable(getattr(context, "run_task")):
-                task_id = context.run_task("Sub_Getreward", None)
-                print(f"[FarmEventHandler] Sub_Getreward run_task 返回任务 id: {task_id}")
-                # MaaContextRunTask 执行失败会返回 MaaInvalidId，一般为负数或 0
-                return bool(task_id not in (None, -1, 0))
-
-            # 兼容旧版/自定义 binding：退回到 tasker 层
             result = None
-            if hasattr(context, "tasker"):
-                tasker = context.tasker
-                # 1) tasker.run_pipeline(name)
-                if hasattr(tasker, "run_pipeline") and callable(getattr(tasker, "run_pipeline")):
-                    result = tasker.run_pipeline("Sub_Getreward")
-                # 2) tasker.post_pipeline(name).wait()
-                elif hasattr(tasker, "post_pipeline") and callable(getattr(tasker, "post_pipeline")):
-                    job = tasker.post_pipeline("Sub_Getreward")
-                    result = job.wait() if job is not None else None
+            tasker = getattr(context, "tasker", None)
 
-            print(f"[FarmEventHandler] Sub_Getreward 兼容模式执行结果: {result}")
+            # 优先使用 tasker.post_pipeline().wait()，确保执行完成
+            if tasker is not None and hasattr(tasker, "post_pipeline") and callable(getattr(tasker, "post_pipeline")):
+                job = tasker.post_pipeline("Sub_Getreward")
+                result = job.wait() if job is not None else None
+            # 次优先：tasker.run_pipeline(name)
+            elif tasker is not None and hasattr(tasker, "run_pipeline") and callable(getattr(tasker, "run_pipeline")):
+                result = tasker.run_pipeline("Sub_Getreward")
+            # 兜底：Context.run_task（可能是异步）
+            elif hasattr(context, "run_task") and callable(getattr(context, "run_task")):
+                result = context.run_task("Sub_Getreward", None)
+
+            print(f"[FarmEventHandler] Sub_Getreward 执行结果: {result}")
+
+            # 轻微等待，给弹窗关闭留出时间
+            time.sleep(0.2)
+
+            # 如果奖励弹窗仍在，直接点击弹窗按钮兜底关闭
+            if self._check_reward_popup(context):
+                try:
+                    controller = context.tasker.controller
+                    controller.post_click(int(SUB_GETREWARD_TARGET[0]), int(SUB_GETREWARD_TARGET[1])).wait()
+                    time.sleep(0.3)
+                except Exception as e:
+                    print(f"[FarmEventHandler] 兜底点击奖励弹窗失败: {e}")
+
             # 这里无法可靠判断 result 语义，保持“只要不抛异常就视为成功”
             return True
         except Exception as e:
@@ -2976,7 +3109,14 @@ class FarmEventHandler(CustomAction):
             pipeline_override={
                 "Farm_CheckReward": {
                     "recognition": "OCR",
-                    "expected": ["获得物品", "获得道具"],
+                    "expected": [
+                        "获得物品",
+                        "获得道具",
+                        "道具",
+                        "本勒",
+                        "LEVEL",
+                        "等级提升"
+                    ],
                     "roi": [78, 15, 1014, 254],
                 }
             },

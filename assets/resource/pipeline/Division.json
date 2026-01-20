@@ -136,7 +136,7 @@
             109
         ],
         "action": "Click",
-        "post_wait_freezes": 1000,
+        "post_delay": 3000,
         "next": [
             "[JumpBack]Hotspring_Getreward",
             "Subreturn_back"
@@ -152,7 +152,7 @@
             88
         ],
         "action": "Click",
-        "post_wait_freezes": 1000,
+        "post_delay": 3000,
         "next": [
             "[JumpBack]Hotspring_Getreward",
             "Subreturn_back"
@@ -213,7 +213,7 @@
         ]
     },
     "EnterFarm": {
-        "doc": "Farm_Emergency_Entry还没弄完，缺Annoying截图、水车修复逻辑和虫子捕捉逻辑",
+        "doc": "",
         "recognition": "OCR",
         "expected": "建设",
         "roi": [
@@ -379,6 +379,7 @@
         ]
     },
     "Farm_SelectCrop": {
+        "doc": "默认按模板识别，可在界面选择按数量 OCR 匹配",
         "recognition": "FeatureMatch",
         "template": "seed/龙鳞果.png",
         "roi": [
