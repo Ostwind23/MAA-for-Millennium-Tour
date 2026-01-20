@@ -26,6 +26,7 @@ from custom.action import (
     # 农场事件处理
     FarmEventHandler,
     FarmWaterwheelRepair,
+    FarmWindmillRepair,
     FarmWormCatching,
     FarmWateringAll,
     # 测试工具

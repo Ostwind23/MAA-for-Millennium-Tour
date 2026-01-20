@@ -172,12 +172,9 @@ REPAIR_BUTTON_ROI = [1022, 435, 206, 244]  # 修理按钮检测区域
 REPAIR_BUTTON_TEMPLATE = f"{_FARM_IMG_DIR}/修理按钮.png"
 
 # 风车修理路径点
-WINDMILL_TARGET_POS = (1157, 457)  # 风车附近目标位置（靠近修理按钮）
-WINDMILL_ENTRY_POS = (1063, 295)   # 右侧栅栏上方入口点（再往右为空气墙）
+WINDMILL_TARGET_POS = (1118, 468)  # 风车附近目标位置（靠近修理按钮）
+WINDMILL_ENTRY_POS = (1033, 262)   # 右侧栅栏上方入口点（再往右为空气墙）
 FARM_WATERING_START_POS = (627, 287)  # 农场右上方默认站位，用于修理后回到浇水起点
-
-# 风车修理相关
-WINDMILL_TARGET_POS = (1157, 457)  # 角色需要移动到的目标位置
 
 # 浇水相关
 WATER_BUTTON_ROI = [1022, 435, 206, 244]  # 右下角浇水按钮区域
@@ -367,6 +364,27 @@ def _clamp_roi(roi: List[int]) -> List[int]:
     if y + h > SCREEN_HEIGHT:
         h = max(1, SCREEN_HEIGHT - y)
     return [x, y, w, h]
+
+
+def _rects_intersect(a: List[int], b: List[int]) -> bool:
+    """
+    判断两个矩形是否相交。
+    矩形格式为 [x, y, w, h]，坐标基于整张截图。
+    """
+    if a is None or b is None:
+        return False
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    if aw <= 0 or ah <= 0 or bw <= 0 or bh <= 0:
+        return False
+    ax2, ay2 = ax + aw, ay + ah
+    bx2, by2 = bx + bw, by + bh
+    # 分离轴：若在任一轴上无重叠，则不相交
+    if ax2 <= bx or bx2 <= ax:
+        return False
+    if ay2 <= by or by2 <= ay:
+        return False
+    return True
 
 
 def _build_moisture_ocr_roi(plot_pos: Tuple[int, int]) -> List[int]:
@@ -2392,8 +2410,11 @@ class FarmEventHandler(CustomAction):
             time.sleep(0.03)
             image = context.tasker.controller.cached_image
 
-        def _ocr_state_with_roi(roi: List[int]) -> str:
-            """在指定 ROI 内识别土壤湿度状态。"""
+        def _ocr_state_primary(roi: List[int]) -> str:
+            """
+            在指定 ROI 内识别湿度状态（不做重叠判断）。
+            仅用于“坑位精确 ROI”这一首选路径。
+            """
             # 优先判定“湿润”
             wet_reco = self._run_recognition_cached(
                 context,
@@ -2430,13 +2451,80 @@ class FarmEventHandler(CustomAction):
 
             return "unknown"
 
+        def _ocr_state_with_overlap(
+            roi: List[int],
+            primary_roi: List[int],
+        ) -> str:
+            """
+            在指定 ROI 内识别湿度状态，并要求文字 box 与坑位精确 ROI 有重叠。
+            用于基于角色 box / 大圆形 ROI 的兜底识别，避免“错浇”判断到邻坑。
+            """
+            # 1) 判定“湿润”
+            wet_reco = self._run_recognition_cached(
+                context,
+                task_name="Farm_Moisture_Wet",
+                image=image,
+                pipeline_override={
+                    "Farm_Moisture_Wet": {
+                        "recognition": "OCR",
+                        "expected": ["湿润"],
+                        "roi": roi,
+                    }
+                },
+                frame=frame,
+            )
+            try:
+                candidates = getattr(wet_reco, "filtered_results", None) if wet_reco is not None else None
+            except Exception:
+                candidates = None
+            if candidates:
+                for res in candidates:
+                    try:
+                        text = getattr(res, "text", None)
+                        box = getattr(res, "box", None)
+                    except Exception:
+                        continue
+                    if text == "湿润" and box is not None and _rects_intersect(primary_roi, list(box)):
+                        return "wet"
+
+            # 2) 判定“缺水/干燥/正常”
+            dry_words = ["缺水", "干燥", "正常"]
+            dry_reco = self._run_recognition_cached(
+                context,
+                task_name="Farm_Moisture_Dry",
+                image=image,
+                pipeline_override={
+                    "Farm_Moisture_Dry": {
+                        "recognition": "OCR",
+                        "expected": dry_words,
+                        "roi": roi,
+                    }
+                },
+                frame=frame,
+            )
+            try:
+                candidates = getattr(dry_reco, "filtered_results", None) if dry_reco is not None else None
+            except Exception:
+                candidates = None
+            if candidates:
+                for res in candidates:
+                    try:
+                        text = getattr(res, "text", None)
+                        box = getattr(res, "box", None)
+                    except Exception:
+                        continue
+                    if text in dry_words and box is not None and _rects_intersect(primary_roi, list(box)):
+                        return "dry"
+
+            return "unknown"
+
         # 1) 首选：基于坑位中心的精确 ROI（用户标注的 UI 区域）
         primary_roi = _build_moisture_ocr_roi(plot_pos)
-        state = _ocr_state_with_roi(primary_roi)
+        state = _ocr_state_primary(primary_roi)
         if state != "unknown":
             return state
 
-        # 2) 备选：以角色识别 box 为中心扩张的 ROI
+        # 2) 备选：以角色识别 box 为中心扩张的 ROI（需要与坑位 ROI 重叠）
         if girl_box is None:
             try:
                 girl_box = getattr(self, "_last_girl_box", None)
@@ -2454,7 +2542,7 @@ class FarmEventHandler(CustomAction):
         backup_rois.append(_clamp_roi([px - radius, py - radius, radius * 2, radius * 2]))
 
         for roi in backup_rois:
-            state = _ocr_state_with_roi(roi)
+            state = _ocr_state_with_overlap(roi, primary_roi)
             if state != "unknown":
                 return state
 

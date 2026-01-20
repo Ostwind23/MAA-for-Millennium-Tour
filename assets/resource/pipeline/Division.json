@@ -526,14 +526,39 @@
         ]
     },
     "CheckWhetherWatered": {
-        "doc": "检查是否都浇过水，如果存在干涸标志则进入全场浇水，否则跳过",
-        "recognition": "TemplateMatch",
-        "template": "farm/干涸标志.png",
-        "roi": [
-            248,
-            196,
-            789,
-            451
+        "doc": "检查是否都浇过水：若存在干涸标志或明显干土颜色块则进入全场浇水，否则跳过",
+        "recognition": "Or",
+        "any_of": [
+            {
+                "recognition": "TemplateMatch",
+                "template": "farm/干涸标志.png",
+                "roi": [
+                    248,
+                    196,
+                    789,
+                    451
+                ]
+            },
+            {
+                "recognition": "ColorMatch",
+                "upper": [
+                    170,
+                    127,
+                    101
+                ],
+                "lower": [
+                    160,
+                    117,
+                    91
+                ],
+                "roi": [
+                    248,
+                    196,
+                    789,
+                    451
+                ],
+                "count": 40
+            }
         ],
         "next": [
             "Farm_Watering",
