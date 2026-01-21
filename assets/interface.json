@@ -111,7 +111,10 @@
         },
         {
             "name": "地牢",
-            "entry": "Task_Dungeon"
+            "entry": "Task_Dungeon",
+            "option": [
+                "地牢无尽模式设置"
+            ]
         },
         {
             "name": "公会",
@@ -1561,6 +1564,27 @@
                         "BattleMode_Check": {
                             "custom_action_param": {
                                 "target_mode": "manual_skip"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "地牢无尽模式设置": {
+            "type": "select",
+            "label": "地牢无尽模式设置",
+            "description": "选择地牢在到达无尽模式(6-1)后的处理方式：默认检测到无尽后停止，也可选择继续在无尽模式中刷关。",
+            "default_case": "检测到无尽后停止",
+            "cases": [
+                {
+                    "name": "检测到无尽后停止"
+                },
+                {
+                    "name": "忽略无尽，继续刷",
+                    "pipeline_override": {
+                        "Dungeon_AutoBattle": {
+                            "custom_action_param": {
+                                "stop_at_endless": false
                             }
                         }
                     }

@@ -4,19 +4,20 @@
         "next": [
             "[JumpBack]Seed_custom",
             "[JumpBack]openStore",
-            "[JumpBack]openGiftstore",
-            "[JumpBack]Sub_getGift",
-            "[JumpBack]Sub_buy",
-            "[JumpBack]openDailystore",
-            "[JumpBack]buy_Stamina_Divisionstore",
-            "[JumpBack]maxPurchase",
-            "[JumpBack]confirmPurchase",
-            "[JumpBack]open_Seedstore",
-            "[JumpBack]buy_Fertilizer_Divisionstore",
+            "[JumpBack]ClosePage",
+            "[JumpBack]Sub_Getreward",
             "[JumpBack]Findseed",
-            "[JumpBack]Swipetootherside1",
-            "[JumpBack]Swipetootherside2",
-            "[JumpBack]Homeflag4",
+            "[JumpBack]buy_Fertilizer_Divisionstore",
+            "[JumpBack]open_Seedstore",
+            "[JumpBack]confirmPurchase",
+            "[JumpBack]maxPurchase",
+            "[JumpBack]maxPurchase_Stamina",
+            "[JumpBack]buy_Stamina_Divisionstore",
+            "[JumpBack]openDailystore",
+            "[JumpBack]Sub_buy",
+            "[JumpBack]Sub_getGift",
+            "[JumpBack]openGiftstore",
+            "[JumpBack]Store_SecondaryFallback",
             "EndOnHome"
         ]
     },
@@ -29,14 +30,15 @@
             218,
             171
         ],
+        "threshold": 0.55,
         "action": "Click",
         "post_delay": 2000,
         "next": [
             "openGiftstore",
             "openDailystore",
-            "Homeflag4",
             "[JumpBack]ClosePage",
-            "[JumpBack]Sub_Getreward"
+            "[JumpBack]Sub_Getreward",
+            "Homeflag4"
         ]
     },
     "openGiftstore": {
@@ -110,7 +112,8 @@
         "next": [
             "[JumpBack]buy_Stamina_Divisionstore",
             "[JumpBack]open_Seedstore",
-            "Homeflag4"
+            "Homeflag4",
+            "EndOnHome"
         ]
     },
     "buy_Stamina_Divisionstore": {
@@ -127,11 +130,12 @@
         ],
         "action": "Click",
         "post_delay": 500,
+        "max_hit": 8,
         "next": [
-            "[JumpBack]maxPurchase",
+            "[JumpBack]maxPurchase_Stamina",
             "buy_Stamina_Divisionstore",
-            "buy_Fertilizer_Divisionstore",
-            "open_Seedstore"
+            "open_Seedstore",
+            "buy_Fertilizer_Divisionstore"
         ]
     },
     "PoorCancle": {
@@ -167,6 +171,114 @@
         "action": "Click",
         "next": [
             "confirmPurchase"
+        ]
+    },
+    "maxPurchase_Stamina": {
+        "doc": "点击后购买最大数量逻辑（星魂精髓专用，带售罄检测）",
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "pre_wait_freezes": 1000,
+        "action": "Click",
+        "next": [
+            "confirmPurchase"
+        ],
+        "on_error": [
+            "Check_Stamina_SoldOut"
+        ]
+    },
+    "Check_Stamina_SoldOut": {
+        "doc": "检查日常商店星魂精髓是否已售罄，有则跳过体力购买，继续后续购买逻辑",
+        "recognition": "TemplateMatch",
+        "template": "已售罄.png",
+        "roi": "buy_Stamina_Divisionstore",
+        "roi_offset": [
+            -53,
+            -13,
+            95,
+            216
+        ],
+        "pre_wait_freezes": 500,
+        "action": "DoNothing",
+        "next": [
+            "open_Seedstore"
+        ]
+    },
+    "maxPurchase_Fertilizer": {
+        "doc": "点击后购买最大数量逻辑（肥料专用，带售罄检测）",
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "pre_wait_freezes": 1000,
+        "action": "Click",
+        "next": [
+            "confirmPurchase"
+        ],
+        "on_error": [
+            "Check_Fertilizer_SoldOut"
+        ]
+    },
+    "Check_Fertilizer_SoldOut": {
+        "doc": "检查日常商店肥料是否已售罄，有则跳过肥料购买，继续后续逻辑",
+        "recognition": "TemplateMatch",
+        "template": "已售罄.png",
+        "roi": "buy_Fertilizer_Divisionstore",
+        "roi_offset": [
+            -53,
+            -13,
+            95,
+            216
+        ],
+        "pre_wait_freezes": 500,
+        "action": "DoNothing",
+        "next": [
+            "Findseed"
+        ]
+    },
+    "maxPurchase_Seed": {
+        "doc": "点击后购买最大数量逻辑（种子专用，带售罄检测）",
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "pre_wait_freezes": 1000,
+        "action": "Click",
+        "next": [
+            "confirmPurchase"
+        ],
+        "on_error": [
+            "Check_Seed_SoldOut"
+        ]
+    },
+    "Check_Seed_SoldOut": {
+        "doc": "检查日常商店种子是否已售罄，有则尝试切页寻找其它种子",
+        "recognition": "TemplateMatch",
+        "template": "已售罄.png",
+        "roi": "Findseed",
+        "roi_offset": [
+            -53,
+            -13,
+            95,
+            216
+        ],
+        "pre_wait_freezes": 500,
+        "action": "DoNothing",
+        "next": [
+            "Swipetootherside1"
         ]
     },
     "confirmPurchase": {
@@ -220,7 +332,7 @@
         ],
         "action": "Click",
         "next": [
-            "[JumpBack]maxPurchase",
+            "[JumpBack]maxPurchase_Fertilizer",
             "Findseed",
             "buy_Fertilizer_Divisionstore",
             "Homeflag4"
@@ -237,7 +349,7 @@
         ],
         "action": "Click",
         "next": [
-            "[JumpBack]maxPurchase",
+            "[JumpBack]maxPurchase_Seed",
             "Findseed",
             "Swipetootherside1",
             "Homeflag4"
@@ -298,6 +410,14 @@
         ],
         "action": "Click",
         "post_delay": 1000
+    },
+    "Store_SecondaryFallback": {
+        "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "Homeflag4"
+        ]
     },
     "Seed_Mark": {
         "doc": "种子选择标志节点，存储用户在 interface 中的选择",

@@ -18,21 +18,22 @@
         "next": [
             "[JumpBack]dreamBattleModeConfig",
             "[JumpBack]dreamOpenBattle",
-            "[JumpBack]openDreamEntry",
-            "[JumpBack]dreamBossLoop",
-            "[JumpBack]dreamEnterFinalStage",
-            "[JumpBack]dreamLaunchBattle",
-            "[JumpBack]dreamLaunchBattleInTeam",
-            "[JumpBack]BattleMode_Check",
-            "[JumpBack]dreamWaitBattleEnd",
-            "[JumpBack]Victory_Return_noNext",
             "[JumpBack]Sub_Getreward",
             "[JumpBack]CloseNotification",
             "[JumpBack]ClickEmptyArea",
-            "[JumpBack]missionAlertCheck",
-            "[JumpBack]openDreamMission",
             "[JumpBack]collectDreamMissions",
-            "[JumpBack]HomeButton"
+            "[JumpBack]openDreamMission",
+            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]dreamWaitBattleEnd",
+            "[JumpBack]BattleMode_Check",
+            "[JumpBack]dreamLaunchBattleInTeam",
+            "[JumpBack]dreamLaunchBattle",
+            "[JumpBack]dreamEnterFinalStage",
+            "[JumpBack]bossThird",
+            "[JumpBack]bossSecond",
+            "[JumpBack]bossFirst",
+            "[JumpBack]openDreamEntry",
+            "[JumpBack]Dream_SecondaryFallback"
         ]
     },
     "dreamOpenBattle": {
@@ -303,6 +304,14 @@
             "[JumpBack]ClickEmptyArea",
             "[JumpBack]HomeButton",
             "EndonHome"
+        ]
+    },
+    "Dream_SecondaryFallback": {
+        "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "HomeButton"
         ]
     }
 }

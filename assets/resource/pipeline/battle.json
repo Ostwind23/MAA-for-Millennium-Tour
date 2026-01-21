@@ -3,31 +3,38 @@
         "doc": "资源关日常战斗入口。采用JumpBack混合模式：主流程通过next链式执行，入口节点包含关键场景JumpBack用于异常恢复",
         "next": [
             "[JumpBack]openBattle",
-            "[JumpBack]openVault",
-            "[JumpBack]openVaultinOCR",
-            "[JumpBack]checkDailyBattleX2",
-            "[JumpBack]DailyTemplate_NoneX2",
-            "[JumpBack]chooseOwnmission",
-            "[JumpBack]chooseOwnmission_下三",
-            "[JumpBack]突破材料_findclass",
-            "[JumpBack]突破材料_findclass_滑动后",
-            "[JumpBack]符文之地_findclass",
-            "[JumpBack]scanmission",
-            "[JumpBack]entermission",
-            "[JumpBack]maximization",
-            "[JumpBack]launchbattle",
-            "[JumpBack]completebattle",
-            "[JumpBack]cancelforsupply",
             "[JumpBack]Sub_Getreward",
+            "[JumpBack]CloseNotification",
+            "[JumpBack]ClickEmptyArea",
             "[JumpBack]Battle_cancelpage",
-            "[JumpBack]x2_back",
-            "returnHome"
+            "[JumpBack]cancelforsupply",
+            "[JumpBack]completebattle",
+            "[JumpBack]launchbattle",
+            "[JumpBack]maximization",
+            "[JumpBack]entermission",
+            "[JumpBack]scanmission",
+            "[JumpBack]符文之地_findclass",
+            "[JumpBack]突破材料_findclass_滑动后",
+            "[JumpBack]突破材料_findclass",
+            "[JumpBack]chooseOwnmission_下三",
+            "[JumpBack]chooseOwnmission",
+            "[JumpBack]checkDailyBattleX2",
+            "[JumpBack]openVaultinOCR",
+            "[JumpBack]openVault",
+            "[JumpBack]Battle_SecondaryFallback"
         ]
     },
     "checkDailyBattleX2": {
         "doc": "[模板调度] 在宝库资源总表界面按资源类型检查当日x2并跳转到对应模板入口，由界面全局模板配置决定各类型行为",
-        "recognition": "DirectHit",
-        "action": "DoNothing",
+        "recognition": "TemplateMatch",
+        "template": "exp mission.png",
+        "roi": [
+            324,
+            1,
+            616,
+            653
+        ],
+        "max_hit": 1,
         "next": [
             "findx2_BenLe",
             "findx2_Exp",
@@ -529,6 +536,15 @@
             0,
             0,
             0
+        ]
+    },
+    "Battle_SecondaryFallback": {
+        "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "x2_back",
+            "returnHome"
         ]
     },
     "x2_back": {

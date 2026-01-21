@@ -1661,11 +1661,11 @@ class DungeonFullAuto(CustomAction):
     
     完整流程:
     1. 在关卡选择界面找到当前关卡（黑神小人标识）并点击
-    2. 检测 ROI [1001, 565, 150, 132] 区域是否出现"无尽"，是则停止（已通关）
+    2. 检测 ROI [1001, 565, 150, 132] 区域是否出现"无尽"，默认检测到后停止（已通关）
     3. 优先尝试快速作战，如果失败则记住并改用普通出击
     4. 普通出击：点击出击 -> 组队界面点击开始战斗 -> 等待战斗结束
     5. 处理"选择一个卡牌效果"弹窗
-    6. 返回关卡选择界面，循环执行直到检测到无尽模式
+    6. 返回关卡选择界面，循环执行直到检测到无尽模式或达到最大刷关数
     
     巡回匹配恢复机制:
     - 当任意步骤识别失败时，启动巡回匹配
@@ -1675,11 +1675,48 @@ class DungeonFullAuto(CustomAction):
     
     参数格式:
     {
-        "max_stages": 60,           // 最大刷关数量，默认 60（6章x10关）
-        "battle_timeout": 300,      // 单场战斗超时（秒），默认 300
-        "enable_patrol": true       // 是否启用巡回匹配恢复，默认 true
+        "max_stages": 60,             // 最大刷关数量，默认 60（6章x10关）
+        "battle_timeout": 300,        // 单场战斗超时（秒），默认 300
+        "enable_patrol": true,        // 是否启用巡回匹配恢复，默认 true
+        "stop_at_endless": true       // 是否在检测到无尽模式(6-1)后停止，默认 true
     }
     """
+
+    def __init__(self):
+        super().__init__()
+        # 战斗模式初始化标记：单次任务仅在第一场战斗开始后执行一次自动战斗切换
+        self._battle_mode_initialized: bool = False
+
+    def _init_battle_mode_auto_once(self, context: Context) -> None:
+        """
+        在第一场真实战斗开始后，调用战斗模式管理器，将战斗模式切换为自动。
+        由于战斗模式会在后续战斗中继承，因此整个 Task 只需执行一次。
+        """
+        if self._battle_mode_initialized:
+            return
+
+        try:
+            # 延迟导入，避免循环依赖或在未使用时加载 numpy 等重依赖
+            from .battle_mode import BattleModeManager  # type: ignore
+        except Exception as e:
+            print(f"[DungeonFullAuto] 导入 BattleModeManager 失败，跳过战斗模式初始化: {e}")
+            self._battle_mode_initialized = True
+            return
+
+        # 构造一个最小 RunArg，仅提供 custom_action_param
+        DummyArg = type("DummyArg", (), {})
+        argv = DummyArg()
+        argv.custom_action_param = {"target_mode": "auto"}
+        argv.image = None
+
+        try:
+            manager = BattleModeManager()
+            manager.run(context, argv)
+            print("[DungeonFullAuto] 已在第一场战斗中执行 BattleModeManager，强制切为自动战斗模式")
+        except Exception as e:
+            print(f"[DungeonFullAuto] 执行 BattleModeManager 失败，跳过战斗模式初始化: {e}")
+
+        self._battle_mode_initialized = True
 
     def _try_recover(self, context: Context, image, reason: str) -> tuple:
         """
@@ -1721,10 +1758,12 @@ class DungeonFullAuto(CustomAction):
         max_stages = param.get("max_stages", 60)
         battle_timeout = param.get("battle_timeout", 300)
         enable_patrol = param.get("enable_patrol", True)
+        stop_at_endless = param.get("stop_at_endless", True)
 
         print(f"[DungeonFullAuto] 开始全自动刷地牢")
         print(f"[DungeonFullAuto] 最大关卡数={max_stages}, 战斗超时={battle_timeout}秒")
         print(f"[DungeonFullAuto] 巡回匹配恢复: {'启用' if enable_patrol else '禁用'}, 固定最大轮数={PATROL_MAX_ROUNDS}")
+        print(f"[DungeonFullAuto] 无尽模式处理: {'检测到无尽后停止' if stop_at_endless else '忽略无尽，继续刷关'}")
 
         # 记录快速作战是否可用（一旦失败就不再尝试）
         quick_battle_available = True
@@ -1739,8 +1778,8 @@ class DungeonFullAuto(CustomAction):
             current_image = _wait_and_screenshot(context, wait_time=2.0)
 
             # === 步骤1.5：优先检测无尽模式终止条件 ===
-            # 在 ROI [1001, 565, 150, 132] 区域检测"无尽"二字
-            if _check_endless_mode(context, current_image):
+            # 在 ROI [1001, 565, 150, 132] 区域检测"无尽"二字（可配置是否在此处停止）
+            if stop_at_endless and _check_endless_mode(context, current_image):
                 print(f"[DungeonFullAuto] 检测到无尽模式区域，已完成全部关卡！共完成 {stages_completed} 关")
                 return CustomAction.RunResult(success=True)
 
@@ -2002,6 +2041,9 @@ class DungeonFullAuto(CustomAction):
                 # === 步骤6：等待战斗开始，然后等待战斗结束 ===
                 print("[DungeonFullAuto] 等待战斗开始...")
                 _wait_and_screenshot(context, wait_time=3.0)  # 等待战斗加载
+
+                # 仅在第一场战斗加载完成后执行一次自动战斗模式初始化
+                self._init_battle_mode_auto_once(context)
 
                 print("[DungeonFullAuto] 等待战斗结束...")
                 battle_start_time = time.time()

@@ -26,6 +26,7 @@
         "next": [
             "[JumpBack]dailyTaskAward",
             "[JumpBack]weeklyTaskAward",
+            "[JumpBack]HomeButton",
             "endDailyAward"
         ]
     },

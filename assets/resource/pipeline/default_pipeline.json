@@ -1,8 +1,11 @@
 {
     "Default": {
         "rate_limit": 500,
-        "pre_wait_freezes": 1000,        
+        "pre_wait_freezes": 1000,
         "post_delay": 500,
-        "on_error": "EmergencyHandler"
+        "on_error": [
+            "Sub_Getreward",
+            "EmergencyHandler"
+        ]
     }
 }

@@ -14,28 +14,23 @@
     "Task_Guild": {
         "_doc": "公会任务入口。采用JumpBack混合模式：主流程通过next链式执行，入口节点包含关键场景JumpBack用于异常恢复。顺序从高往低保证任务优先级",
         "next": [
-            "[JumpBack]openGuild",
-            "[JumpBack]openGuildDonation",
-            "[JumpBack]guildDonationLoop",
-            "[JumpBack]guildDonationComplete",
-            "[JumpBack]openMemberInfo",
-            "[JumpBack]memberInfoRewardLoop",
-            "[JumpBack]memberInfoComplete",
-            "[JumpBack]openGuildActivity",
             "[JumpBack]Guild_BattleModeConfig",
-            "[JumpBack]enterGuildBoss",
-            "[JumpBack]guildBossStartBattle",
-            "[JumpBack]guildBossLaunchBattleInTeam",
-            "[JumpBack]BattleMode_Check",
-            "[JumpBack]guildBossWaitBattleEnd",
-            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]openGuild",
             "[JumpBack]Sub_Getreward",
-            "[JumpBack]guildBossBackToGuild",
-            "[JumpBack]openGuildMission",
-            "[JumpBack]guildMissionRewardLoop",
             "[JumpBack]Sub_GuildReward",
-            "[JumpBack]guildMissionComplete",
-            "[JumpBack]guildBackToHome",
+            "[JumpBack]openGuildMission",
+            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]guildBossWaitBattleEnd",
+            "[JumpBack]BattleMode_Check",
+            "[JumpBack]guildBossLaunchBattleInTeam",
+            "[JumpBack]guildBossStartBattle",
+            "[JumpBack]enterGuildBoss",
+            "[JumpBack]openGuildActivity",
+            "[JumpBack]openMemberInfo",
+            "[JumpBack]guildDonationComplete",
+            "[JumpBack]guildDonationLoop",
+            "[JumpBack]openGuildDonation",
+            "[JumpBack]Guild_SecondaryFallback",
             "endGuild"
         ]
     },
@@ -81,7 +76,12 @@
             "2/3",
             "1/3"
         ],
-        "roi": [441,347,506,302],
+        "roi": [
+            441,
+            347,
+            506,
+            302
+        ],
         "action": "Click",
         "target": [
             958,
@@ -340,6 +340,15 @@
         "_doc": "公会任务页面完成，返回主菜单",
         "recognition": "DirectHit",
         "next": [
+            "guildBackToHome"
+        ]
+    },
+    "Guild_SecondaryFallback": {
+        "_doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "guildBossBackToGuild",
             "guildBackToHome"
         ]
     },

@@ -29,12 +29,7 @@ import time
 import math
 import os
 import threading
-import subprocess
-import shutil
-import ctypes
 import builtins
-from ctypes import wintypes
-from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Optional, List, Tuple, Callable, Dict, Any
 import numpy as np
@@ -58,13 +53,9 @@ except Exception:
 DEBUG_ENABLED = True 
 
 # 调试显示模式：
-# - "scrcpy": 使用 scrcpy 以 30fps 转播画面 + 透明 overlay 画框画字（推荐，低开销）
-# - "opencv": 使用 OpenCV cv2.imshow 显示 ADB 截图，并用 cv2 直接画框（兼容，无需 scrcpy）
+# - "opencv": 使用 OpenCV cv2.imshow 显示 ADB 截图，并用 cv2 直接画框（推荐）
 # - "tk": 旧版 Tkinter+PIL 合成显示（开销大，仅保留兼容）
-DEBUG_VIEW_MODE = "scrcpy"
-
-# scrcpy 窗口标题（用于定位窗口并对齐 overlay）
-SCRCPY_WINDOW_TITLE = "MAA_for_Millennium_Tour Debug View"
+DEBUG_VIEW_MODE = "opencv"
 
 # 调试输出目录（相对于项目根目录）
 DEBUG_OUTPUT_DIR = "assets/debug/farm_debug"
@@ -107,6 +98,36 @@ def _get_focus_context() -> Optional[Context]:
         return _FOCUS_CONTEXT
 
 
+def _emit_focus_callback_by_pipeline(message: str, context: Optional[Context]) -> bool:
+    """通过临时 pipeline 发送 focus 消息（展示到 UI 终端）。"""
+    if not context:
+        return False
+    tasker = getattr(context, "tasker", None)
+    if tasker is None:
+        return False
+
+    pipeline = {
+        "_Focus_Callback": {
+            "recognition": "DirectHit",
+            "action": "DoNothing",
+            "focus": {"Node.Recognition.Succeeded": message},
+            "max_hit": 1,
+        }
+    }
+
+    try:
+        if hasattr(tasker, "post_pipeline") and callable(getattr(tasker, "post_pipeline")):
+            job = tasker.post_pipeline(pipeline)
+            if job is not None and hasattr(job, "wait"):
+                job.wait()
+            return True
+        if hasattr(tasker, "run_pipeline") and callable(getattr(tasker, "run_pipeline")):
+            return bool(tasker.run_pipeline(pipeline))
+    except Exception:
+        return False
+    return False
+
+
 def _emit_focus_callback(message: str, context: Optional[Context] = None) -> None:
     """尽量发送 focus 回调，不影响主流程。"""
     if message is None:
@@ -114,18 +135,21 @@ def _emit_focus_callback(message: str, context: Optional[Context] = None) -> Non
     msg = str(message)
     if not msg:
         return
+    ctx = context or _get_focus_context()
+
+    # 优先通过临时 pipeline 发送到 UI 终端
+    if _emit_focus_callback_by_pipeline(msg, ctx):
+        return
+
+    # 兜底：通过 Toolkit.report_message 走官方回调通道
+    # 《2.3-回调协议》约定：type 使用 "Custom.*" 前缀，detail 为 JSON 字符串。
     detail = {"focus": msg}
     detail_json = json.dumps(detail, ensure_ascii=False)
-
-    # 通过 Toolkit.report_message 走官方回调通道
-    # 《2.3-回调协议》约定：type 使用 "Custom.*" 前缀，detail 为 JSON 字符串。
     try:
         from maa.toolkit import Toolkit
 
-        # 按协议：type + detail(JSON 字符串)
         Toolkit.report_message(_FOCUS_MESSAGE_TYPE, detail_json)
     except Exception:
-        # 若 Toolkit 或 report_message 不存在，直接忽略，不影响主流程
         return
 
 
@@ -246,7 +270,7 @@ YOLO_BUGS_INDEX = 0  # bugs 类别索引
 YOLO_THRESHOLD = 0.3  # 检测置信度阈值（降低以提高检测率）
 
 # 移动控制参数
-MOVE_TOLERANCE = 26  # 到达目标位置的容差（像素）
+MOVE_TOLERANCE = 20  # 到达目标位置的容差（像素）
 MOVE_NEAR_DISTANCE = 60  # 进入近距离阈值（像素）
 MOVE_CHECK_INTERVAL = 0.1  # 移动过程中检测间隔（秒）- 降低以提高帧率
 MOVE_TIMEOUT = 15  # 移动超时时间（秒）
@@ -836,405 +860,10 @@ class TkDebugViewer:
         self._tkinter_thread()
 
 
-class ScrcpyOverlayDebugViewer:
-    """
-    scrcpy 画面转播 + 透明 overlay 叠加绘制（框、文字、目标点等）。
-
-    设计目标：
-    - 显示侧尽可能低开销：不显示 ADB 截图，不做 PIL 合成。
-    - 任务逻辑与 ADB 截图/识别完全不变：主线程仍用 MaaFramework API。
-    - overlay 只消费主线程 push 的“检测结果/目标/文字”等，并与 scrcpy 窗口客户区对齐。
-    """
-
-    def __init__(self, *, adb_serial: Optional[str] = None):
-        # scrcpy 进程
-        self._scrcpy_proc: Optional[subprocess.Popen] = None
-        # 绑定的 ADB 设备 serial（多开模拟器时用于指定目标设备）
-        self._adb_serial = adb_serial
-
-        # 线程控制
-        self._stop_flag = threading.Event()
-        self._thread: Optional[threading.Thread] = None
-
-        # 共享状态（线程安全）
-        self._lock = threading.Lock()
-        self._detections: List[dict] = []
-        self._target_pos: Optional[Tuple[int, int]] = None
-        self._info_text: str = ""
-        self._frame_count = 0
-
-        # Tkinter overlay（在 Tk 线程中初始化）
-        # 使用字符串类型注解以避免在缺失 Tkinter 的环境下导入失败
-        self._root: Optional["tk.Tk"] = None
-        self._canvas: Optional["tk.Canvas"] = None
-
-        # scrcpy 窗口句柄与映射参数
-        self._scrcpy_hwnd: Optional[int] = None
-        self._client_w = SCREEN_WIDTH
-        self._client_h = SCREEN_HEIGHT
-        self._scale = 1.0
-        self._pad_x = 0.0
-        self._pad_y = 0.0
-
-        # FPS 统计（overlay 更新频率）
-        self._last_fps_time = time.time()
-        self._overlay_frames = 0
-        self._overlay_fps = 0.0
-
-    # -------------------- 主线程推送 API --------------------
-    def push_frame(self, image: np.ndarray):
-        """
-        scrcpy 模式下不显示 ADB 截图，因此不存储图像。
-        但仍统计 frame_count，便于显示“主线程推送帧数”的 proxy 指标。
-        """
-        with self._lock:
-            self._frame_count += 1
-
-    def push_detections(self, detections: List[dict]):
-        with self._lock:
-            self._detections = detections.copy() if detections else []
-
-    def set_target(self, pos: Optional[Tuple[int, int]]):
-        with self._lock:
-            self._target_pos = pos
-
-    def set_info(self, text: str):
-        with self._lock:
-            self._info_text = text or ""
-
-    # -------------------- 生命周期 --------------------
-    def start(self):
-        if self._thread and self._thread.is_alive():
-            print("[ScrcpyOverlayDebugViewer] 已在运行")
-            return
-
-        # 先启动 scrcpy（外部工具，不打包）
-        self._start_scrcpy()
-
-        print("[ScrcpyOverlayDebugViewer] 启动 overlay...")
-        self._stop_flag.clear()
-        self._thread = threading.Thread(target=self._tk_thread, name="ScrcpyOverlayDebugViewer", daemon=True)
-        self._thread.start()
-        time.sleep(0.3)
-
-    def stop(self):
-        print("[ScrcpyOverlayDebugViewer] 请求停止...")
-        self._stop_flag.set()
-
-        # 关闭 overlay
-        if self._root:
-            try:
-                self._root.quit()
-            except Exception:
-                pass
-
-        if self._thread and self._thread.is_alive():
-            self._thread.join(timeout=2.0)
-
-        self._thread = None
-        self._root = None
-        self._canvas = None
-
-        # 关闭 scrcpy
-        self._stop_scrcpy()
-        print("[ScrcpyOverlayDebugViewer] 已停止")
-
-    def is_running(self) -> bool:
-        return self._thread is not None and self._thread.is_alive()
-
-    def _check_stopping(self) -> bool:
-        return self._stop_flag.is_set()
-
-    # -------------------- scrcpy 管理 --------------------
-    def _start_scrcpy(self):
-        # scrcpy 查找策略（按优先级，符合你的发布计划）：
-        # 1) 项目根目录下 scrcpy/ 文件夹内递归搜索 scrcpy*.exe（GitHub Action 可放这里）
-        # 2) 环境变量 SCRCPY_PATH 指向 scrcpy.exe
-        # 不再依赖 PATH（避免用户环境差异）
-
-        scrcpy_path = None
-
-        # 1) 项目根目录 scrcpy/ 目录
-        try:
-            project_root = Path(__file__).resolve().parents[3]
-            scrcpy_dir = project_root / "scrcpy"
-            if scrcpy_dir.exists() and scrcpy_dir.is_dir():
-                # 常见候选优先级（若你未来直接把 exe 放在 scrcpy/ 根目录）
-                preferred = [
-                    scrcpy_dir / "scrcpy.exe",
-                    scrcpy_dir / "scrcpy-noconsole.exe",
-                    scrcpy_dir / "scrcpy-console.exe",
-                ]
-                for p in preferred:
-                    if p.exists():
-                        scrcpy_path = str(p)
-                        break
-
-                # 若根目录没有，则递归搜索（适配 scrcpy-win64-vX.Y.Z/ 这种解压结构）
-                if not scrcpy_path:
-                    candidates = []
-                    for root, _, files in os.walk(scrcpy_dir):
-                        for fn in files:
-                            low = fn.lower()
-                            if low.startswith("scrcpy") and low.endswith(".exe"):
-                                candidates.append(Path(root) / fn)
-                    # 更偏好 scrcpy.exe / scrcpy-noconsole.exe
-                    def _score(p: Path) -> int:
-                        n = p.name.lower()
-                        if n == "scrcpy.exe":
-                            return 0
-                        if n == "scrcpy-noconsole.exe":
-                            return 1
-                        if n == "scrcpy-console.exe":
-                            return 2
-                        return 10
-                    if candidates:
-                        candidates.sort(key=_score)
-                        scrcpy_path = str(candidates[0])
-        except Exception:
-            scrcpy_path = None
-
-        # 2) 环境变量覆盖（开发者/高级用户可用）
-        if not scrcpy_path:
-            try:
-                env_path = os.environ.get("SCRCPY_PATH")
-                if env_path and os.path.exists(env_path):
-                    scrcpy_path = env_path
-            except Exception:
-                pass
-
-        if not scrcpy_path:
-            raise FileNotFoundError(
-                "scrcpy not found. Put scrcpy.exe under <project_root>/scrcpy/, "
-                "or set SCRCPY_PATH."
-            )
-
-        cmd = [
-            scrcpy_path,
-        ]
-        # 绑定到当前 MAA 使用的设备（避免多开模拟器时 scrcpy 选错）
-        if self._adb_serial:
-            cmd += ["-s", str(self._adb_serial)]
-
-        cmd += [
-            "--no-audio",
-            "--max-fps", "30",
-            # scrcpy 3.x 起废弃 --bit-rate，改为 --video-bit-rate / --audio-bit-rate
-            "--video-bit-rate", "4M",
-            "--max-size", str(SCREEN_WIDTH),
-            "--window-title", SCRCPY_WINDOW_TITLE,
-        ]
-        self._scrcpy_proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print(f"[ScrcpyOverlayDebugViewer] scrcpy 已启动: title={SCRCPY_WINDOW_TITLE}")
-
-    def _stop_scrcpy(self):
-        if self._scrcpy_proc is None:
-            return
-        try:
-            self._scrcpy_proc.terminate()
-            self._scrcpy_proc.wait(timeout=2.0)
-        except Exception:
-            try:
-                self._scrcpy_proc.kill()
-            except Exception:
-                pass
-        finally:
-            self._scrcpy_proc = None
-
-    # -------------------- Windows 窗口对齐 --------------------
-    def _find_scrcpy_window(self) -> Optional[int]:
-        try:
-            hwnd = ctypes.windll.user32.FindWindowW(None, SCRCPY_WINDOW_TITLE)
-            if hwnd:
-                return int(hwnd)
-        except Exception:
-            pass
-        return None
-
-    def _get_client_rect_screen(self, hwnd: int) -> Optional[Tuple[int, int, int, int]]:
-        """
-        获取窗口客户区在屏幕坐标系下的 (left, top, width, height)。
-        """
-        try:
-            rect = wintypes.RECT()
-            if not ctypes.windll.user32.GetClientRect(hwnd, ctypes.byref(rect)):
-                return None
-
-            pt = wintypes.POINT(0, 0)
-            if not ctypes.windll.user32.ClientToScreen(hwnd, ctypes.byref(pt)):
-                return None
-
-            w = int(rect.right - rect.left)
-            h = int(rect.bottom - rect.top)
-            return (int(pt.x), int(pt.y), w, h)
-        except Exception:
-            return None
-
-    def _sync_overlay_geometry(self):
-        if self._root is None:
-            return
-
-        if not self._scrcpy_hwnd:
-            self._scrcpy_hwnd = self._find_scrcpy_window()
-            if not self._scrcpy_hwnd:
-                return
-
-        info = self._get_client_rect_screen(self._scrcpy_hwnd)
-        if not info:
-            return
-        left, top, w, h = info
-        if w <= 0 or h <= 0:
-            return
-
-        self._client_w = w
-        self._client_h = h
-
-        # letterbox：保持比例
-        sx = w / float(SCREEN_WIDTH)
-        sy = h / float(SCREEN_HEIGHT)
-        scale = min(sx, sy)
-        video_w = SCREEN_WIDTH * scale
-        video_h = SCREEN_HEIGHT * scale
-        self._scale = scale
-        self._pad_x = (w - video_w) / 2.0
-        self._pad_y = (h - video_h) / 2.0
-
-        try:
-            self._root.geometry(f"{w}x{h}+{left}+{top}")
-            # 成功对齐后显示 overlay（启动时会先 withdraw）
-            try:
-                self._root.deiconify()
-            except Exception:
-                pass
-        except Exception:
-            pass
-        if self._canvas is not None:
-            try:
-                self._canvas.config(width=w, height=h)
-            except Exception:
-                pass
-
-    def _map_point(self, x: int, y: int) -> Tuple[int, int]:
-        mx = int(self._pad_x + x * self._scale)
-        my = int(self._pad_y + y * self._scale)
-        return mx, my
-
-    # -------------------- overlay 绘制 --------------------
-    def _tk_thread(self):
-        print("[ScrcpyOverlayDebugViewer] Tk 线程启动")
-        try:
-            self._root = tk.Tk()
-            self._root.title("Farm Debug Overlay")
-            self._root.overrideredirect(True)
-            self._root.attributes("-topmost", True)
-            # 启动时先隐藏，等定位到 scrcpy 窗口后再显示，避免跑到屏幕左上角挡住视线
-            try:
-                self._root.withdraw()
-            except Exception:
-                pass
-
-            transparent_color = "#ff00ff"
-            self._root.configure(bg=transparent_color)
-            try:
-                self._root.wm_attributes("-transparentcolor", transparent_color)
-            except Exception:
-                pass
-
-            self._canvas = tk.Canvas(self._root, bg=transparent_color, highlightthickness=0, bd=0)
-            self._canvas.pack(fill=tk.BOTH, expand=True)
-
-            self._try_set_clickthrough()
-
-            self._schedule_refresh()
-            self._root.mainloop()
-        except Exception as e:
-            print(f"[ScrcpyOverlayDebugViewer] Tk 线程异常: {e}")
-        finally:
-            self._root = None
-            self._canvas = None
-            print("[ScrcpyOverlayDebugViewer] Tk 线程退出")
-
-    def _try_set_clickthrough(self):
-        """
-        Windows 点击穿透：WS_EX_LAYERED + WS_EX_TRANSPARENT。
-        失败不影响功能（最多就是挡住鼠标）。
-        """
-        try:
-            hwnd = self._root.winfo_id()
-            GWL_EXSTYLE = -20
-            WS_EX_LAYERED = 0x00080000
-            WS_EX_TRANSPARENT = 0x00000020
-            WS_EX_TOOLWINDOW = 0x00000080
-            exstyle = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-            exstyle |= (WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW)
-            ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, exstyle)
-        except Exception:
-            pass
-
-    def _schedule_refresh(self):
-        if self._root and not self._check_stopping():
-            self._refresh_overlay()
-            self._root.after(33, self._schedule_refresh)
-
-    def _refresh_overlay(self):
-        if self._check_stopping() or self._root is None or self._canvas is None:
-            return
-
-        self._sync_overlay_geometry()
-
-        # overlay fps
-        self._overlay_frames += 1
-        now = time.time()
-        if now - self._last_fps_time >= 1.0:
-            self._overlay_fps = self._overlay_frames / (now - self._last_fps_time)
-            self._overlay_frames = 0
-            self._last_fps_time = now
-
-        with self._lock:
-            detections = self._detections.copy()
-            target = self._target_pos
-            info = self._info_text
-            frame_count = self._frame_count
-
-        self._canvas.delete("all")
-
-        # 框与标签
-        for det in detections:
-            label = det.get("label", "unknown")
-            box = det.get("box", [0, 0, 0, 0])
-            conf = float(det.get("confidence", 0.0) or 0.0)
-            color = DEBUG_COLORS.get(label, (0, 255, 0))  # RGB
-            x, y, w, h = [int(v) for v in box]
-            x1, y1 = self._map_point(x, y)
-            x2, y2 = self._map_point(x + w, y + h)
-            hex_color = f"#{color[0]:02x}{color[1]:02x}{color[2]:02x}"
-            self._canvas.create_rectangle(x1, y1, x2, y2, outline=hex_color, width=2)
-            text = f"{label} {conf:.2f}" if conf > 0 else str(label)
-            self._canvas.create_text(x1 + 3, y1 - 12, text=text, fill=hex_color, anchor="nw")
-
-        # 目标点
-        if target:
-            tx, ty = int(target[0]), int(target[1])
-            x, y = self._map_point(tx, ty)
-            tcolor = DEBUG_COLORS.get("target", (255, 0, 255))
-            thex = f"#{tcolor[0]:02x}{tcolor[1]:02x}{tcolor[2]:02x}"
-            self._canvas.create_line(x - 20, y, x + 20, y, fill=thex, width=2)
-            self._canvas.create_line(x, y - 20, x, y + 20, fill=thex, width=2)
-
-        # 信息
-        info_text = (
-            f"Farm Debug [scrcpy+overlay] | OverlayFPS:{self._overlay_fps:.1f} | "
-            f"PushFrameCount:{frame_count} | Dets:{len(detections)}"
-        )
-        if info:
-            info_text += f" | {info}"
-        self._canvas.create_text(10, 10, text=info_text, fill="#ffffff", anchor="nw")
-
-
 class OpenCVDebugViewer:
     """
     OpenCV 调试查看器：显示 ADB 截图并用 cv2 直接画框画字。
-    用于 scrcpy 不可用时的兼容/回退。
+    作为默认的调试可视化方案。
     """
 
     def __init__(self):
@@ -1361,84 +990,6 @@ def get_debug_viewer():
     return _debug_viewer
 
 
-def _get_current_adb_serial(context: Optional[Context]) -> Optional[str]:
-    """
-    尝试从当前 MAA Controller 中提取 ADB serial/address，用于 scrcpy 的 -s 参数。
-    兼容常见形式：
-    - 127.0.0.1:16384（模拟器常见）
-    - emulator-5554（Android emulator）
-    - 设备序列号（USB）
-    """
-    if context is None:
-        return None
-
-    # 0) 环境变量兜底（一些工具链会设置）
-    try:
-        env_serial = os.environ.get("ANDROID_SERIAL") or os.environ.get("ADB_SERIAL")
-        if env_serial:
-            return str(env_serial)
-    except Exception:
-        pass
-
-    # 1) 优先尝试从当前 Controller 取（但注意：maa.controller.AdbController 通常不暴露 address）
-    try:
-        controller = context.tasker.controller
-    except Exception:
-        controller = None
-
-    # 常见字段名尝试（属性或无参方法）
-    if controller is not None:
-        for key in ("address", "adb_address", "serial", "device_serial"):
-            try:
-                val = getattr(controller, key)
-                if callable(val):
-                    val = val()
-                if val:
-                    return str(val)
-            except Exception:
-                continue
-
-    # 兜底：尝试从 config / extras 中找
-    if controller is not None:
-        try:
-            cfg = getattr(controller, "config", None)
-            if isinstance(cfg, dict):
-                addr = cfg.get("address") or cfg.get("adb_address") or cfg.get("serial")
-                if addr:
-                    return str(addr)
-        except Exception:
-            pass
-
-    # 2) 优先从 maa.ToolKit 获取（纯 maa 侧信息）
-    # - 若当前仅有 1 个 ADB 设备，直接使用它（最常见）
-    # - 若有多个设备，无法从 controller 精确反查“当前使用的是哪一个”，此时继续走后续兜底
-    try:
-        from maa.toolkit import Toolkit
-
-        devs = Toolkit.find_adb_devices()
-        if len(devs) == 1:
-            addr = getattr(devs[0], "address", None)
-            if addr:
-                return str(addr)
-    except Exception:
-        pass
-
-    # 再兜底：从 .nicegui/storage-general.json 读取（GUI 场景下通常会有）
-    try:
-        project_root = Path(__file__).resolve().parents[3]
-        storage_path = project_root / ".nicegui" / "storage-general.json"
-        if storage_path.exists():
-            raw = storage_path.read_text(encoding="utf-8")
-            data = json.loads(raw)
-            addr = data.get("adb_address")
-            if addr:
-                return str(addr)
-    except Exception:
-        pass
-
-    return None
-
-
 def start_debug_viewer(context: Optional[Context] = None):
     """启动调试查看器（非阻塞）"""
     global _debug_viewer
@@ -1446,30 +997,18 @@ def start_debug_viewer(context: Optional[Context] = None):
         return None
     if _debug_viewer and _debug_viewer.is_running():
         return _debug_viewer
-    # 优先 scrcpy+overlay；失败则回退到 OpenCV（避免 Tkinter+PIL 合成带来的性能开销）
-    mode = (DEBUG_VIEW_MODE or "scrcpy").lower()
 
-    # 在缺失 Tkinter 的环境中，强制使用 OpenCV 调试或直接关闭调试，避免导入错误
-    if not _HAS_TKINTER and mode != "opencv":
-        print("[DebugViewer] 当前环境不支持 Tkinter，自动切换到 OpenCV 调试模式")
-        mode = "opencv"
+    # 统一以 OpenCV 为主，必要时可切到 Tk 模式
+    mode = (DEBUG_VIEW_MODE or "opencv").lower()
 
-    if mode == "scrcpy":
-        try:
-            adb_serial = _get_current_adb_serial(context)
-            if adb_serial:
-                print(f"[DebugViewer] scrcpy 绑定设备: {adb_serial}")
-            else:
-                print("[DebugViewer] scrcpy 未获取到设备 serial，将由 scrcpy 自行选择（多设备时可能选错）")
-            _debug_viewer = ScrcpyOverlayDebugViewer(adb_serial=adb_serial)
-            _debug_viewer.start()
-            return _debug_viewer
-        except Exception as e:
-            print(f"[DebugViewer] scrcpy 模式启动失败，回退到 OpenCV：{e}")
-            mode = "opencv"
+    if mode == "tk" and _HAS_TKINTER:
+        print("[DebugViewer] 使用 Tkinter 调试窗口")
+        _debug_viewer = TkDebugViewer()
+    else:
+        if mode not in ("opencv", "tk"):
+            print(f"[DebugViewer] 未知调试模式 {mode}，已回退到 OpenCV")
+        _debug_viewer = OpenCVDebugViewer()
 
-    # 任何非 scrcpy 模式都用 OpenCV viewer（更轻量）
-    _debug_viewer = OpenCVDebugViewer()
     _debug_viewer.start()
     return _debug_viewer
 
@@ -2055,7 +1594,7 @@ class FarmEventHandler(CustomAction):
             frame_ctx = FrameContext(image=current_image)
             yolo = self._yolo_detect_all_once(context, frame_ctx)
             box = yolo.girl_best.box if yolo.girl_best is not None else None
-            # 推送当前帧的检测结果到调试 overlay（scrcpy 模式下用于画框）
+            # 推送当前帧的检测结果到调试窗口（在调试框中画框）
             if DEBUG_ENABLED:
                 debug_detections = []
                 for d in yolo.all:
@@ -2687,8 +2226,11 @@ class FarmEventHandler(CustomAction):
                 pass
             time.sleep(0.25)
 
-            # 3) 浇水直到 ColorMatch 判定湿润
+            # 3) 浇水直到 ColorMatch 判定湿润，并在首次湿润后额外再浇 2 次补满进度条
             water_count = 0
+            wet_reached = False          # 是否已经从“未湿润”变为“湿润”
+            extra_after_wet = 2          # 首次湿润后额外补浇次数
+
             while water_count < max_water_per_plot:
                 # 单帧：每轮循环只截一次图，然后复用该帧进行所有检测
                 frame_img = capture_image_safe()
@@ -2736,32 +2278,24 @@ class FarmEventHandler(CustomAction):
                 entry["attempts"] += 1
                 time.sleep(WATER_CLICK_WAIT)
 
-                frame_after = capture_image_safe()
-                if is_wet_combined((plot_x, plot_y), frame_after):
-                    # 从未湿润 -> 湿润：按原需求额外再浇 1 次补满进度条
-                    # 重新截一帧复用（避免 _check_water_button 内部截图）
-                    img2 = capture_image_safe()
-                    frame2 = FrameContext(image=img2) if img2 is not None else None
-                    found2, box2 = self._check_water_button(context, img2, frame=frame2) if img2 is not None else (False, None)
-                    if not found2:
-                        try:
-                            controller.post_click(int(plot_x), int(plot_y)).wait()
-                        except Exception:
-                            pass
-                        time.sleep(0.2)
-                        img3 = capture_image_safe()
-                        frame3 = FrameContext(image=img3) if img3 is not None else None
-                        found2, box2 = self._check_water_button(context, img3, frame=frame3) if img3 is not None else (False, None)
+                # 尚未检测到“湿润” -> 检查是否已经变为湿润（状态切换点）
+                if not wet_reached:
+                    frame_after = capture_image_safe()
+                    if is_wet_combined((plot_x, plot_y), frame_after):
+                        wet_reached = True
+                        print("[浇水] 检测到坑位已湿润，进入补浇阶段（额外再浇 2 次）")
+                        # 不立即返回，继续 while 循环，在湿润状态下再浇 extra_after_wet 次
+                    continue
 
-                    if found2:
-                        print("[浇水] 已湿润，额外再浇 1 次补满进度条")
-                        self._click_water_button(context, box2)
-                        time.sleep(WATER_CLICK_WAIT)
-
-                    entry["wet"] = True
-                    entry["done"] = True
-                    entry["fail_reason"] = None
-                    return True
+                # 已经进入“湿润后补浇”阶段
+                if wet_reached:
+                    extra_after_wet -= 1
+                    print(f"[浇水] 湿润后补浇，剩余次数: {max(extra_after_wet, 0)}")
+                    if extra_after_wet <= 0:
+                        entry["wet"] = True
+                        entry["done"] = True
+                        entry["fail_reason"] = None
+                        return True
 
             entry["fail_reason"] = "not_wet_after_watering"
             return False

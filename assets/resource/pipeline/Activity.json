@@ -3,16 +3,17 @@
         "doc": "活动战斗入口任务：从主界面进入活动 → 打开活动战斗页 → 选择最后一关 Final → 快速作战最大化次数并完成战斗，支持 JumpBack 异常兜底",
         "next": [
             "[JumpBack]openActivityBattleFromHome",
-            "[JumpBack]openActivityBattleEntry",
-            "[JumpBack]findActivityFinalStage",
-            "[JumpBack]activityEntermission",
-            "[JumpBack]activityMaximization",
-            "[JumpBack]activityLaunchbattle",
-            "[JumpBack]activityCompletebattle",
             "[JumpBack]Sub_Getreward",
+            "[JumpBack]CloseNotification",
+            "[JumpBack]ClickEmptyArea",
             "[JumpBack]Battle_cancelpage",
-            "[JumpBack]x2_back",
-            "HomeButton",
+            "[JumpBack]activityCompletebattle",
+            "[JumpBack]activityLaunchbattle",
+            "[JumpBack]activityMaximization",
+            "[JumpBack]activityEntermission",
+            "[JumpBack]findActivityFinalStage",
+            "[JumpBack]openActivityBattleEntry",
+            "[JumpBack]ActivityBattle_SecondaryFallback",
             "EndonHome"
         ]
     },
@@ -63,18 +64,19 @@
     "taskActivityMission": {
         "doc": "活动任务收取入口任务：活动商店购买目标商品 → 活动任务全部领取 → 活动签到并关闭界面，使用 JumpBack 进行异常兜底",
         "next": [
+            "[JumpBack]openActivityShopFromHome",
             "[JumpBack]Sub_Getreward",
             "[JumpBack]CloseNotification",
-            "[JumpBack]openActivityShopFromHome",
-            "[JumpBack]openActivityShopEntry",
-            "[JumpBack]findActivityShopItem",
-            "[JumpBack]maxPurchase",
-            "[JumpBack]confirmPurchase",
-            "[JumpBack]openActivityMissionEntry",
-            "[JumpBack]collectAllActivityMissions",
-            "[JumpBack]openActivitySigninEntry",
+            "[JumpBack]ClickEmptyArea",
             "[JumpBack]scanActivitySigninSlots",
-            "HomeButton"
+            "[JumpBack]openActivitySigninEntry",
+            "[JumpBack]collectAllActivityMissions",
+            "[JumpBack]openActivityMissionEntry",
+            "[JumpBack]confirmPurchase",
+            "[JumpBack]maxPurchase",
+            "[JumpBack]findActivityShopItem",
+            "[JumpBack]openActivityShopEntry",
+            "[JumpBack]ActivityMission_SecondaryFallback"
         ]
     },
     "openActivityShopFromHome": {
@@ -166,6 +168,7 @@
             "全部领取"
         ],
         "action": "Click",
+        "post_delay": 2000,
         "max_hit": 1,
         "next": [
             "[JumpBack]Sub_Getreward",
@@ -206,8 +209,7 @@
         "max_hit": 1,
         "next": [
             "[JumpBack]Sub_Getreward",
-            "[JumpBack]CloseNotification",
-            "BackButton"
+            "CloseNotification"
         ]
     },
     "activityEntermission": {
@@ -291,6 +293,25 @@
         "next": [
             "[JumpBack]Battle_cancelpage",
             "[JumpBack]HomeButton",
+            "EndonHome"
+        ]
+    },
+    "ActivityBattle_SecondaryFallback": {
+        "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "x2_back",
+            "HomeButton"
+        ]
+    },
+    "ActivityMission_SecondaryFallback": {
+        "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "BackButton",
+            "HomeButton",
             "EndonHome"
         ]
     }

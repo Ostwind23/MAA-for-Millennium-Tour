@@ -199,28 +199,6 @@ jobs:
             cp -rv assets/Assets/* install/assets/
           fi
 
-      - name: Download scrcpy (Windows x64)
-        if: matrix.os == 'win' && matrix.arch == 'x86_64'
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: Genymobile/scrcpy
-          fileName: "scrcpy-win64-*.zip"
-          latest: true
-          out-file-path: "scrcpy_tmp"
-          extract: true
-
-      - name: Install scrcpy into package
-        if: matrix.os == 'win' && matrix.arch == 'x86_64'
-        shell: bash
-        run: |
-          mkdir -p install/scrcpy
-          SCRCPY_DIR=$(find scrcpy_tmp -maxdepth 1 -type d -name "scrcpy-win64*" | head -n 1 || true)
-          if [ -z "$SCRCPY_DIR" ]; then
-            echo "Error: scrcpy directory not found under scrcpy_tmp"
-            ls -R scrcpy_tmp || true
-            exit 1
-          fi
-          cp -rp "$SCRCPY_DIR"/. install/scrcpy/
 
       - name: Replace MFAAvalonia.exe icon
         if: matrix.os == 'win' && matrix.arch == 'x86_64'

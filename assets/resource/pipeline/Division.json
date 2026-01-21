@@ -3,12 +3,12 @@
         "doc": "神谕司任务链",
         "next": [
             "[JumpBack]openDivision",
-            "[JumpBack]openDivisionAppointment",
-            "[JumpBack]Task_DivisionHotSpring",
-            "[JumpBack]Task_DivisionFarming",
             "[JumpBack]ClosePage",
             "[JumpBack]Sub_Getreward",
-            "Homeflag3"
+            "[JumpBack]Task_DivisionFarming",
+            "[JumpBack]Task_DivisionHotSpring",
+            "[JumpBack]openDivisionAppointment",
+            "[JumpBack]Division_SecondaryFallback"
         ]
     },
     "openDivision": {
@@ -560,6 +560,7 @@
                 "count": 40
             }
         ],
+        "max_hit": 2,
         "next": [
             "Farm_Watering",
             "[JumpBack]Sub_Getreward",
@@ -588,6 +589,14 @@
         ],
         "action": "Click",
         "post_delay": 2000
+    },
+    "Division_SecondaryFallback": {
+        "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "Homeflag3"
+        ]
     },
     "Homeflag3": {
         "doc": "神谕司任务结束，返回主界面",
