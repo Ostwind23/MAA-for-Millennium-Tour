@@ -1,29 +1,29 @@
 {
-    "$section_entry": "========== 活动1 春夜腾龙令 任务入口 ==========",
-    "taskActivityBattle": {
+    "$section_entry": "========== 活动2 瑰色的爱之诗 任务入口 ==========",
+    "taskActivityBattle_2": {
         "doc": "活动战斗入口任务：从主界面进入活动 → 打开活动战斗页 → 选择最后一关 Final → 快速作战最大化次数并完成战斗，支持 JumpBack 异常兜底",
         "next": [
-            "[JumpBack]checkOtherActivityEntryBattle",
-            "openActivityBattleFromHome",
-            "activityEntryRetryWaitBattle",
+            "[JumpBack]checkOtherActivityEntryBattle_2",
+            "openActivityBattleFromHome_2",
+            "activityEntryRetryWaitBattle_2",
             "[JumpBack]Sub_Getreward",
             "[JumpBack]CloseNotification",
             "[JumpBack]ClickEmptyArea",
             "[JumpBack]Battle_cancelpage",
-            "[JumpBack]activityCompletebattle",
-            "[JumpBack]activityLaunchbattle",
-            "[JumpBack]activityMaximization",
-            "[JumpBack]activityEntermission",
-            "[JumpBack]findActivityFinalStage",
-            "[JumpBack]openActivityBattleEntry",
-            "[JumpBack]ActivityBattle_SecondaryFallback",
+            "[JumpBack]activityCompletebattle_2",
+            "[JumpBack]activityLaunchbattle_2",
+            "[JumpBack]activityMaximization_2",
+            "[JumpBack]activityEntermission_2",
+            "[JumpBack]findActivityFinalStage_2",
+            "[JumpBack]openActivityBattleEntry_2",
+            "[JumpBack]ActivityBattle_SecondaryFallback_2",
             "EndonHome"
         ]
     },
-    "openActivityBattleFromHome": {
+    "openActivityBattleFromHome_2": {
         "doc": "主界面点击右侧活动入口（用于活动战斗流程）",
         "recognition": "TemplateMatch",
-        "template": "activity/activity_entry.png",
+        "template": "activity/activity_entry_2.png",
         "roi": [
             877,
             81,
@@ -34,27 +34,27 @@
         "post_delay": 2000,
         "timeout": 8000,
         "next": [
-            "openActivityBattleEntry"
+            "openActivityBattleEntry_2"
         ],
         "on_error": [
-            "activityEntrySwipeLeftBattle"
+            "activityEntrySwipeLeftBattle_2"
         ]
     },
-    "openActivityBattleEntry": {
+    "openActivityBattleEntry_2": {
         "doc": "活动页面底部“活动战斗”入口",
         "recognition": "TemplateMatch",
-        "template": "activity/activity_battle_entry.png",
+        "template": "activity/activity_battle_entry_2.png",
         "action": "Click",
         "post_wait_freezes": 1000,
         "next": [
-            "findActivityFinalStage"
+            "findActivityFinalStage_2"
         ]
     },
-    "findActivityFinalStage": {
+    "findActivityFinalStage_2": {
         "doc": "活动关卡列表中查找最后一关（文本包含 Final），优先选择最右侧/最后一个结果",
         "recognition": "OCR",
         "expected": [
-            "旅程再启"
+            "再会玫瑰"
         ],
         "order_by": "Horizontal",
         "index": -1,
@@ -62,35 +62,35 @@
         "post_delay": 500,
         "timeout": 8000,
         "next": [
-            "activityEntermission"
+            "activityEntermission_2"
         ],
         "on_error": [
-            "openActivityBattleEntry"
+            "openActivityBattleEntry_2"
         ]
     },
-    "taskActivityMission": {
+    "taskActivityMission_2": {
         "doc": "活动任务收取入口任务：活动商店购买目标商品 → 活动任务全部领取 → 活动签到并关闭界面，使用 JumpBack 进行异常兜底",
         "next": [
-            "[JumpBack]checkOtherActivityEntryMission",
-            "openActivityShopFromHome",
+            "[JumpBack]checkOtherActivityEntryMission_2",
+            "[JumpBack]openActivityShopFromHome_2",
             "[JumpBack]Sub_Getreward",
             "[JumpBack]CloseNotification",
             "[JumpBack]ClickEmptyArea",
-            "[JumpBack]scanActivitySigninSlots",
-            "[JumpBack]openActivitySigninEntry",
-            "[JumpBack]collectAllActivityMissions",
-            "[JumpBack]openActivityMissionEntry",
+            "[JumpBack]scanActivitySigninSlots_2",
+            "[JumpBack]openActivitySigninEntry_2",
+            "[JumpBack]collectAllActivityMissions_2",
+            "[JumpBack]openActivityMissionEntry_2",
             "[JumpBack]confirmPurchase",
             "[JumpBack]maxPurchase",
-            "[JumpBack]findActivityShopItem",
-            "[JumpBack]openActivityShopEntry",
-            "[JumpBack]ActivityMission_SecondaryFallback"
+            "[JumpBack]findActivityShopItem_2",
+            "[JumpBack]openActivityShopEntry_2",
+            "[JumpBack]ActivityMission_SecondaryFallback_2"
         ]
     },
-    "openActivityShopFromHome": {
+    "openActivityShopFromHome_2": {
         "doc": "主界面点击右侧活动入口（用于活动任务收取流程）",
         "recognition": "TemplateMatch",
-        "template": "activity/activity_entry.png",
+        "template": "activity/activity_entry_2.png",
         "roi": [
             831,
             73,
@@ -102,16 +102,16 @@
         "timeout": 8000,
         "max_hit": 1,
         "next": [
-            "openActivityShopEntry"
+            "openActivityShopEntry_2"
         ],
         "on_error": [
-            "activityEntrySwipeLeftMission"
+            "activityEntrySwipeLeftMission_2"
         ]
     },
-    "checkOtherActivityEntryBattle": {
-        "doc": "活动1入口检查：若识别为活动2入口则等待后重试（战斗入口）",
+    "checkOtherActivityEntryBattle_2": {
+        "doc": "活动2入口检查：若识别为活动1入口则等待后重试（战斗入口）",
         "recognition": "TemplateMatch",
-        "template": "activity/activity_entry_2.png",
+        "template": "activity/activity_entry.png",
         "roi": [
             877,
             81,
@@ -121,13 +121,13 @@
         "action": "DoNothing",
         "post_delay": 2000,
         "next": [
-            "openActivityBattleFromHome"
+            "openActivityBattleFromHome_2"
         ]
     },
-    "checkOtherActivityEntryMission": {
-        "doc": "活动1入口检查：若识别为活动2入口则等待后重试（任务入口）",
+    "checkOtherActivityEntryMission_2": {
+        "doc": "活动2入口检查：若识别为活动1入口则等待后重试（任务入口）",
         "recognition": "TemplateMatch",
-        "template": "activity/activity_entry_2.png",
+        "template": "activity/activity_entry.png",
         "roi": [
             831,
             73,
@@ -137,30 +137,33 @@
         "action": "DoNothing",
         "post_delay": 2000,
         "next": [
-            "openActivityShopFromHome"
+            "openActivityShopFromHome_2"
         ]
     },
-    "openActivityShopEntry": {
+    "openActivityShopEntry_2": {
         "doc": "活动页面底部“活动商店”入口",
         "recognition": "TemplateMatch",
-        "template": "activity/activity_shop.png",
+        "template": "activity/activity_shop_2.png",
         "action": "Click",
         "post_wait_freezes": 1000,
         "max_hit": 1,
         "next": [
-            "findActivityShopItem"
+            "findActivityShopItem_2"
         ]
     },
-    "findActivityShopItem": {
+    "findActivityShopItem_2": {
         "doc": "活动商店中查找需要购买的目标商品（通过 OCR 识别商品名称，默认占位文本，建议通过 pipeline_override 覆写 expected）",
         "recognition": "OCR",
         "roi": [
-            341,
+            375,
             35,
-            898,
+            864,
             623
         ],
         "expected": [
+            "心海",
+            "圣殿",
+            "星斑玉",
             "星魂结晶",
             "星痕之页",
             "香薰蜡烛",
@@ -188,18 +191,18 @@
             "BackButton"
         ]
     },
-    "openActivityMissionEntry": {
+    "openActivityMissionEntry_2": {
         "doc": "活动页面底部“活动任务”入口",
         "recognition": "TemplateMatch",
-        "template": "activity/activity_mission.png",
+        "template": "activity/activity_mission_2.png",
         "action": "Click",
         "post_wait_freezes": 1000,
         "max_hit": 1,
         "next": [
-            "collectAllActivityMissions"
+            "collectAllActivityMissions_2"
         ]
     },
-    "collectAllActivityMissions": {
+    "collectAllActivityMissions_2": {
         "doc": "活动任务页面右上角点击“全部领取”按钮，并处理获得奖励弹窗后返回活动页面",
         "recognition": "OCR",
         "roi": [
@@ -219,30 +222,30 @@
             "BackButton"
         ]
     },
-    "openActivitySigninEntry": {
-        "doc": "活动页面上方“活动签到”入口，这里用roi+感叹号识别来防止当天签过到后接着签到导致卡死",
+    "openActivitySigninEntry_2": {
+        "doc": "活动页面上方“活动签到”入口，这里用roi+感叹号识别来防止当天签过到后接着签到导致卡死。记得改签到时也要改这里的roi",
         "recognition": "And",
         "all_of": [
             {
                 "recognition": "TemplateMatch",
                 "template": "Alert.png",
                 "roi": [
-                    1143,
-                    0,
-                    138,
-                    135
+                    919,
+                    304,
+                    361,
+                    205
                 ]
             },
             {
                 "recognition": "TemplateMatch",
                 "template": [
-                    "activity/activity_signin.png"
+                    "activity/activity_signin2.png"
                 ],
                 "roi": [
-                    1143,
-                    0,
-                    138,
-                    135
+                    919,
+                    304,
+                    361,
+                    205
                 ]
             }
         ],
@@ -251,18 +254,18 @@
         "post_wait_freezes": 1000,
         "max_hit": 1,
         "next": [
-            "scanActivitySigninSlots"
+            "scanActivitySigninSlots_2"
         ]
     },
-    "scanActivitySigninSlots": {
+    "scanActivitySigninSlots_2": {
         "doc": "活动签到面板中从左往右扫描当日可签到的格子（模板匹配），点击后依次获得奖励并关闭签到页面，最后返回主界面",
         "recognition": "TemplateMatch",
-        "template": "activity/activity_signin_today.png",
+        "template": "activity/activity_signin_today_2.png",
         "roi": [
-            33,
-            243,
-            1212,
-            383
+            415,
+            182,
+            814,
+            204
         ],
         "order_by": "Horizontal",
         "index": 0,
@@ -274,7 +277,7 @@
             "CloseNotification"
         ]
     },
-    "activityEntermission": {
+    "activityEntermission_2": {
         "doc": "活动战斗：进入快速作战界面（复用 battle.json 的 entermission 配置）",
         "recognition": "TemplateMatch",
         "template": "battle/fast battle.png",
@@ -286,10 +289,10 @@
         ],
         "action": "Click",
         "next": [
-            "activityMaximization"
+            "activityMaximization_2"
         ]
     },
-    "activityMaximization": {
+    "activityMaximization_2": {
         "doc": "活动战斗：快速作战界面中点击最大次数（复用 battle.json 的 maximization 配置）",
         "recognition": "TemplateMatch",
         "template": "maximize.png",
@@ -301,10 +304,10 @@
         ],
         "action": "Click",
         "next": [
-            "activityLaunchbattle"
+            "activityLaunchbattle_2"
         ]
     },
-    "activityLaunchbattle": {
+    "activityLaunchbattle_2": {
         "doc": "活动战斗：点击开始战斗按钮（复用 battle.json 的 launchbattle 配置）",
         "recognition": "TemplateMatch",
         "template": "battle/launch battle.png",
@@ -317,11 +320,11 @@
         "action": "Click",
         "post_wait_freezes": 1000,
         "next": [
-            "activityCompletebattle",
-            "activityCancelforSupply"
+            "activityCompletebattle_2",
+            "activityCancelforSupply_2"
         ]
     },
-    "activityCompletebattle": {
+    "activityCompletebattle_2": {
         "doc": "活动战斗：战斗结算点击完成/获得奖励（复用 battle.json 的 completebattle 配置）",
         "recognition": "TemplateMatch",
         "template": "battle finish.png",
@@ -341,7 +344,7 @@
             "EndonHome"
         ]
     },
-    "activityCancelforSupply": {
+    "activityCancelforSupply_2": {
         "recognition": "TemplateMatch",
         "template": "daily/cancel.png",
         "roi": [
@@ -358,7 +361,7 @@
             "EndonHome"
         ]
     },
-    "activityEntrySwipeLeftBattle": {
+    "activityEntrySwipeLeftBattle_2": {
         "doc": "活动入口识别失败时右向左滑动后重试（战斗入口）",
         "action": "Swipe",
         "begin": [
@@ -376,20 +379,20 @@
         "duration": 700,
         "post_delay": 500,
         "next": [
-            "openActivityBattleFromHome"
+            "openActivityBattleFromHome_2"
         ]
     },
-    "activityEntryRetryWaitBattle": {
+    "activityEntryRetryWaitBattle_2": {
         "doc": "活动入口未识别时等待后再尝试（战斗入口）",
         "recognition": "DirectHit",
         "action": "DoNothing",
         "post_delay": 2500,
         "max_hit": 2,
         "next": [
-            "activityEntrySwipeLeftBattle"
+            "activityEntrySwipeLeftBattle_2"
         ]
     },
-    "activityEntrySwipeLeftMission": {
+    "activityEntrySwipeLeftMission_2": {
         "doc": "活动入口识别失败时右向左滑动后重试（任务入口）",
         "action": "Swipe",
         "begin": [
@@ -407,10 +410,10 @@
         "duration": 700,
         "post_delay": 500,
         "next": [
-            "openActivityShopFromHome"
+            "openActivityShopFromHome_2"
         ]
     },
-    "ActivityBattle_SecondaryFallback": {
+    "ActivityBattle_SecondaryFallback_2": {
         "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
         "recognition": "DirectHit",
         "action": "DoNothing",
@@ -419,7 +422,7 @@
             "HomeButton"
         ]
     },
-    "ActivityMission_SecondaryFallback": {
+    "ActivityMission_SecondaryFallback_2": {
         "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
         "recognition": "DirectHit",
         "action": "DoNothing",

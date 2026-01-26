@@ -485,6 +485,86 @@ ROI_CARD_SELECT_TITLE = [0, 0, 1280, 200]      # 卡牌选择标题区域（上�
 ROI_CARD_SELECT_CONFIRM = [0, 500, 1280, 220]  # 确认选择按钮区域（下半屏）
 ROI_FULL_SCREEN = [0, 0, 1280, 720]            # 全屏
 
+# 卡牌效果关键词 - 生存类默认列表
+SURVIVAL_CARD_KEYWORDS = [
+    "反噬",
+    "生命",
+    "伤害减免",
+    "防御",
+    "治疗",
+    "护盾"
+]
+
+
+def _resolve_card_select_keywords(param: dict) -> list:
+    """
+    解析卡牌选择关键词
+
+    规则:
+    - 显式提供 card_select_keywords 时直接使用
+    - card_select_mode == "survival" 且未提供关键词时，使用默认生存关键词
+    - 否则返回空列表（不做定向选择）
+    """
+    if not isinstance(param, dict):
+        return []
+
+    keywords = param.get("card_select_keywords")
+    if isinstance(keywords, list) and keywords:
+        return keywords
+
+    mode = param.get("card_select_mode")
+    if mode == "survival":
+        return SURVIVAL_CARD_KEYWORDS
+
+    return []
+
+
+def _select_card_by_keywords(context: Context, image, keywords: list) -> bool:
+    """
+    在卡牌选择界面按关键词筛选并点击卡牌
+    返回 True 表示已点击到匹配卡牌
+    """
+    if not keywords:
+        return False
+
+    reco_result = context.run_recognition(
+        "Dungeon_CardSelect_OCR",
+        image,
+        {
+            "Dungeon_CardSelect_OCR": {
+                "recognition": "OCR",
+                "roi": ROI_FULL_SCREEN,
+            }
+        }
+    )
+
+    if not _reco_hit(reco_result):
+        return False
+
+    results = []
+    if hasattr(reco_result, "all_results") and reco_result.all_results:
+        for result in reco_result.all_results:
+            if hasattr(result, "text") and hasattr(result, "box"):
+                results.append((result.text, result.box))
+    else:
+        text = _reco_detail(reco_result)
+        box = _reco_box(reco_result)
+        if text and box:
+            results.append((text, box))
+
+    if not results:
+        return False
+
+    for keyword in keywords:
+        for text, box in results:
+            if keyword in text:
+                print(f"[card_select] 命中关键词 '{keyword}' -> {text}")
+                _click_box(context.tasker.controller, box)
+                time.sleep(0.5)
+                return True
+
+    return False
+
 
 # ==================== 巡回匹配相关定义 ====================
 # 
@@ -1368,6 +1448,7 @@ class DungeonSelectCardEffect(CustomAction):
         param = _parse_param(argv.custom_action_param)
         max_wait = param.get("max_wait", 5)
         wait_interval = param.get("wait_interval", 1.0)
+        card_keywords = _resolve_card_select_keywords(param)
 
         print("[DungeonSelectCardEffect] 检测卡牌效果选择弹窗...")
 
@@ -1391,6 +1472,10 @@ class DungeonSelectCardEffect(CustomAction):
 
             if _reco_hit(title_reco):
                 print(f"[DungeonSelectCardEffect] 检测到卡牌选择弹窗: {_reco_detail(title_reco)}")
+
+                # 优先按关键词选择卡牌
+                if card_keywords:
+                    _select_card_by_keywords(context, image, card_keywords)
 
                 # 查找并点击"确认选择"按钮
                 confirm_reco = context.run_recognition(
@@ -1759,6 +1844,7 @@ class DungeonFullAuto(CustomAction):
         battle_timeout = param.get("battle_timeout", 300)
         enable_patrol = param.get("enable_patrol", True)
         stop_at_endless = param.get("stop_at_endless", True)
+        card_keywords = _resolve_card_select_keywords(param)
 
         print(f"[DungeonFullAuto] 开始全自动刷地牢")
         print(f"[DungeonFullAuto] 最大关卡数={max_stages}, 战斗超时={battle_timeout}秒")
@@ -2125,6 +2211,10 @@ class DungeonFullAuto(CustomAction):
 
                 if _reco_hit(title_reco):
                     print("[DungeonFullAuto] 检测到卡牌选择弹窗")
+
+                    # 优先按关键词选择卡牌
+                    if card_keywords:
+                        _select_card_by_keywords(context, card_image, card_keywords)
 
                     # 点击"确认选择"
                     confirm_reco = context.run_recognition(

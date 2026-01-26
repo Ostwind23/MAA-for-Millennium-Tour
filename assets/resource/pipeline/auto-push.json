@@ -1,18 +1,18 @@
 {
     "$section_autopush_config": "========== 主线推图配置节点 ==========",
-
     "AutoPush_BattleModeConfig": {
         "_doc": "[配置节点] 主线推图战斗模式配置 - 在任务链开始时覆盖 BattleMode_Check 的参数。用户通过 interface.json 选择的战斗模式会通过 pipeline_override 写入此节点的 custom_action_param",
         "recognition": "DirectHit",
         "action": "Custom",
         "custom_action": "BattleModeConfigOverride",
-        "custom_action_param": {"target_mode": "auto"},
+        "custom_action_param": {
+            "target_mode": "auto"
+        },
         "max_hit": 1,
         "next": [
             "beginAutoPush_Main"
         ]
     },
-
     "beginAutoPush": {
         "_doc": "主线推图入口 - 首先执行战斗模式配置",
         "recognition": "DirectHit",
@@ -20,7 +20,6 @@
             "AutoPush_BattleModeConfig"
         ]
     },
-
     "beginAutoPush_Main": {
         "_doc": "在具体的章节界面打开，根据此处的action设置选择普通模式或者困难模式",
         "recognition": "TemplateMatch",
@@ -69,24 +68,22 @@
         ],
         "post_delay": 1500,
         "next": [
-            "makesureautobattle",
+            "[JumpBack]makesureautobattle",
             "outofsupply",
             "launchautopush"
         ]
     },
     "makesureautobattle": {
         "recognition": "TemplateMatch",
-        "template": "autopush/autobattlebutton.png",
+        "template": "battle/手动战斗状态.png",
         "roi": [
-            583,
+            901,
             0,
-            117,
-            118
+            378,
+            263
         ],
         "action": "Click",
-        "next": [
-            "launchautopush"
-        ]
+        "post_delay": 1000
     },
     "outofsupply": {
         "recognition": "TemplateMatch",
@@ -113,8 +110,10 @@
             149
         ],
         "action": "Click",
+        "post_delay": 2000,
         "next": [
             "[JumpBack]Sub_findnewenemy",
+            "[JumpBack]makesureautobattle",
             "Duringbattle"
         ]
     },
@@ -130,19 +129,39 @@
         "action": "Click"
     },
     "Duringbattle": {
+        "_doc": "战斗中等待结束 - 通过wait_freeze等待战斗结算",
+        "recognition": "TemplateMatch",
+        "template": [
+            "battle/自动战斗状态.png",
+            "battle/手动战斗状态.png"
+        ],
+        "roi": [
+            901,
+            0,
+            378,
+            263
+        ],
         "post_wait_freezes": {
             "time": 5000,
-            "threshold": 0.95
+            "target": [
+                0,
+                0,
+                1280,
+                720
+            ],
+            "timeout": 300000
         },
+        "timeout": 600000,
         "next": [
+            "Duringbattle",
             "[JumpBack]nextround",
             "inbattleoutofsupply",
             "reachtoend"
         ]
     },
     "nextround": {
-        "recognition": "TemplateMatch",
-        "template": "autopush/nextround.png",
+        "recognition": "OCR",
+        "expected": "下一关",
         "roi": [
             117,
             553,
@@ -151,7 +170,7 @@
         ],
         "action": "Click",
         "next": [
-            "Duringbattle"
+            "start_activityautopushing"
         ]
     },
     "inbattleoutofsupply": {
@@ -200,7 +219,8 @@
         ],
         "post_delay": 1000,
         "next": [
-            "HomeflagMedal"
+            "[JumpBack]HomeflagMedal",
+            "EndOnHome"
         ]
     }
 }

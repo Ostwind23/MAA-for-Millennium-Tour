@@ -125,7 +125,13 @@
         "expected": [
             "空白"
         ],
-        "action": "Click"
+        "action": "Click",
+        "target_offset": [
+            0,
+            0,
+            0,
+            50
+        ]
     },
     "ClickEmptyArea": {
         "doc": "点击空白区域以关闭可能的遮挡",

@@ -113,7 +113,8 @@
             "name": "地牢",
             "entry": "Task_Dungeon",
             "option": [
-                "地牢无尽模式设置"
+                "地牢无尽模式设置",
+                "地牢卡牌效果选择"
             ]
         },
         {
@@ -147,7 +148,8 @@
         //     "entry": "openDivisionforhotspring"
         // },
         {
-            "name": "自动推进主线战斗关卡（需要点进自己要打的主线章；目前只支持多关纯战斗自动连战）",
+            "name": "自动推进主线战斗关卡",
+            "description": "需要点进自己要打的主线章；目前只支持多关纯战斗自动连战",
             "entry": "beginAutoPush",
             "option": [
                 "选择表界或里界",
@@ -170,18 +172,29 @@
         //     "entry": "autofishing"
         // },
         {
-            "name": "自动推图（自动主线的功能抽离,打开活动的战斗关卡,点进去到编队预备出击界面即可单独启动此任务以自动推进本页内的战斗关卡）",
+            "name": "自动推图（活动使用）",
+            "description": "自动主线的功能抽离,打开活动的战斗关卡,点进去到编队预备出击界面即可单独启动此任务以自动推进本页内的战斗关卡",
             "entry": "Activityautopush"
         },
         {
-            "name": "活动战斗",
-            "description": "在当前活动中自动刷最后一关，需要提前手动打到最后一关",
+            "name": "活动战斗(春夜腾龙令)",
+            "description": "在春夜腾龙令中自动刷最后一关，需要提前手动打到最后一关",
             "entry": "taskActivityBattle"
         },
         {
-            "name": "活动任务收取",
-            "description": "在当前活动中自动进入活动商店购买目标商品、领取活动任务奖励并完成每日签到后返回主界面",
+            "name": "活动战斗(瑰色的爱之诗)",
+            "description": "在瑰色的爱之诗中自动刷最后一关，需要提前手动打到最后一关",
+            "entry": "taskActivityBattle_2"
+        },
+        {
+            "name": "活动任务收取(春夜腾龙令)",
+            "description": "在春夜腾龙令中自动进入活动商店购买目标商品、领取活动任务奖励并完成每日签到后返回主界面",
             "entry": "taskActivityMission"
+        },
+        {
+            "name": "活动任务收取(瑰色的爱之诗)",
+            "description": "在瑰色的爱之诗中自动进入活动商店购买目标商品、领取活动任务奖励并完成每日签到后返回主界面",
+            "entry": "taskActivityMission_2"
         },
         {
             "name": "收取储存的体力",
@@ -480,7 +493,7 @@
             "type": "select",
             "label": "播种种子选择",
             "description": "选择农场种植时使用的作物种子类型",
-            "default_case": "龙鳞果",
+            "default_case": "自动选择种子数在16及以上的作物",
             "cases": [
                 {
                     "name": "龙鳞果",
@@ -1584,7 +1597,29 @@
                     "pipeline_override": {
                         "Dungeon_AutoBattle": {
                             "custom_action_param": {
-                                "stop_at_endless": false
+                                "stop_at_endless": false,
+                                "max_stages": 500
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "地牢卡牌效果选择": {
+            "type": "select",
+            "label": "地牢卡牌效果选择",
+            "description": "选择地牢卡牌效果的偏好：默认选最左侧的卡牌，若选择生存类则会在卡牌选择界面优先点击含关键词的卡牌。",
+            "default_case": "选最左侧的卡牌",
+            "cases": [
+                {
+                    "name": "选最左侧的卡牌"
+                },
+                {
+                    "name": "选生存类buff",
+                    "pipeline_override": {
+                        "Dungeon_AutoBattle": {
+                            "custom_action_param": {
+                                "card_select_mode": "survival"
                             }
                         }
                     }

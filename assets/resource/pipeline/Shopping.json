@@ -291,12 +291,30 @@
             142
         ],
         "action": "Click",
-        "post_wait_freezes": 500,
+        "post_wait_freezes": 1000,
         "on_error": [
             "PoorCancle"
         ],
         "next": [
+            "confirmPurchaseCheck",
             "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
+    "confirmPurchaseCheck": {
+        "doc": "确认购买后若弹窗仍停留则取消（判定货币不足/购买失败）",
+        "recognition": "TemplateMatch",
+        "template": "daily/confirmPurchase.png",
+        "roi": [
+            736,
+            505,
+            290,
+            142
+        ],
+        "action": "DoNothing",
+        "post_delay": 500,
+        "next": [
+            "[JumpBack]Sub_Cancel",
             "Subreturn_back"
         ]
     },

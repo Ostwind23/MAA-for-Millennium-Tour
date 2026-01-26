@@ -2231,13 +2231,27 @@ class FarmEventHandler(CustomAction):
             wet_reached = False          # 是否已经从“未湿润”变为“湿润”
             extra_after_wet = 2          # 首次湿润后额外补浇次数
 
+            screencap_fail_in_loop = 0  # 循环内截图失败计数
+            max_screencap_fail_in_loop = 10  # 最大允许的连续截图失败次数
+
             while water_count < max_water_per_plot:
                 # 单帧：每轮循环只截一次图，然后复用该帧进行所有检测
                 frame_img = capture_image_safe()
                 if frame_img is None:
+                    screencap_fail_in_loop += 1
+                    print(f"[浇水] 截图失败 ({screencap_fail_in_loop}/{max_screencap_fail_in_loop})")
+                    if screencap_fail_in_loop >= max_screencap_fail_in_loop:
+                        print("[浇水] 连续截图失败过多，退出浇水循环")
+                        entry["fail_reason"] = "screencap_failed"
+                        break
                     time.sleep(0.1)
                     continue
+                screencap_fail_in_loop = 0  # 截图成功，重置计数
                 frame_ctx = FrameContext(image=frame_img)
+
+                # 推送当前帧到调试窗口（避免画面不更新）
+                if DEBUG_ENABLED:
+                    push_debug_frame(frame_img)
 
                 if self._check_reward_popup(context, frame_ctx.image, frame=frame_ctx):
                     print("[浇水] 检测到奖励弹窗，先领取奖励")
@@ -2263,6 +2277,14 @@ class FarmEventHandler(CustomAction):
                     found, box = self._check_water_button(context, frame_ctx.image, frame=frame_ctx)
 
                 if not found:
+                    # 找不到浇水按钮时，检测是否已经湿润（可能坑位本来就是湿润状态）
+                    check_frame = frame_ctx.image if frame_ctx else capture_image_safe()
+                    if check_frame is not None and is_wet_combined((plot_x, plot_y), check_frame):
+                        print("[浇水] 找不到浇水按钮但检测到已湿润，标记为完成")
+                        entry["wet"] = True
+                        entry["done"] = True
+                        entry["fail_reason"] = None
+                        return True
                     water_count += 1
                     entry["attempts"] += 1
                     time.sleep(0.15)
