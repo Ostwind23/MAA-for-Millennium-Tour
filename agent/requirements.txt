@@ -2,7 +2,7 @@
 # 这些依赖会在 CI 构建时预下载并打包
 
 # MaaFramework Python 绑定
-maafw==5.3.3
+maafw==5.5.0
 
 # 数值计算
 numpy>=1.20.0

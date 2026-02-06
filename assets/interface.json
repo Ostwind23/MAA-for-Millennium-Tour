@@ -746,9 +746,7 @@
                         "EnterFarm": {
                             "next": [
                                 "[JumpBack]Sub_Getreward",
-                                "[JumpBack]Farm_Emergency_Annoying",
-                                "[JumpBack]Farm_Emergency_Waterwheel",
-                                "[JumpBack]Farm_Emergency_Worms",
+                                "[JumpBack]Farm_Emergency_Entry",
                                 "[JumpBack]Farm_Enter_Harvest",
                                 "[JumpBack]returnHome"
                             ]

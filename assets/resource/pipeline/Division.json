@@ -231,10 +231,11 @@
     "Farm_Emergency_Entry": {
         "doc": "农场故障事件检测，角色罢工会影响正常收取农作物，因此要优先处理",
         "next": [
-            "Farm_Emergency_Annoying",
-            "Farm_Emergency_Waterwheel",
-            "Farm_Emergency_Windmill",
-            "Farm_Emergency_Worms"
+            "[JumpBack]Farm_Emergency_Annoying",
+            "[JumpBack]Farm_Emergency_Waterwheel",
+            "[JumpBack]Farm_Emergency_Windmill",
+            "[JumpBack]Farm_Emergency_Worms",
+            "Subreturn_back"
         ]
     },
     "Farm_Emergency_Annoying": {
@@ -412,9 +413,6 @@
         ],
         "action": "Click",
         "post_delay": 1000,
-        "focus": {
-            "Node.Recognition.Failed": "[color:red]没有检测到可用的作物种子[/color]"
-        },
         "next": [
             "Farm_ConfirmPlant"
         ]

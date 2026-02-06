@@ -460,4 +460,5 @@ debug
 # Yolov8
 yolov8n.pt
 yolov8s.pt
+yolo26n.pt
 runs

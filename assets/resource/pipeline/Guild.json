@@ -17,8 +17,6 @@
             "[JumpBack]Guild_BattleModeConfig",
             "[JumpBack]openGuild",
             "[JumpBack]Sub_Getreward",
-            "[JumpBack]Sub_GuildReward",
-            "[JumpBack]openGuildMission",
             "[JumpBack]Victory_Return_noNext",
             "[JumpBack]guildBossWaitBattleEnd",
             "[JumpBack]BattleMode_Check",
@@ -30,6 +28,8 @@
             "[JumpBack]guildDonationComplete",
             "[JumpBack]guildDonationLoop",
             "[JumpBack]openGuildDonation",
+            "[JumpBack]Sub_GuildReward",
+            "[JumpBack]openGuildMission",
             "[JumpBack]Guild_SecondaryFallback",
             "endGuild"
         ]
@@ -128,7 +128,7 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "memberInfoRewardLoop",
+            "[JumpBack]memberInfoRewardLoop",
             "memberInfoComplete"
         ]
     },
@@ -144,16 +144,15 @@
         ],
         "action": "Click",
         "target_offset": [
-            -10,
-            -25,
+            -20,
+            50,
             0,
             0
         ],
         "post_delay": 1000,
         "next": [
             "[JumpBack]Sub_Getreward",
-            "memberInfoRewardLoop",
-            "memberInfoComplete"
+            "Subreturn_back"
         ]
     },
     "memberInfoComplete": {
