@@ -31,6 +31,8 @@ from custom.action import (
     FarmWateringAll,
     # 测试工具
     TestRunRecoHandler,
+    # 自动钓鱼
+    AutoFishing,
 )
 
 # ===== 导入所有 Custom Recognition =====
@@ -97,6 +99,9 @@ AgentServer.register_custom_action("FarmWateringAll", FarmWateringAll())
 # Pipeline 调用示例: {"custom_action": "TestRunRecoHandler", "custom_action_param": {"test_mode": "all_classes"}}
 AgentServer.register_custom_action("TestRunRecoHandler", TestRunRecoHandler())
 
+# 自动钓鱼 - 完整钓鱼流程自动化
+# Pipeline 调用示例: {"custom_action": "AutoFishing", "custom_action_param": {"strategy": "aggressive", "max_rounds": 50}}
+AgentServer.register_custom_action("AutoFishing", AutoFishing())
 
 
 # ===== 注册 Custom Recognitions =====
@@ -125,6 +130,8 @@ REGISTERED_ACTIONS = [
     "FarmWateringAll",        # 全农场浇水
     # 测试工具
     "TestRunRecoHandler",  # 测试 NeuralNetworkDetect
+    # 自动钓鱼
+    "AutoFishing",  # 完整钓鱼流程自动化
 ]
 
 REGISTERED_RECOGNITIONS = [

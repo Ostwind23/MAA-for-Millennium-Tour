@@ -1407,7 +1407,7 @@ class FarmEventHandler(CustomAction):
         box = yolo.girl_best.box
         center = _box_center(box)
         confidence = yolo.girl_best.score
-        print(f"[FarmEventHandler] ✓ 检测到角色 (girl): box={box}, center={center}, confidence={confidence:.3f}")
+        print(f"[FarmEventHandler] [OK] 检测到角色 (girl): box={box}, center={center}, confidence={confidence:.3f}")
 
         if DEBUG_ENABLED:
             update_debug_detections([{"label": "girl", "box": list(box), "confidence": confidence}])
@@ -2742,9 +2742,9 @@ class FarmEventHandler(CustomAction):
             success = self._catch_single_worm(context, nearest_bug)
             if success:
                 caught_count += 1
-                print(f"[捉虫] ✓ 成功捕捉第 {caught_count} 只虫子！")
+                print(f"[捉虫] [OK] 成功捕捉第 {caught_count} 只虫子！")
             else:
-                print("[捉虫] ✗ 捕捉失败，尝试下一只")
+                print("[捉虫] [FAIL] 捕捉失败，尝试下一只")
             
             # 短暂等待后继续
             time.sleep(0.5)

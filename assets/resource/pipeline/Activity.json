@@ -16,8 +16,7 @@
             "[JumpBack]activityEntermission",
             "[JumpBack]findActivityFinalStage",
             "[JumpBack]openActivityBattleEntry",
-            "[JumpBack]ActivityBattle_SecondaryFallback",
-            "EndonHome"
+            "[JumpBack]ActivityBattle_SecondaryFallback"
         ]
     },
     "openActivityBattleFromHome": {
@@ -412,7 +411,11 @@
     },
     "ActivityBattle_SecondaryFallback": {
         "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
-        "recognition": "DirectHit",
+        "recognition": "TemplateMatch",
+        "template": [
+            "home.png",
+            "summon.png"
+        ],
         "action": "DoNothing",
         "next": [
             "x2_back",
@@ -421,7 +424,11 @@
     },
     "ActivityMission_SecondaryFallback": {
         "doc": "二级兜底：仅在强条件节点均匹配失败后，才允许触发弱条件返回按钮",
-        "recognition": "DirectHit",
+        "recognition": "TemplateMatch",
+        "template": [
+            "home.png",
+            "summon.png"
+        ],
         "action": "DoNothing",
         "next": [
             "BackButton",

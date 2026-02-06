@@ -143,6 +143,12 @@
             547
         ],
         "action": "Click",
+        "target_offset": [
+            -10,
+            -25,
+            0,
+            0
+        ],
         "post_delay": 1000,
         "next": [
             "[JumpBack]Sub_Getreward",
@@ -216,7 +222,8 @@
         "action": "Click",
         "post_delay": 2000,
         "next": [
-            "guildBossLaunchBattleInTeam"
+            "guildBossLaunchBattleInTeam",
+            "guildCheckBossBattle"
         ]
     },
     "guildBossLaunchBattleInTeam": {
@@ -259,6 +266,24 @@
         "timeout": 300000,
         "next": [
             "[JumpBack]Victory_Return_noNext",
+            "guildBossBackToGuild"
+        ]
+    },
+    "guildCheckBossBattle": {
+        "_doc": "检查公会首领战斗是否结束",
+        "recognition": "OCR",
+        "expected": [
+            "0",
+            "0/1"
+        ],
+        "roi": [
+            26,
+            6,
+            393,
+            214
+        ],
+        "post_delay": 1000,
+        "next": [
             "guildBossBackToGuild"
         ]
     },

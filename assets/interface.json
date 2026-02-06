@@ -67,10 +67,11 @@
         },
         {
             "name": "商店",
-            "description": "默认自动购买每日免费体力、日常商店的两管体力药和种子商店的三种肥料。可在选项中自定义选择要购买的种子。",
+            "description": "默认自动购买每日免费体力、日常商店的两管体力药和种子商店的三种肥料。可在选项中自定义选择要购买的种子，以及是否购买礼物福袋。",
             "entry": "Task_Store",
             "option": [
-                "种子购买设置"
+                "种子购买设置",
+                "礼物福袋购买设置"
             ]
         },
         {
@@ -209,9 +210,78 @@
                 "回忆深潜目标关卡",
                 "回忆深潜出战队伍"
             ]
+        },
+        {
+            "name": "魔物阵列",
+            "description": "打完已有的所有魔物阵列次数",
+            "entry": "taskMonsterColumnMatrix"
+        },
+        {
+            "name": "自动钓鱼",
+            "description": "自动完成钓鱼流程，包括下杆、等待上钩、拉扯和QTE。需要先进入钓鱼界面并选好饵料，默认单轮执行50次。",
+            "entry": "Fully_Automatic_Fishing",
+            "option": [
+                "钓鱼拉扯策略"
+            ]
         }
     ],
     "option": {
+        "钓鱼拉扯策略": {
+            "type": "select",
+            "label": "拉扯策略",
+            "description": "选择钓鱼时的拉扯策略：逆向拉扯进度快但体力消耗大，适合属性较高的玩家；顺向拉扯进度慢但省体力，适合属性较低的玩家",
+            "default_case": "逆向拉扯（快速）",
+            "cases": [
+                {
+                    "name": "逆向拉扯（快速）",
+                    "pipeline_override": {
+                        "Fully_Automatic_Fishing": {
+                            "custom_action_param": {
+                                "strategy": "aggressive",
+                                "max_rounds": 50,
+                                "qte_shrink_speed": 70
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "顺向拉扯（省体力）",
+                    "pipeline_override": {
+                        "Fully_Automatic_Fishing": {
+                            "custom_action_param": {
+                                "strategy": "conservative",
+                                "max_rounds": 50,
+                                "qte_shrink_speed": 70
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "礼物福袋购买设置": {
+            "type": "switch",
+            "label": "是否购买礼物福袋",
+            "description": "开启后会在购买星魂精髓时同时购买礼物福袋",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "label": "购买",
+                    "pipeline_override": {
+                        "buy_Stamina_Divisionstore": {
+                            "expected": [
+                                "中型星魂精髓",
+                                "大型星魂精髓",
+                                "礼物"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "label": "不购买"
+                }
+            ]
+        },
         "种子购买设置": {
             "type": "select",
             "label": "种子购买设置",
@@ -842,7 +912,25 @@
                 {
                     "name": "忽略x2，仅按无x2模板",
                     "pipeline_override": {
+                        "openVault": {
+                            "next": [
+                                "DailyTemplate_NoneX2"
+                            ]
+                        },
+                        "openVaultinOCR": {
+                            "next": [
+                                "DailyTemplate_NoneX2"
+                            ]
+                        },
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
+                        },
                         "checkDailyBattleX2": {
+                            "enabled": false
+                        },
+                        "checkX2_Phase2": {
                             "enabled": false
                         },
                         "findx2_BenLe": {
@@ -876,32 +964,38 @@
                 {
                     "name": "本勒关",
                     "pipeline_override": {
-                        "DailyTemplate_NoneX2": {
-                            "next": [
-                                "chooseOwnmission"
-                            ]
-                        },
                         "chooseOwnmission": {
                             "expected": "本勒收集"
                         },
                         "chooseOwnmission_下三": {
                             "expected": "本勒收集"
+                        },
+                        "chooseOwnmission_上三重试": {
+                            "expected": "本勒收集"
+                        },
+                        "NoneX2_SwipeBackToTop": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
                         }
                     }
                 },
                 {
                     "name": "经验关",
                     "pipeline_override": {
-                        "DailyTemplate_NoneX2": {
-                            "next": [
-                                "chooseOwnmission"
-                            ]
-                        },
                         "chooseOwnmission": {
                             "expected": "经验获取"
                         },
                         "chooseOwnmission_下三": {
                             "expected": "经验获取"
+                        },
+                        "chooseOwnmission_上三重试": {
+                            "expected": "经验获取"
+                        },
+                        "NoneX2_SwipeBackToTop": {
+                            "next": [
+                                "chooseOwnmission"
+                            ]
                         }
                     }
                 },
@@ -911,11 +1005,6 @@
                         "突破材料类别选择"
                     ],
                     "pipeline_override": {
-                        "DailyTemplate_NoneX2": {
-                            "next": [
-                                "chooseOwnmission"
-                            ]
-                        },
                         "chooseOwnmission": {
                             "expected": "突破材料",
                             "next": [
@@ -932,6 +1021,20 @@
                             ],
                             "on_error": [
                                 "Battle_SwipetoRightside"
+                            ]
+                        },
+                        "chooseOwnmission_上三重试": {
+                            "expected": "突破材料",
+                            "next": [
+                                "突破材料_findclass"
+                            ],
+                            "on_error": [
+                                "Battle_SwipetoRightside"
+                            ]
+                        },
+                        "NoneX2_SwipeBackToTop": {
+                            "next": [
+                                "chooseOwnmission"
                             ]
                         }
                     }
@@ -939,16 +1042,22 @@
                 {
                     "name": "技能材料关",
                     "pipeline_override": {
-                        "DailyTemplate_NoneX2": {
-                            "next": [
-                                "chooseOwnmission"
-                            ]
-                        },
                         "chooseOwnmission": {
                             "expected": "技能材料"
                         },
                         "chooseOwnmission_下三": {
                             "expected": "技能材料"
+                        },
+                        "chooseOwnmission_上三重试": {
+                            "expected": "技能材料"
+                        },
+                        "NoneX2_SwipeBackToTop": {
+                            "enabled": false
+                        },
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission_下三"
+                            ]
                         }
                     }
                 },
@@ -958,11 +1067,6 @@
                         "符文之地类别选择"
                     ],
                     "pipeline_override": {
-                        "DailyTemplate_NoneX2": {
-                            "next": [
-                                "chooseOwnmission"
-                            ]
-                        },
                         "chooseOwnmission": {
                             "expected": "符文之地",
                             "next": [
@@ -973,6 +1077,20 @@
                             "expected": "符文之地",
                             "next": [
                                 "符文之地_findclass"
+                            ]
+                        },
+                        "chooseOwnmission_上三重试": {
+                            "expected": "符文之地",
+                            "next": [
+                                "符文之地_findclass"
+                            ]
+                        },
+                        "NoneX2_SwipeBackToTop": {
+                            "enabled": false
+                        },
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission_下三"
                             ]
                         }
                     }
@@ -980,16 +1098,22 @@
                 {
                     "name": "骚灵之境",
                     "pipeline_override": {
-                        "DailyTemplate_NoneX2": {
-                            "next": [
-                                "chooseOwnmission_下三"
-                            ]
-                        },
                         "chooseOwnmission": {
                             "expected": "骚灵之境"
                         },
                         "chooseOwnmission_下三": {
                             "expected": "骚灵之境"
+                        },
+                        "chooseOwnmission_上三重试": {
+                            "expected": "骚灵之境"
+                        },
+                        "NoneX2_SwipeBackToTop": {
+                            "enabled": false
+                        },
+                        "DailyTemplate_NoneX2": {
+                            "next": [
+                                "chooseOwnmission_下三"
+                            ]
                         }
                     }
                 }
@@ -1029,6 +1153,15 @@
                             "on_error": [
                                 "Battle_SwipetoRightside"
                             ]
+                        },
+                        "chooseOwnmission_上三重试": {
+                            "expected": "突破材料",
+                            "next": [
+                                "突破材料_findclass"
+                            ],
+                            "on_error": [
+                                "Battle_SwipetoRightside"
+                            ]
                         }
                     }
                 }
@@ -1048,7 +1181,7 @@
                     "pipeline_override": {
                         "DailyTemplate_RuneX2": {
                             "next": [
-                                "chooseOwnmission"
+                                "chooseOwnmission_下三"
                             ]
                         },
                         "chooseOwnmission": {
@@ -1058,6 +1191,12 @@
                             ]
                         },
                         "chooseOwnmission_下三": {
+                            "expected": "符文之地",
+                            "next": [
+                                "符文之地_findclass"
+                            ]
+                        },
+                        "chooseOwnmission_上三重试": {
                             "expected": "符文之地",
                             "next": [
                                 "符文之地_findclass"
@@ -1194,6 +1333,7 @@
         },
         "资源关关卡选择设置": {
             "type": "select",
+            "default_case": "选择最后一关",
             "cases": [
                 {
                     "name": "选择目前能打的最高关次（仅限没打完全部关卡的人选择）",
@@ -1349,7 +1489,7 @@
                                 "镜中异相"
                             ]
                         },
-                        "memoryFindDungeonByTemplate": {
+                        "memoryFindDungeonByFeature": {
                             "template": [
                                 "memorydive/镜中异相_未选中.png",
                                 "memorydive/镜中异相_选中.png"
@@ -1365,7 +1505,7 @@
                                 "内陆国度"
                             ]
                         },
-                        "memoryFindDungeonByTemplate": {
+                        "memoryFindDungeonByFeature": {
                             "template": [
                                 "memorydive/内陆国度_未选中.png",
                                 "memorydive/内陆国度_选中.png"
@@ -1381,7 +1521,7 @@
                                 "悖逆之城"
                             ]
                         },
-                        "memoryFindDungeonByTemplate": {
+                        "memoryFindDungeonByFeature": {
                             "template": [
                                 "memorydive/悖逆之城_未选中.png",
                                 "memorydive/悖逆之城_选中.png"
@@ -1397,7 +1537,7 @@
                                 "狂号风暴"
                             ]
                         },
-                        "memoryFindDungeonByTemplate": {
+                        "memoryFindDungeonByFeature": {
                             "template": [
                                 "memorydive/狂号风暴_未选中.png",
                                 "memorydive/狂号风暴_选中.png"
@@ -1413,7 +1553,7 @@
                                 "洞悉之瞳"
                             ]
                         },
-                        "memoryFindDungeonByTemplate": {
+                        "memoryFindDungeonByFeature": {
                             "template": [
                                 "memorydive/洞悉之瞳_未选中.png",
                                 "memorydive/洞悉之瞳_选中.png"
@@ -1429,7 +1569,7 @@
                                 "深暗魔井"
                             ]
                         },
-                        "memoryFindDungeonByTemplate": {
+                        "memoryFindDungeonByFeature": {
                             "template": [
                                 "memorydive/深暗魔井_未选中.png",
                                 "memorydive/深暗魔井_选中.png"

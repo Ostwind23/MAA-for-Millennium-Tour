@@ -160,6 +160,9 @@
             1
         ]
     },
+    "Subreturn_back": {
+        "action": "DoNothing"
+    },
     "$BattleMode_Section": "========== 战斗模式管理（自动/手动+跳过）==========",
     "BattleMode_Check": {
         "doc": "[复用][JumpBack入口] 战斗模式智能管理 - 根据用户配置自动切换战斗模式。在各战斗场景的 next 中以 [JumpBack]BattleMode_Check 方式引用",

@@ -48,7 +48,7 @@
             1,
             1
         ],
-        "post_wait_freezes": 500,
+        "post_wait_freezes": 2000,
         "next": [
             "[JumpBack]Sub_Getreward",
             "findAccessibleTask"
@@ -65,7 +65,7 @@
             57
         ],
         "action": "Click",
-        "pre_wait_freezes": 200,
+        "pre_wait_freezes": 300,
         "next": [
             "weeklyTaskAwardGet"
         ]

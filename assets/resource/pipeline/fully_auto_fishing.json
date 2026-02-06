@@ -1,5 +1,6 @@
 {
     "Fully_Automatic_Fishing": {
+        "doc": "自动钓鱼（逆向拉扯）：进度快但体力消耗大，适合高体力角色",
         "recognition": "TemplateMatch",
         "template": "fishing/control button.png",
         "roi": [
@@ -8,10 +9,41 @@
             228,
             230
         ],
+        "threshold": 0.65,
         "action": "Custom",
-        "custom_action": "Autofishing",
+        "custom_action": "AutoFishing",
+        "custom_action_param": {
+            "strategy": "aggressive",
+            "max_rounds": 50
+        },
         "next": [
             "Fully_Automatic_Fishing"
         ]
+    },
+    "Fishing_Conservative": {
+        "doc": "自动钓鱼（顺向拉扯）：进度慢但省体力，适合低体力角色",
+        "recognition": "TemplateMatch",
+        "template": "fishing/control button.png",
+        "roi": [
+            939,
+            377,
+            228,
+            230
+        ],
+        "threshold": 0.65,
+        "action": "Custom",
+        "custom_action": "AutoFishing",
+        "custom_action_param": {
+            "strategy": "conservative",
+            "max_rounds": 50
+        },
+        "next": [
+            "Fishing_Conservative"
+        ]
+    },
+    "Test_Fishing_Icon": {
+        "recognition": "TemplateMatch",
+        "template": "fishing/icon.png",
+        "action": "Click"
     }
 }

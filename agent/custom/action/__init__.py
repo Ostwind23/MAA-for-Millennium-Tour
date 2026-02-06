@@ -34,6 +34,7 @@ from .farm_event import (
     FarmWateringAll,       # 全农场浇水专用
 )
 from .test_run_reco import TestRunRecoHandler  # 测试 NeuralNetworkDetect
+from .fishing import AutoFishing  # 自动钓鱼
 
 __all__ = [
     "MyCustomAction",
@@ -70,4 +71,6 @@ __all__ = [
     "FarmWateringAll",
     # 测试工具
     "TestRunRecoHandler",
+    # 自动钓鱼
+    "AutoFishing",
 ]

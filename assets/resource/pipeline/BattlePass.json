@@ -3,7 +3,8 @@
         "_doc": "通行证入口节点。采用 JumpBack 混合模式：主流程通过 next 链式执行，入口节点包含关键场景 JumpBack 用于异常恢复",
         "next": [
             "[JumpBack]accessBattlePass",
-            "[JumpBack]gainPassAward",
+            "[JumpBack]gainPassAward1",
+            "[JumpBack]gainPassAward2",
             "[JumpBack]endBattlePass",
             "EndonHome"
         ]
@@ -22,10 +23,11 @@
         "index": -1,
         "action": "Click",
         "next": [
-            "gainPassAward"
+            "gainPassAward1",
+            "gainPassAward2"
         ]
     },
-    "gainPassAward": {
+    "gainPassAward1": {
         "_doc": "领取通行证奖励",
         "recognition": "TemplateMatch",
         "template": "daily/gainpassaward.png",
@@ -36,6 +38,29 @@
             145
         ],
         "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "endBattlePass"
+        ]
+    },
+    "gainPassAward2": {
+        "_doc": "领取通行证奖励",
+        "recognition": "OCR",
+        "expected": "\\b[1-9]\\d{3,5}\\b",
+        "roi": [
+            840,
+            303,
+            169,
+            77
+        ],
+        "action": "Click",
+        "target_offset": [
+            0,
+            60,
+            0,
+            0
+        ],
         "post_delay": 1000,
         "next": [
             "[JumpBack]Sub_Getreward",

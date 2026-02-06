@@ -1,0 +1,216 @@
+{
+    "$section_matrix_main": "========== 魔物阵列主任务 ==========",
+    "taskMonsterColumnMatrix": {
+        "doc": "魔物阵列主任务入口。采用 JumpBack 混合模式：线性流程由各节点自身的 next 串联，入口节点通过 [JumpBack] 链统一兜底异常弹窗和战斗流程（按执行顺序从先到后排列）",
+        "next": [
+            "[JumpBack]matrixOpenBattle",
+            "[JumpBack]matrixOpenStrategy",
+            "[JumpBack]matrixEnterMatrix",
+            "[JumpBack]matrixCheckCountZero",
+            "[JumpBack]matrixClickMatchBattle",
+            "[JumpBack]matrixClickSkipButton",
+            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]Failure_Return_noNext",
+            "[JumpBack]matrixOpenRewardPanel",
+            "[JumpBack]matrixCollectAllRewards",
+            "[JumpBack]Sub_Getreward",
+            "[JumpBack]ClickEmptyArea",
+            "[JumpBack]HomeButton",
+            "EndonHome"
+        ]
+    },
+    "$section_matrix_navigate": "========== 魔物阵列导航流程 ==========",
+    "matrixOpenBattle": {
+        "doc": "从主界面点击右下角“出击”按钮，进入出击页面",
+        "recognition": "OCR",
+        "expected": "出击",
+        "roi": [
+            1021,
+            476,
+            207,
+            244
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "matrixOpenStrategy"
+        ]
+    },
+    "matrixOpenStrategy": {
+        "doc": "在出击页面底部点击“多维策略”入口按钮",
+        "recognition": "OCR",
+        "expected": "多维策略",
+        "roi": [
+            225,
+            599,
+            318,
+            121
+        ],
+        "action": "Click",
+        "post_delay": 1500,
+        "next": [
+            "matrixEnterMatrix"
+        ]
+    },
+    "matrixEnterMatrix": {
+        "doc": "在多维策略页面中 OCR 匹配“进入主题”并点击进入",
+        "recognition": "OCR",
+        "expected": [
+            "进入",
+            "主题"
+        ],
+        "roi": [
+            772,
+            371,
+            323,
+            285
+        ],
+        "action": "Click",
+        "post_wait_freezes": 1000,
+        "next": [
+            "matrixCheckLoop"
+        ]
+    },
+    "$section_matrix_battle_loop": "========== 魔物阵列战斗循环 ==========",
+    "matrixCheckLoop": {
+        "doc": "战斗循环入口：优先检测剩余次数是否为0，为0则进入奖励领取流程，否则继续战斗",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "matrixCheckCountZero",
+            "matrixClickMatchBattle"
+        ]
+    },
+    "matrixCheckCountZero": {
+        "doc": "检测左上角今日剩余挑战次数是否为 0/12，命中则进入奖励领取流程",
+        "recognition": "OCR",
+        "expected": "今日剩余挑战次数：0/12",
+        "roi": [
+            113,
+            96,
+            370,
+            90
+        ],
+        "action": "DoNothing",
+        "next": [
+            "matrixRewardEntry"
+        ]
+    },
+    "matrixClickMatchBattle": {
+        "doc": "点击“匹配作战”按钮开始匹配对手",
+        "recognition": "OCR",
+        "expected": "匹配作战",
+        "roi": [
+            395,
+            439,
+            507,
+            281
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "matrixWaitMatching"
+        ]
+    },
+    "matrixWaitMatching": {
+        "doc": "等待匹配中，检测匹配画面或右上角跳过按钮出现",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "post_delay": 3000,
+        "next": [
+            "matrixClickSkipButton",
+            "matrixWaitMatching"
+        ],
+        "timeout": 60000
+    },
+    "matrixClickSkipButton": {
+        "doc": "检测并点击战斗画面右上角的跳过按钮（需要截取 skipButton.png 图片）",
+        "recognition": "TemplateMatch",
+        "template": "battle/跳过战斗按钮.png",
+        "roi": [
+            917,
+            1,
+            365,
+            214
+        ],
+        "action": "Click",
+        "post_wait_freezes": 500,
+        "next": [
+            "matrixBattleResult"
+        ]
+    },
+    "matrixBattleResult": {
+        "doc": "战斗结果处理：检测战斗胜利或战斗失败画面并点击，然后返回循环检查次数",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]matrixClickSkipButton",
+            "[JumpBack]Victory_Return_noNext",
+            "[JumpBack]Failure_Return_noNext",
+            "matrixCheckLoop"
+        ]
+    },
+    "$section_matrix_reward": "========== 魔物阵列奖励领取 ==========",
+    "matrixRewardEntry": {
+        "doc": "奖励领取入口：使用 JumpBack 尝试检测奖励按钮上的 Alert 图标，有则领取奖励，无则直接返回主界面",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]matrixOpenRewardPanel",
+            "matrixReturnHome"
+        ]
+    },
+    "matrixOpenRewardPanel": {
+        "doc": "检测右上角奖励按钮上的 Alert.png 图标，有则点击进入奖励面板",
+        "recognition": "TemplateMatch",
+        "template": "Alert.png",
+        "roi": [
+            701,
+            1,
+            181,
+            138
+        ],
+        "action": "Click",
+        "max_hit": 1,
+        "post_wait_freezes": 500,
+        "next": [
+            "matrixCollectAllRewards"
+        ]
+    },
+    "matrixCollectAllRewards": {
+        "doc": "在奖励面板中点击“全部领取”按钮",
+        "recognition": "OCR",
+        "expected": "全部领取",
+        "roi": [
+            136,
+            332,
+            325,
+            225
+        ],
+        "action": "Click",
+        "max_hit": 1,
+        "post_wait_freezes": 800,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "matrixCloseRewardPanel"
+        ]
+    },
+    "matrixCloseRewardPanel": {
+        "doc": "领取奖励后点击空白区域关闭奖励面板，然后返回主界面",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]ClickEmptyArea",
+            "matrixReturnHome"
+        ]
+    },
+    "matrixReturnHome": {
+        "doc": "返回主界面结束任务",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]HomeButton",
+            "EndonHome"
+        ]
+    }
+}

@@ -16,6 +16,7 @@
             "[JumpBack]符文之地_findclass",
             "[JumpBack]突破材料_findclass_滑动后",
             "[JumpBack]突破材料_findclass",
+            "[JumpBack]chooseOwnmission_上三重试",
             "[JumpBack]chooseOwnmission_下三",
             "[JumpBack]chooseOwnmission",
             "[JumpBack]checkDailyBattleX2",
@@ -25,7 +26,7 @@
         ]
     },
     "checkDailyBattleX2": {
-        "doc": "[模板调度] 在宝库资源总表界面按资源类型检查当日x2并跳转到对应模板入口，由界面全局模板配置决定各类型行为",
+        "doc": "[模板调度] 在宝库资源总表界面检测上三x2，找到则进入对应模板，找不到则滑到下三继续检测",
         "recognition": "TemplateMatch",
         "template": "exp mission.png",
         "roi": [
@@ -39,14 +40,57 @@
             "findx2_BenLe",
             "findx2_Exp",
             "findx2_Break",
+            "checkX2_Phase2"
+        ]
+    },
+    "checkX2_Phase2": {
+        "doc": "上三没有x2，滑到下三继续检测x2",
+        "action": "Swipe",
+        "begin": [
+            1254,
+            97,
+            1,
+            1
+        ],
+        "end": [
+            1240,
+            514,
+            0,
+            1
+        ],
+        "duration": 500,
+        "post_delay": 1000,
+        "next": [
             "findx2_Rune",
-            "findx2_SaoLing"
+            "findx2_SaoLing",
+            "DailyTemplate_NoneX2"
         ]
     },
     "DailyTemplate_NoneX2": {
-        "doc": "[模板入口] 当日无x2或未启用x2时默认刷的资源关入口，由界面全局模板配置覆盖",
+        "doc": "[模板入口] 当日无x2时的默认入口。执行到此时界面在下三，上三任务需要滑回上三，下三任务直接在当前界面选择",
         "recognition": "DirectHit",
         "action": "DoNothing",
+        "next": [
+            "NoneX2_SwipeBackToTop"
+        ]
+    },
+    "NoneX2_SwipeBackToTop": {
+        "doc": "无x2时滑回上三（因为检测x2时已滑到下三）。下三任务会禁用此任务直接跳到chooseOwnmission_下三",
+        "action": "Swipe",
+        "begin": [
+            1106,
+            126,
+            1,
+            1
+        ],
+        "end": [
+            1106,
+            526,
+            0,
+            1
+        ],
+        "duration": 500,
+        "post_delay": 1000,
         "next": [
             "chooseOwnmission"
         ]
@@ -258,7 +302,7 @@
         "action": "Click",
         "post_wait_freezes": 1500,
         "next": [
-            "chooseOwnmission"
+            "checkDailyBattleX2"
         ]
     },
     "openVaultinOCR": {
@@ -273,8 +317,7 @@
         "action": "Click",
         "post_wait_freezes": 1500,
         "next": [
-            "chooseOwnmission",
-            "SwipetoDownside"
+            "checkDailyBattleX2"
         ]
     },
     "chooseOwnmission": {
@@ -318,8 +361,49 @@
             "chooseOwnmission_下三"
         ]
     },
+    "SwipetoUpside": {
+        "doc": "从下三滑动回上三，用于目标任务在上三但被错误滑到下三的恢复场景",
+        "action": "Swipe",
+        "begin": [
+            1240,
+            514,
+            1,
+            1
+        ],
+        "end": [
+            1254,
+            97,
+            0,
+            1
+        ],
+        "duration": 500,
+        "post_delay": 1000,
+        "next": [
+            "chooseOwnmission_上三重试"
+        ]
+    },
+    "chooseOwnmission_上三重试": {
+        "doc": "滑回上三后重试查找目标任务，找不到则返回主界面",
+        "recognition": "OCR",
+        "expected": "经验获取",
+        "roi": [
+            324,
+            1,
+            616,
+            653
+        ],
+        "action": "Click",
+        "timeout": 5000,
+        "post_wait_freezes": 1000,
+        "next": [
+            "findmission"
+        ],
+        "on_error": [
+            "returnHome"
+        ]
+    },
     "chooseOwnmission_下三": {
-        "doc": "下三任务：技能材料，符文之地，骚灵之境。找不到则返回主界面",
+        "doc": "下三任务：技能材料，符文之地，骚灵之境。找不到则滑回上三重试",
         "recognition": "OCR",
         "expected": "技能材料",
         "roi": [
@@ -335,7 +419,7 @@
             "findmission"
         ],
         "on_error": [
-            "returnHome"
+            "SwipetoUpside"
         ]
     },
     "findx2": {

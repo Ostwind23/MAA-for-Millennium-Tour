@@ -95,9 +95,6 @@
         "action": "Click",
         "post_delay": 500
     },
-    "Subreturn_back": {
-        "action": "DoNothing"
-    },
     "openDailystore": {
         "recognition": "OCR",
         "expected": "日常商店",
