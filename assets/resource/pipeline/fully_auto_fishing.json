@@ -45,5 +45,26 @@
         "recognition": "TemplateMatch",
         "template": "fishing/icon.png",
         "action": "Click"
+    },
+    "Test_Fishing_Catched": {
+        "recognition": "ColorMatch",
+        "upper": [
+            255,
+            143,
+            85
+        ],
+        "lower": [
+            239,
+            123,
+            65
+        ],
+        "roi": [
+            2,
+            260,
+            1280,
+            460
+        ],
+        "count": 200,
+        "connected": true
     }
 }

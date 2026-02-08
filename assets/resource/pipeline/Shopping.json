@@ -206,8 +206,8 @@
             "open_Seedstore"
         ]
     },
-    "maxPurchase_Fertilizer": {
-        "doc": "点击后购买最大数量逻辑（肥料专用，带售罄检测）",
+    "maxPurchase_Fertilizer_Abandoned": {
+        "doc": "[已弃用] 旧版肥料最大化购买（on_error 会跳过剩余肥料，已替换为 maxPurchase_Fertilizer_Fast/Harvest/Lucky）",
         "recognition": "TemplateMatch",
         "template": "maximize.png",
         "roi": [
@@ -222,11 +222,11 @@
             "confirmPurchase"
         ],
         "on_error": [
-            "Check_Fertilizer_SoldOut"
+            "Check_Fertilizer_SoldOut_Abandoned"
         ]
     },
-    "Check_Fertilizer_SoldOut": {
-        "doc": "检查日常商店肥料是否已售罄，有则跳过肥料购买，继续后续逻辑",
+    "Check_Fertilizer_SoldOut_Abandoned": {
+        "doc": "[已弃用] 旧版肥料售罄检测（next 直接跳到 Findseed 跳过剩余肥料，已替换为 Check_Fertilizer_Fast/Harvest/Lucky_SoldOut）",
         "recognition": "TemplateMatch",
         "template": "已售罄.png",
         "roi": "buy_Fertilizer_Divisionstore",
@@ -239,6 +239,129 @@
         "pre_wait_freezes": 500,
         "action": "DoNothing",
         "next": [
+            "Findseed"
+        ]
+    },
+    "maxPurchase_Fertilizer_Fast": {
+        "doc": "速生型肥料最大化购买（带售罄检测）",
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "pre_wait_freezes": 1000,
+        "action": "Click",
+        "next": [
+            "confirmPurchase"
+        ],
+        "on_error": [
+            "Check_Fertilizer_Fast_SoldOut"
+        ]
+    },
+    "maxPurchase_Fertilizer_Harvest": {
+        "doc": "丰收型肥料最大化购买（带售罄检测）",
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "pre_wait_freezes": 1000,
+        "action": "Click",
+        "next": [
+            "confirmPurchase"
+        ],
+        "on_error": [
+            "Check_Fertilizer_Harvest_SoldOut"
+        ]
+    },
+    "maxPurchase_Fertilizer_Lucky": {
+        "doc": "幸运型肥料最大化购买（带售罄检测）",
+        "recognition": "TemplateMatch",
+        "template": "maximize.png",
+        "roi": [
+            708,
+            413,
+            170,
+            150
+        ],
+        "pre_wait_freezes": 1000,
+        "action": "Click",
+        "next": [
+            "confirmPurchase"
+        ],
+        "on_error": [
+            "Check_Fertilizer_Lucky_SoldOut"
+        ]
+    },
+    "Check_Fertilizer_Fast_SoldOut": {
+        "doc": "检查速生型肥料是否已售罄，有则跳过继续后续购买",
+        "recognition": "TemplateMatch",
+        "template": "已售罄.png",
+        "roi": "buy_Fertilizer_Fast_Store",
+        "roi_offset": [
+            -53,
+            -13,
+            95,
+            216
+        ],
+        "pre_wait_freezes": 500,
+        "action": "DoNothing",
+        "focus": {
+            "Node.Recognition.Succeeded": "[color:yellow]速生型肥料已售罄，跳过[/color]"
+        },
+        "next": [
+            "[JumpBack]Sub_Cancel",
+            "[JumpBack]buy_Fertilizer_Harvest_Store",
+            "[JumpBack]buy_Fertilizer_Lucky_Store",
+            "Findseed"
+        ]
+    },
+    "Check_Fertilizer_Harvest_SoldOut": {
+        "doc": "检查丰收型肥料是否已售罄，有则跳过继续后续购买",
+        "recognition": "TemplateMatch",
+        "template": "已售罄.png",
+        "roi": "buy_Fertilizer_Harvest_Store",
+        "roi_offset": [
+            -53,
+            -13,
+            95,
+            216
+        ],
+        "pre_wait_freezes": 500,
+        "action": "DoNothing",
+        "focus": {
+            "Node.Recognition.Succeeded": "[color:yellow]丰收型肥料已售罄，跳过[/color]"
+        },
+        "next": [
+            "[JumpBack]Sub_Cancel",
+            "[JumpBack]buy_Fertilizer_Lucky_Store",
+            "Findseed"
+        ]
+    },
+    "Check_Fertilizer_Lucky_SoldOut": {
+        "doc": "检查幸运型肥料是否已售罄，有则跳过继续后续购买",
+        "recognition": "TemplateMatch",
+        "template": "已售罄.png",
+        "roi": "buy_Fertilizer_Lucky_Store",
+        "roi_offset": [
+            -53,
+            -13,
+            95,
+            216
+        ],
+        "pre_wait_freezes": 500,
+        "action": "DoNothing",
+        "focus": {
+            "Node.Recognition.Succeeded": "[color:yellow]幸运型肥料已售罄，跳过[/color]"
+        },
+        "next": [
+            "[JumpBack]Sub_Cancel",
             "Findseed"
         ]
     },
@@ -334,7 +457,7 @@
         ]
     },
     "buy_Fertilizer_Divisionstore": {
-        "doc": "购买三种肥料",
+        "doc": "购买三种肥料（协调器：检测肥料文字后分发到具体类型节点）",
         "recognition": "OCR",
         "expected": [
             "肥料"
@@ -345,12 +468,70 @@
             1058,
             517
         ],
-        "action": "Click",
+        "max_hit": 1,
+        "action": "DoNothing",
         "next": [
-            "[JumpBack]maxPurchase_Fertilizer",
-            "Findseed",
-            "buy_Fertilizer_Divisionstore",
-            "Homeflag4"
+            "[JumpBack]buy_Fertilizer_Fast_Store",
+            "[JumpBack]buy_Fertilizer_Harvest_Store",
+            "[JumpBack]buy_Fertilizer_Lucky_Store",
+            "Findseed"
+        ]
+    },
+    "buy_Fertilizer_Fast_Store": {
+        "doc": "购买速生型肥料",
+        "recognition": "OCR",
+        "expected": "速生型",
+        "roi": [
+            222,
+            124,
+            1058,
+            517
+        ],
+        "max_hit": 8,
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "[JumpBack]maxPurchase_Fertilizer_Fast",
+            "[JumpBack]Sub_Cancel",
+            "Subreturn_back"
+        ]
+    },
+    "buy_Fertilizer_Harvest_Store": {
+        "doc": "购买丰收型肥料",
+        "recognition": "OCR",
+        "expected": "丰收型",
+        "roi": [
+            222,
+            124,
+            1058,
+            517
+        ],
+        "max_hit": 8,
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "[JumpBack]maxPurchase_Fertilizer_Harvest",
+            "[JumpBack]Sub_Cancel",
+            "Subreturn_back"
+        ]
+    },
+    "buy_Fertilizer_Lucky_Store": {
+        "doc": "购买幸运型肥料",
+        "recognition": "OCR",
+        "expected": "幸运型",
+        "roi": [
+            222,
+            124,
+            1058,
+            517
+        ],
+        "max_hit": 8,
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "[JumpBack]maxPurchase_Fertilizer_Lucky",
+            "[JumpBack]Sub_Cancel",
+            "Subreturn_back"
         ]
     },
     "Findseed": {

@@ -674,60 +674,48 @@
         },
         "肥料选择": {
             "type": "select",
-            "label": "肥料选择",
-            "description": "选择农场种植使用的肥料类型",
-            "default_case": "丰收型肥料",
+            "label": "肥料优先级",
+            "description": "选择农场施肥时优先使用的肥料类型。当首选肥料用完时，会自动尝试使用其他类型的肥料。",
+            "default_case": "丰收型肥料优先",
             "cases": [
                 {
-                    "name": "速生型肥料",
-                    "description": "加快作物生长速度",
+                    "name": "速生型肥料优先",
+                    "description": "优先使用速生型肥料，用完后依次尝试丰收型、幸运型",
                     "pipeline_override": {
-                        "Farm_ChooseFertilizer": {
-                            "upper": [
-                                152,
-                                179,
-                                97
-                            ],
-                            "lower": [
-                                132,
-                                159,
-                                77
+                        "Farm_Fertilize": {
+                            "next": [
+                                "Farm_ChooseFertilizer_Fast",
+                                "Farm_ChooseFertilizer_Harvest",
+                                "Farm_ChooseFertilizer_Lucky",
+                                "Farm_ChooseFertilizer_None"
                             ]
                         }
                     }
                 },
                 {
-                    "name": "丰收型肥料",
-                    "description": "增加作物产量",
+                    "name": "丰收型肥料优先",
+                    "description": "优先使用丰收型肥料，用完后依次尝试速生型、幸运型",
                     "pipeline_override": {
-                        "Farm_ChooseFertilizer": {
-                            "upper": [
-                                218,
-                                182,
-                                52
-                            ],
-                            "lower": [
-                                199,
-                                166,
-                                31
+                        "Farm_Fertilize": {
+                            "next": [
+                                "Farm_ChooseFertilizer_Harvest",
+                                "Farm_ChooseFertilizer_Fast",
+                                "Farm_ChooseFertilizer_Lucky",
+                                "Farm_ChooseFertilizer_None"
                             ]
                         }
                     }
                 },
                 {
-                    "name": "幸运型肥料",
-                    "description": "增加稀有作物概率",
+                    "name": "幸运型肥料优先",
+                    "description": "优先使用幸运型肥料，用完后依次尝试丰收型、速生型",
                     "pipeline_override": {
-                        "Farm_ChooseFertilizer": {
-                            "upper": [
-                                237,
-                                140,
-                                53
-                            ],
-                            "lower": [
-                                217,
-                                120,
-                                33
+                        "Farm_Fertilize": {
+                            "next": [
+                                "Farm_ChooseFertilizer_Lucky",
+                                "Farm_ChooseFertilizer_Harvest",
+                                "Farm_ChooseFertilizer_Fast",
+                                "Farm_ChooseFertilizer_None"
                             ]
                         }
                     }

@@ -47,6 +47,9 @@ class QTEButtonSlot:
     target_click_time: float = 0.0    # 计算好的点击时间戳
     clicked: bool = False             # 是否已点击
     confidence: float = 0.0           # 模板匹配置信度
+    circle_detect_attempts: int = 0   # 外圆检测尝试次数
+    max_detected_directions: int = 0  # 历次检测中最大方向数（区分"圆圈未出现"vs"检测失败"）
+    warmup_done: bool = False         # 预热帧是否已跳过（避免在圆圈展开动画阶段误测量）
 
 # ==================== 路径配置 ====================
 _CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -71,17 +74,18 @@ JOYSTICK_CENTER = (
 JOYSTICK_RADIUS = min(JOYSTICK_ROI[2], JOYSTICK_ROI[3]) // 2  # = 123
 
 # ==================== 上钩检测配置（ColorMatch）====================
-# 蓝色像素检测参数
-# 用户提供的蓝色 RGB [29, 86, 136]，±20 范围
-BITE_DETECT_ROI = [1034, 476, 182, 179]  # 上钩检测专用区域
+# 检测屏幕下半部分的黄色条（鱼上钩时出现的拉扯条）
+# 替代原蓝色检测：蓝色方案在深蓝色背景的钓鱼场景下会误触发
+BITE_DETECT_ROI = [2, 260, 1280, 460]  # 屏幕下半部分
 # MaaFramework ColorMatch 使用 RGB 格式
-BITE_COLOR_LOWER_RGB = [9, 66, 116]    # RGB 下限 (29-20, 86-20, 136-20)
-BITE_COLOR_UPPER_RGB = [49, 106, 156]  # RGB 上限 (29+20, 86+20, 136+20)
+# 黄色条颜色范围：RGB upper[255, 143, 85], lower[239, 123, 65]
+BITE_COLOR_LOWER_RGB = [239, 123, 65]   # RGB 下限
+BITE_COLOR_UPPER_RGB = [255, 143, 85]   # RGB 上限
 # OpenCV 调试显示使用 BGR 格式
-BITE_COLOR_LOWER_BGR = [116, 66, 9]    # BGR 下限
-BITE_COLOR_UPPER_BGR = [156, 106, 49]  # BGR 上限
-BITE_COLOR_COUNT = 100  # 像素数阈值
-BITE_TIMEOUT = 20.0  # 等待上钩超时时间（秒）
+BITE_COLOR_LOWER_BGR = [65, 123, 239]   # BGR 下限
+BITE_COLOR_UPPER_BGR = [85, 143, 255]   # BGR 上限
+BITE_COLOR_COUNT = 200  # 像素数阈值
+BITE_TIMEOUT = 10.0  # 等待上钩超时时间（秒）
 
 # ==================== 箭头检测配置（颜色扫描）====================
 # 黄色箭头检测区域（比操控杆区域各向扩大，包含外围圆弧）
@@ -108,6 +112,8 @@ QTE_MAX_DURATION = 6.0  # QTE 最长持续时间（秒）
 QTE_BUTTON_COUNT = 3  # QTE 按钮总数
 QTE_TEMPLATE_THRESHOLD = 0.9  # 模板匹配阈值（提高到 0.75 减少误识别）
 QTE_CLICK_WINDOW = 1.0  # 点击时间窗口（秒），超过此时间报超时
+QTE_FALLBACK_MIN_DIRECTIONS = 4  # fallback 快速触发所需的最小方向数（表明圆圈确实存在但检测失败）
+QTE_FALLBACK_TIMEOUT = 2.5  # 超时 fallback（秒），圆圈始终未出现时的兜底
 
 # 从鱼图标 box 扩展到整个圆形按钮的偏移
 QTE_BUTTON_EXPAND_LEFT = 18
@@ -138,7 +144,10 @@ BLACKOUT_RATIO_THRESHOLD = 0.6  # 暗色像素比例阈值（70%）
 # ==================== 时间配置 ====================
 CAST_ROD_DELAY = 0.5  # 下杆后等待时间
 BITE_CHECK_INTERVAL = 0.05  # 上钩检测间隔
-STRUGGLE_CHECK_INTERVAL = 0.05  # 拉扯阶段检测间隔
+STRUGGLE_CHECK_INTERVAL = 0.02  # 拉扯阶段检测间隔（持续按住模式下可更短）
+STRUGGLE_QTE_CHECK_INTERVAL = 0.5  # 拉扯阶段 QTE 模板匹配间隔（秒），避免每帧都做昂贵的匹配
+STRUGGLE_DRAG_DURATION = 5.0  # 拉扯持续时间（秒），超过后松手休息
+STRUGGLE_REST_DURATION = 1.5  # 休息时间（秒），松手恢复体力
 QTE_CHECK_INTERVAL = 0.03  # QTE 阶段检测间隔（需要更快）
 QTE_BUTTON_CLICK_DELAY = 0.1  # QTE 按钮点击后等待
 RESULT_CHECK_INTERVAL = 0.3  # 结果界面检测间隔
@@ -344,6 +353,7 @@ class AutoFishing(CustomAction):
         # 保存参数到实例变量
         self._strategy = strategy
         self._qte_shrink_speed = qte_shrink_speed
+        self._joystick_held = False  # 摇杆是否正在被持续按住
         
         # 启动调试窗口
         if DEBUG_ENABLED:
@@ -466,7 +476,7 @@ class AutoFishing(CustomAction):
                 time.sleep(0.1)
                 continue
             
-            # ColorMatch 检测蓝色像素（MaaFramework 使用 RGB 格式）
+            # ColorMatch 检测黄色拉扯条（鱼上钩时屏幕下半部分出现的黄色条）
             reco = context.run_recognition("bite_check", image, {
                 "bite_check": {
                     "recognition": "ColorMatch",
@@ -522,14 +532,10 @@ class AutoFishing(CustomAction):
     
     def _struggle_phase(self, context: Context, strategy: str) -> str:
         """
-        拉扯阶段
+        拉扯阶段（优化版：持续按住摇杆 + QTE 降频检测 + 体力管理）
         
-        此阶段做的检测：
-        - 黄色箭头方向（颜色扫描）
-        - QTE 触发（鱼按钮检测）
-        - 黑屏检测（判断是否钓上鱼）
-        
-        不做 OCR 检测以提高性能
+        节奏：拉扯 STRUGGLE_DRAG_DURATION 秒 → 松手休息 STRUGGLE_REST_DURATION 秒 → 循环
+        休息期间仍持续检测黑屏/QTE，确保不错过关键事件。
         
         返回:
             "caught" - 钓上鱼
@@ -537,91 +543,134 @@ class AutoFishing(CustomAction):
         """
         max_duration = 120.0  # 最长拉扯时间
         start_time = time.time()
+        last_qte_check_time = 0.0  # 上次 QTE 检测时间（首帧立即检测一次）
         
-        while time.time() - start_time < max_duration:
-            # 每次循环重新获取 controller 引用，避免 IPC 通信问题
-            try:
-                controller = context.tasker.controller
-                controller.post_screencap().wait()
-                time.sleep(0.03)  # 短暂延迟确保截图完成
-                image = controller.cached_image
-            except Exception as e:
-                print(f"[AutoFishing] 拉扯阶段截图失败: {e}")
-                time.sleep(0.1)
-                continue
-            
-            # 1. 快速黑屏预筛（≤5ms），若命中再做 OCR 确认结算页面
-            if self._check_screen_blackout(image):
-                # 等黑屏过渡结束后 OCR 确认
-                time.sleep(0.5)
-                try:
-                    controller.post_screencap().wait()
-                    time.sleep(0.03)
-                    confirm_img = controller.cached_image
-                    if self._check_result_screen(context, confirm_img):
-                        print("[AutoFishing] 检测到结算页面，钓上鱼！")
-                        return "caught"
-                except Exception:
-                    pass
-                # 黑屏但不是结算，可能是过场动画，继续
-            
-            # 2. 检测是否进入 QTE（鱼按钮出现）
-            qte_buttons = self._detect_all_fish_buttons(context, image)
-            if qte_buttons:
-                _debug_log(f"[Struggle] 检测到 QTE，共 {len(qte_buttons)} 个按钮")
-                if DEBUG_ENABLED:
-                    fishing_debug.get_debug_viewer().set_phase("QTE")
+        # 拉扯/休息节奏状态
+        drag_phase_start = time.time()  # 当前拉扯周期开始时间
+        is_resting = False              # 当前是否处于休息状态
+        
+        try:
+            while time.time() - start_time < max_duration:
+                now = time.time()
                 
-                # 动态处理 QTE
-                qte_result = self._handle_qte_dynamic(context)
-                
-                if DEBUG_ENABLED:
-                    fishing_debug.get_debug_viewer().set_phase("Struggle")
-                
-                if qte_result == "caught":
-                    return "caught"
-                # QTE 完成后，等待游戏 UI 完全过渡，避免残留按钮图像被重新检测
-                _debug_log("[Struggle] QTE 结束，等待 1.5s 冷却")
-                time.sleep(1.5)
-                continue
-            
-            # 3. 检测黄色箭头方向并拖拽
-            t_arrow_start = time.time()
-            arrow_result = self._detect_arrow_direction_by_color(image)
-            if arrow_result is not None:
-                angle, debug_info = arrow_result
-                
-                # 根据策略计算拖拽方向
-                if strategy == "aggressive":
-                    drag_angle = angle + 180  # 逆向
+                # ======== 拉扯/休息节奏控制 ========
+                if not is_resting:
+                    # 正在拉扯：检查是否该休息了
+                    if now - drag_phase_start >= STRUGGLE_DRAG_DURATION:
+                        self._release_joystick(context)
+                        is_resting = True
+                        drag_phase_start = now
+                        _debug_log(
+                            f"[Struggle] 松手休息 {STRUGGLE_REST_DURATION:.1f}s（恢复体力）"
+                        )
                 else:
-                    drag_angle = angle  # 顺向
+                    # 正在休息：检查是否该重新拉扯了
+                    if now - drag_phase_start >= STRUGGLE_REST_DURATION:
+                        is_resting = False
+                        drag_phase_start = now
+                        _debug_log(
+                            f"[Struggle] 恢复拉扯 {STRUGGLE_DRAG_DURATION:.1f}s"
+                        )
                 
-                # 调试显示
-                if DEBUG_ENABLED and debug_info:
-                    fishing_debug.get_debug_viewer().draw_arrow_detection(
-                        image,
-                        debug_info['left_point'],
-                        debug_info['right_point'],
-                        debug_info['mid_point'],
-                        JOYSTICK_CENTER,
-                        angle,
-                        roi=_clamp_roi(ARROW_DETECT_ROI)
+                # 每次循环重新获取 controller 引用，避免 IPC 通信问题
+                try:
+                    controller = context.tasker.controller
+                    controller.post_screencap().wait()
+                    time.sleep(0.03)  # 短暂延迟确保截图完成
+                    image = controller.cached_image
+                except Exception as e:
+                    print(f"[AutoFishing] 拉扯阶段截图失败: {e}")
+                    time.sleep(0.1)
+                    continue
+                
+                # 1. 快速黑屏预筛（≤5ms），若命中再做 OCR 确认结算页面
+                if self._check_screen_blackout(image):
+                    self._release_joystick(context)  # 黑屏时释放摇杆
+                    # 等黑屏过渡结束后 OCR 确认
+                    time.sleep(0.5)
+                    try:
+                        controller.post_screencap().wait()
+                        time.sleep(0.03)
+                        confirm_img = controller.cached_image
+                        if self._check_result_screen(context, confirm_img):
+                            print("[AutoFishing] 检测到结算页面，钓上鱼！")
+                            return "caught"
+                    except Exception:
+                        pass
+                    # 黑屏但不是结算，可能是过场动画，继续
+                
+                # 2. 箭头方向检测（每帧都做，无论拉扯/休息都需要知道方向）
+                t_arrow_start = time.time()
+                arrow_result = self._detect_arrow_direction_by_color(image)
+                if arrow_result is not None and not is_resting:
+                    # 仅在拉扯阶段才实际操作摇杆
+                    angle, debug_info = arrow_result
+                    
+                    # 根据策略计算拖拽方向
+                    if strategy == "aggressive":
+                        drag_angle = angle + 180  # 逆向
+                    else:
+                        drag_angle = angle  # 顺向
+                    
+                    # 调试显示
+                    if DEBUG_ENABLED and debug_info:
+                        fishing_debug.get_debug_viewer().draw_arrow_detection(
+                            image,
+                            debug_info['left_point'],
+                            debug_info['right_point'],
+                            debug_info['mid_point'],
+                            JOYSTICK_CENTER,
+                            angle,
+                            roi=_clamp_roi(ARROW_DETECT_ROI)
+                        )
+                    
+                    # 持续按住模式：只做 touch_move，~5ms
+                    t_before_drag = time.time()
+                    detect_to_drag_ms = (t_before_drag - t_arrow_start) * 1000
+                    _debug_log(
+                        f"[Struggle] 箭头检测→拖拽: {detect_to_drag_ms:.0f}ms, "
+                        f"angle={angle:.1f}°, drag_angle={drag_angle:.1f}°"
                     )
+                    
+                    self._hold_joystick_direction(context, drag_angle)
                 
-                # 记录从箭头检测开始到准备拖拽的耗时
-                t_before_drag = time.time()
-                detect_to_drag_ms = (t_before_drag - t_arrow_start) * 1000
-                _debug_log(
-                    f"[Struggle] 箭头检测→拖拽: {detect_to_drag_ms:.0f}ms, "
-                    f"angle={angle:.1f}°, drag_angle={drag_angle:.1f}°"
-                )
+                # 3. QTE 检测（降频，拉扯/休息期间都要检测）
+                now = time.time()
+                if now - last_qte_check_time >= STRUGGLE_QTE_CHECK_INTERVAL:
+                    last_qte_check_time = now
+                    qte_buttons = self._detect_all_fish_buttons(context, image)
+                    if qte_buttons:
+                        # 进入 QTE 前必须释放摇杆，否则 touch 状态冲突
+                        self._release_joystick(context)
+                        
+                        _debug_log(f"[Struggle] 检测到 QTE，共 {len(qte_buttons)} 个按钮")
+                        if DEBUG_ENABLED:
+                            fishing_debug.get_debug_viewer().set_phase("QTE")
+                        
+                        # 动态处理 QTE
+                        qte_result = self._handle_qte_dynamic(context)
+                        
+                        if DEBUG_ENABLED:
+                            fishing_debug.get_debug_viewer().set_phase("Struggle")
+                        
+                        if qte_result == "caught":
+                            return "caught"
+                        # QTE 完成后冷却，避免残留图像被重新检测
+                        _debug_log("[Struggle] QTE 结束，等待 1.0s 冷却")
+                        time.sleep(1.0)
+                        last_qte_check_time = time.time()
+                        # QTE 结束后重新开始拉扯周期
+                        is_resting = False
+                        drag_phase_start = time.time()
+                        continue
                 
-                self._drag_joystick(context, drag_angle)
+                time.sleep(STRUGGLE_CHECK_INTERVAL)
             
-            time.sleep(STRUGGLE_CHECK_INTERVAL)
+            return "failed"
         
-        return "failed"
+        finally:
+            # 无论如何退出拉扯阶段，都确保释放摇杆
+            self._release_joystick(context)
     
     def _detect_arrow_direction_by_color(self, image: np.ndarray) -> Optional[Tuple[float, dict]]:
         """
@@ -688,7 +737,7 @@ class AutoFishing(CustomAction):
     
     def _drag_joystick(self, context: Context, angle_deg: float, duration_ms: int = None):
         """
-        拖拽摇杆到指定角度方向
+        拖拽摇杆到指定角度方向（完整滑动，用于非拉扯阶段）
         
         参数:
             context: MAA 上下文
@@ -705,6 +754,57 @@ class AutoFishing(CustomAction):
         _safe_swipe(context, 
                     JOYSTICK_CENTER[0], JOYSTICK_CENTER[1],
                     end_x, end_y, duration_ms)
+    
+    def _hold_joystick_direction(self, context: Context, angle_deg: float):
+        """
+        摇杆全幅拖拽模式：每次调用都从中心出发拖到边缘，确保最大位移
+        
+        流程：touch_up（如有）→ touch_down（中心）→ touch_move（边缘）
+        每帧完整重做一次"从中心到边缘"的拖拽，游戏能可靠识别全幅输入。
+        总耗时约 15~20ms，远低于旧版 500ms 完整滑动。
+        """
+        try:
+            controller = context.tasker.controller
+            
+            rad = math.radians(angle_deg)
+            target_x = int(JOYSTICK_CENTER[0] + JOYSTICK_RADIUS * math.cos(rad))
+            target_y = int(JOYSTICK_CENTER[1] + JOYSTICK_RADIUS * math.sin(rad))
+            
+            # 如果已经在按住，先抬起，确保下一次 touch_down 从中心开始
+            if self._joystick_held:
+                controller.post_touch_up(contact=0).wait()
+            
+            # 从摇杆中心按下
+            controller.post_touch_down(
+                JOYSTICK_CENTER[0], JOYSTICK_CENTER[1],
+                contact=0, pressure=1
+            ).wait()
+            
+            # 拖到目标方向的边缘（全幅位移 = JOYSTICK_RADIUS）
+            controller.post_touch_move(
+                target_x, target_y,
+                contact=0, pressure=1
+            ).wait()
+            
+            self._joystick_held = True
+            
+        except Exception as e:
+            print(f"[Fishing] 摇杆拖拽异常: {e}")
+            self._joystick_held = False
+    
+    def _release_joystick(self, context: Context):
+        """
+        释放持续按住的摇杆
+        
+        在进入 QTE、退出拉扯阶段等需要其他触摸操作前调用
+        """
+        if self._joystick_held:
+            try:
+                controller = context.tasker.controller
+                controller.post_touch_up(contact=0).wait()
+            except Exception as e:
+                print(f"[Fishing] 摇杆释放异常: {e}")
+            self._joystick_held = False
     
     # ==================== QTE 阶段（动态规划）====================
     
@@ -755,13 +855,12 @@ class AutoFishing(CustomAction):
         
         return buttons
     
-    def _detect_circle_radius(self, image: np.ndarray, center: Tuple[int, int], button_radius: int) -> float:
+    def _detect_circle_radius(self, image: np.ndarray, center: Tuple[int, int], button_radius: int) -> Tuple[float, int]:
         """
         检测按钮周围的白色圆圈半径（径向扫描法）
         
         从按钮中心向外扫描多个方向，找到白色像素的最大距离
-        为避免白云等背景干扰：检测到的边缘往外 10px 如果还是白色，则丢弃该方向结果
-        （圆圈厚度约 7px，往外 10px 必然超出圆圈范围）
+        为避免白云等背景干扰：检测到的边缘往外多点验证
         
         参数:
             image: 截图
@@ -769,7 +868,8 @@ class AutoFishing(CustomAction):
             button_radius: 按钮半径（扫描起点）
             
         返回:
-            float: 检测到的圆圈半径，0 表示未检测到
+            (radius, direction_count): 检测到的圆圈半径和成功方向数
+            radius=0 表示未检测到，direction_count 可用于区分"圆圈未出现"和"检测失败"
         """
         cx, cy = center
         h, w = image.shape[:2]
@@ -800,7 +900,8 @@ class AutoFishing(CustomAction):
             sin_a = math.sin(angle)
             
             last_white_radius = 0
-            has_any_inbound = False  # 该方向是否有任何像素在屏幕内
+            inbound_count = 0  # 该方向有多少个采样点在屏幕内
+            total_scan_points = max_radius - start_radius  # 该方向总采样点数
             
             # 沿着这个方向从外向内扫描，找到最外层的白色像素
             for r in range(max_radius, start_radius, -1):
@@ -808,24 +909,30 @@ class AutoFishing(CustomAction):
                 py = int(cy + r * sin_a)
                 
                 if 0 <= px < w and 0 <= py < h:
-                    has_any_inbound = True
+                    inbound_count += 1
                     if is_white_pixel(px, py):
                         last_white_radius = r
                         break  # 找到最外层白色像素即可停止
             
-            if not has_any_inbound:
-                # 该方向的所有扫描点都在屏幕外，跳过不计入统计
+            # 改进 OOB 判定：如果该方向超过一半的采样点越界，视为实质越界
+            if total_scan_points > 0 and inbound_count < total_scan_points // 2:
                 skipped_oob += 1
                 continue
             
             if last_white_radius > 0:
-                # 验证：检查边缘往外 10px 的像素（圆圈厚度约 7px）
-                verify_radius = last_white_radius + 10
-                verify_px = int(cx + verify_radius * cos_a)
-                verify_py = int(cy + verify_radius * sin_a)
+                # 验证：检查边缘往外的多个像素（圆圈厚度约 7px）
+                # 使用 3 个验证点投票，至少 2 个非白色才通过
+                verify_offsets = [8, 12, 16]
+                white_verify_count = 0
+                for offset in verify_offsets:
+                    verify_radius = last_white_radius + offset
+                    verify_px = int(cx + verify_radius * cos_a)
+                    verify_py = int(cy + verify_radius * sin_a)
+                    if is_white_pixel(verify_px, verify_py):
+                        white_verify_count += 1
                 
-                if is_white_pixel(verify_px, verify_py):
-                    # 外侧还是白色，可能是背景干扰，丢弃该方向结果
+                if white_verify_count >= 2:
+                    # 多数验证点仍为白色，可能是背景干扰，丢弃该方向结果
                     continue
                 
                 # 验证通过，保留结果
@@ -834,27 +941,28 @@ class AutoFishing(CustomAction):
         # 有效方向数 = 总方向 - 越界跳过的方向
         valid_directions = QTE_CIRCLE_SCAN_DIRECTIONS - skipped_oob
         
-        # 需要至少一半的 *有效方向* 检测到圆圈（排除越界方向）
-        min_required = max(valid_directions // 2, 4)  # 至少 4 个方向
-        if len(detected_radii) >= min_required:
-            radius = sum(detected_radii) / len(detected_radii)
+        # 降低阈值：只需 3/8 的有效方向检测到圆圈即可（原为 1/2，对边缘按钮过于严格）
+        dir_count = len(detected_radii)
+        min_required = max(valid_directions * 3 // 8, 3)  # 至少 3 个方向
+        if dir_count >= min_required:
+            radius = sum(detected_radii) / dir_count
             if DEBUG_ENABLED:
                 _debug_log(
                     f"[QTE-Circle] detected radius={radius:.1f}, "
-                    f"directions={len(detected_radii)}/{valid_directions}"
+                    f"directions={dir_count}/{valid_directions}"
                     f"(total={QTE_CIRCLE_SCAN_DIRECTIONS}, oob={skipped_oob}), "
                     f"center={center}"
                 )
-            return radius
+            return (radius, dir_count)
         
         if DEBUG_ENABLED:
             _debug_log(
                 f"[QTE-Circle] insufficient directions: "
-                f"{len(detected_radii)}/{valid_directions}"
+                f"{dir_count}/{valid_directions}"
                 f"(total={QTE_CIRCLE_SCAN_DIRECTIONS}, oob={skipped_oob}), "
                 f"center={center}"
             )
-        return 0.0
+        return (0.0, dir_count)
     
     def _handle_qte_dynamic(self, context: Context) -> str:
         """
@@ -926,7 +1034,7 @@ class AutoFishing(CustomAction):
             # 如果 3 个槽位都已分配且都已有圆圈数据，跳过模板匹配以加速
             all_slots_filled = all(s is not None for s in qte_slots)
             all_circles_known = all_slots_filled and all(
-                s.circle_radius > 0 or s.clicked for s in qte_slots  # type: ignore
+                s.circle_radius != 0 or s.clicked for s in qte_slots  # type: ignore  # >0 正常, <0 fallback
             )
             
             if not all_circles_known:
@@ -944,7 +1052,7 @@ class AutoFishing(CustomAction):
                 time.sleep(QTE_CHECK_INTERVAL)
                 continue
             
-            # 处理检测到的按钮
+            # 处理检测到的按钮（分配新槽位 + 更新已知槽位的中心坐标）
             for btn in buttons:
                 center = btn['center']
                 slot_idx = find_slot_by_center(center)
@@ -963,53 +1071,67 @@ class AutoFishing(CustomAction):
                         first_detect_time=capture_time,
                         confidence=btn.get('confidence', 1.0)
                     )
-                    
-                    # 检测外圆大小
-                    circle_radius = self._detect_circle_radius(image, center, button_radius)
-                    
-                    if circle_radius > 0:
-                        # 检测到圆圈，计算点击时间
-                        # 修正半径：减去辉光边缘导致的检测偏大
-                        corrected_radius = circle_radius - QTE_RADIUS_CORRECTION
-                        slot.circle_radius = circle_radius
-                        shrink_distance = max(0, corrected_radius - button_radius)
-                        wait_time = shrink_distance / self._qte_shrink_speed
-                        slot.target_click_time = capture_time + wait_time + QTE_CLICK_OFFSET
-                        
-                        _debug_log(
-                            f"[QTE] 槽位[{empty_idx}]: 新按钮 {center}, "
-                            f"外圆={circle_radius:.0f}→{corrected_radius:.0f}px, 按钮R={button_radius}px, "
-                            f"shrink={shrink_distance:.0f}px, 等待={wait_time:.2f}s, "
-                            f"target_t=+{slot.target_click_time - start_time:.2f}s"
-                        )
-                    else:
-                        # 未检测到圆圈，后续帧继续尝试
-                        _debug_log(f"[QTE] 槽位[{empty_idx}]: 新按钮 {center}, 外圆未出现")
-                    
                     qte_slots[empty_idx] = slot
+                    _debug_log(f"[QTE] 槽位[{empty_idx}]: 发现新按钮 {center}")
+            
+            # 对所有未完成圆圈检测的槽位进行检测（不依赖模板匹配结果）
+            # 这确保即使模板匹配在按钮被点击后找不到剩余按钮，圆圈检测仍可继续
+            for slot_idx, slot in enumerate(qte_slots):
+                if slot is None or slot.clicked or slot.circle_radius != 0:
+                    continue  # 跳过空槽、已点击、已有圆圈数据的槽位
                 
-                else:
-                    # 已存在的按钮
-                    slot = qte_slots[slot_idx]
-                    if slot is None or slot.clicked:
-                        continue
+                # 预热帧跳过：每个槽位的首次检测机会不实际执行圆圈检测
+                # 原因：游戏 QTE 圆圈出现时先播放展开动画（从小到大），然后才开始收缩。
+                # 如果在展开阶段就测量半径，会测到一个偏小的值（还在长大），
+                # 导致计算出过短的等待时间 → 过早点击。
+                # 跳过首帧，让圆圈完成展开后再测量，确保测到的是收缩阶段的真实值。
+                if not slot.warmup_done:
+                    slot.warmup_done = True
+                    _debug_log(
+                        f"[QTE] 槽位[{slot_idx}]: {slot.center} 预热帧跳过"
+                    )
+                    continue
+                
+                circle_radius, dir_count = self._detect_circle_radius(image, slot.center, slot.button_radius)
+                slot.circle_detect_attempts += 1
+                slot.max_detected_directions = max(slot.max_detected_directions, dir_count)
+                
+                if circle_radius > 0:
+                    # 检测到圆圈，计算点击时间
+                    corrected_radius = circle_radius - QTE_RADIUS_CORRECTION
+                    slot.circle_radius = circle_radius
+                    shrink_distance = max(0, corrected_radius - slot.button_radius)
+                    wait_time = shrink_distance / self._qte_shrink_speed
+                    slot.target_click_time = capture_time + wait_time + QTE_CLICK_OFFSET
                     
-                    # 如果外圆还未检测到，再次尝试
-                    if slot.circle_radius == 0:
-                        circle_radius = self._detect_circle_radius(image, slot.center, slot.button_radius)
-                        if circle_radius > 0:
-                            corrected_radius = circle_radius - QTE_RADIUS_CORRECTION
-                            slot.circle_radius = circle_radius
-                            shrink_distance = max(0, corrected_radius - slot.button_radius)
-                            wait_time = shrink_distance / self._qte_shrink_speed
-                            slot.target_click_time = capture_time + wait_time + QTE_CLICK_OFFSET
-                            
-                            _debug_log(
-                                f"[QTE] 槽位[{slot_idx}]: 外圆检测到 "
-                                f"{circle_radius:.0f}→{corrected_radius:.0f}px, "
-                                f"shrink={shrink_distance:.0f}px, 等待={wait_time:.2f}s, "
-                                f"target_t=+{slot.target_click_time - start_time:.2f}s"
-                            )
+                    _debug_log(
+                        f"[QTE] 槽位[{slot_idx}]: 外圆检测到 "
+                        f"{circle_radius:.0f}→{corrected_radius:.0f}px, 按钮R={slot.button_radius}px, "
+                        f"shrink={shrink_distance:.0f}px, 等待={wait_time:.2f}s, "
+                        f"target_t=+{slot.target_click_time - start_time:.2f}s"
+                    )
+                else:
+                    # 圆圈未通过检测，根据历史方向数决定是否 fallback
+                    elapsed = capture_time - slot.first_detect_time
+                    
+                    # 快速 fallback：圆圈确实存在（方向数≥4）但持续未通过阈值
+                    # 这对应旧日志中 7/16 的情况——圆圈在，但因边缘/背景问题无法通过
+                    if (slot.max_detected_directions >= QTE_FALLBACK_MIN_DIRECTIONS
+                            and slot.circle_detect_attempts >= 2):
+                        self._apply_fallback(slot, slot_idx, capture_time, start_time, "方向数足够但检测失败")
+                    
+                    # 超时 fallback：圆圈始终未出现（方向数很低），等待超过阈值后放弃
+                    # 这避免了对"圆圈尚未出现"的按钮过早 fallback
+                    elif elapsed >= QTE_FALLBACK_TIMEOUT:
+                        self._apply_fallback(slot, slot_idx, capture_time, start_time, f"超时 {elapsed:.1f}s")
+                    
+                    else:
+                        _debug_log(
+                            f"[QTE] 槽位[{slot_idx}]: {slot.center} 外圆未出现 "
+                            f"(尝试 {slot.circle_detect_attempts}, "
+                            f"最大方向数={slot.max_detected_directions}, "
+                            f"已等待={elapsed:.2f}s)"
+                        )
             
             # 调试显示
             if DEBUG_ENABLED and buttons:
@@ -1022,7 +1144,7 @@ class AutoFishing(CustomAction):
             # 按 target_click_time 排序，先点时间最早的
             pending_slots = [
                 (i, s) for i, s in enumerate(qte_slots) 
-                if s is not None and not s.clicked and s.circle_radius > 0
+                if s is not None and not s.clicked and s.circle_radius != 0  # >0 正常检测, <0 fallback 模式
             ]
             pending_slots.sort(key=lambda x: x[1].target_click_time)
             
@@ -1073,6 +1195,32 @@ class AutoFishing(CustomAction):
         
         _debug_log("[QTE] 整体超时")
         return "done"
+    
+    def _apply_fallback(self, slot: QTEButtonSlot, slot_idx: int,
+                        capture_time: float, start_time: float, reason: str):
+        """
+        对指定槽位启用 fallback 降级模式
+        
+        参数:
+            slot: 目标按钮槽位
+            slot_idx: 槽位索引
+            capture_time: 当前帧截图时间戳
+            start_time: QTE 开始时间戳
+            reason: 触发原因（用于日志）
+        """
+        fallback_wait = self._calculate_qte_wait_time_fallback(slot.button_radius)
+        slot.circle_radius = -1.0  # 标记为 fallback 模式
+        # 基于 first_detect_time 计算理想点击时间；若已过期则立即点击
+        ideal_click_time = slot.first_detect_time + fallback_wait
+        slot.target_click_time = max(ideal_click_time, capture_time)
+        
+        _debug_log(
+            f"[QTE] 槽位[{slot_idx}]: 启用 fallback ({reason}), "
+            f"尝试={slot.circle_detect_attempts}, 最大方向数={slot.max_detected_directions}, "
+            f"按钮R={slot.button_radius}px, fallback等待={fallback_wait:.2f}s, "
+            f"target_t=+{slot.target_click_time - start_time:.2f}s"
+            f"{' (立即点击)' if ideal_click_time < capture_time else ''}"
+        )
     
     def _calculate_qte_wait_time_fallback(self, button_radius: int) -> float:
         """

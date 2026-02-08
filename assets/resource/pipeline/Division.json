@@ -5,10 +5,9 @@
             "[JumpBack]openDivision",
             "[JumpBack]ClosePage",
             "[JumpBack]Sub_Getreward",
-            "[JumpBack]Task_DivisionFarming",
             "[JumpBack]Task_DivisionHotSpring",
-            "[JumpBack]openDivisionAppointment",
-            "[JumpBack]Division_SecondaryFallback"
+            "openDivisionAppointment",
+            "Division_SecondaryFallback"
         ]
     },
     "openDivision": {
@@ -29,11 +28,9 @@
         ],
         "post_delay": 1000,
         "next": [
-            "[JumpBack]openDivisionAppointment",
-            "[JumpBack]Task_DivisionHotSpring",
-            "[JumpBack]Task_DivisionFarming",
             "[JumpBack]ClosePage",
             "[JumpBack]Sub_Getreward",
+            "openDivisionAppointment",
             "Homeflag3"
         ]
     },
@@ -52,18 +49,20 @@
         ]
     },
     "openDivisionAppointment": {
+        "doc": "通过模板匹配'委任'按钮进入委任页面",
         "recognition": "TemplateMatch",
-        "template": "Alert.png",
+        "template": "division/委任按钮.png",
         "roi": [
-            1,
-            223,
-            132,
-            86
+            0,
+            170,
+            280,
+            150
         ],
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "getDivisionAppointment"
+            "getDivisionAppointment",
+            "Division_backtolist"
         ]
     },
     "getDivisionAppointment": {
@@ -99,7 +98,7 @@
     "Division_Judginglist": {
         "next": [
             "[JumpBack]Task_DivisionHotSpring",
-            "[JumpBack]Task_DivisionFarming",
+            "Task_DivisionFarming",
             "Homeflag3"
         ]
     },
@@ -196,17 +195,18 @@
         "action": "Click"
     },
     "Task_DivisionFarming": {
-        "doc": "神谕司任务链-农场任务",
+        "doc": "神谕司任务链-农场任务，通过模板匹配'农场'按钮进入",
         "recognition": "TemplateMatch",
-        "template": "Alert.png",
+        "template": "division/农场按钮.png",
         "roi": [
-            14,
-            307,
-            83,
-            84
+            0,
+            260,
+            280,
+            150
         ],
-        "pre_wait_freezes": 2000,
+        "pre_wait_freezes": 1000,
         "action": "Click",
+        "post_wait_freezes": 2000,
         "next": [
             "[JumpBack]Sub_Getreward",
             "EnterFarm"
@@ -230,6 +230,20 @@
     },
     "Farm_Emergency_Entry": {
         "doc": "农场故障事件检测，角色罢工会影响正常收取农作物，因此要优先处理",
+        "recognition": "TemplateMatch",
+        "template": [
+            "farm/罢工.png",
+            "farm/水车损坏.png",
+            "farm/风车故障.png",
+            "farm/捉虫标志.png"
+        ],
+        "roi": [
+            1064,
+            99,
+            215,
+            147
+        ],
+        "action": "Click",
         "next": [
             "[JumpBack]Farm_Emergency_Annoying",
             "[JumpBack]Farm_Emergency_Waterwheel",
@@ -472,11 +486,14 @@
         "action": "Click",
         "post_delay": 1000,
         "next": [
-            "Farm_ChooseFertilizer"
+            "Farm_ChooseFertilizer_Harvest",
+            "Farm_ChooseFertilizer_Fast",
+            "Farm_ChooseFertilizer_Lucky",
+            "Farm_ChooseFertilizer_None"
         ]
     },
-    "Farm_ChooseFertilizer": {
-        "doc": "速生型肥料colormatch upper[152, 179, 97], lower[132, 159, 77] 丰收型肥料upper[218, 182, 52], lower[199, 166, 31] 幸运型肥料upper[237, 140, 53], lower[217, 120, 33]",
+    "Farm_ChooseFertilizer_Abandoned": {
+        "doc": "[已弃用-保留兼容] 速生型肥料colormatch upper[152, 179, 97], lower[132, 159, 77] 丰收型肥料upper[218, 182, 52], lower[199, 166, 31] 幸运型肥料upper[237, 140, 53], lower[217, 120, 33]",
         "recognition": "ColorMatch",
         "upper": [
             218,
@@ -501,6 +518,93 @@
         },
         "next": [
             "Farm_ConfirmFertilize"
+        ]
+    },
+    "Farm_ChooseFertilizer_Fast": {
+        "doc": "速生型肥料 - 加快生长速度",
+        "recognition": "ColorMatch",
+        "upper": [
+            152,
+            179,
+            97
+        ],
+        "lower": [
+            132,
+            159,
+            77
+        ],
+        "roi": [
+            373,
+            135,
+            832,
+            479
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Farm_ConfirmFertilize"
+        ]
+    },
+    "Farm_ChooseFertilizer_Harvest": {
+        "doc": "丰收型肥料 - 增加产量",
+        "recognition": "ColorMatch",
+        "upper": [
+            218,
+            182,
+            52
+        ],
+        "lower": [
+            199,
+            166,
+            31
+        ],
+        "roi": [
+            373,
+            135,
+            832,
+            479
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Farm_ConfirmFertilize"
+        ]
+    },
+    "Farm_ChooseFertilizer_Lucky": {
+        "doc": "幸运型肥料 - 增加稀有概率",
+        "recognition": "ColorMatch",
+        "upper": [
+            237,
+            140,
+            53
+        ],
+        "lower": [
+            217,
+            120,
+            33
+        ],
+        "roi": [
+            373,
+            135,
+            832,
+            479
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "Farm_ConfirmFertilize"
+        ]
+    },
+    "Farm_ChooseFertilizer_None": {
+        "doc": "所有肥料均不可用时的兜底节点",
+        "recognition": "DirectHit",
+        "action": "DoNothing",
+        "focus": {
+            "Node.Recognition.Succeeded": "[color:red]没有检测到任何可用的肥料，跳过施肥[/color]"
+        },
+        "next": [
+            "[JumpBack]ClosePage",
+            "Homeflag3"
         ]
     },
     "Farm_ConfirmFertilize": {
