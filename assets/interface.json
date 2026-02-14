@@ -97,21 +97,21 @@
             ]
         },
         {
-            "name": "深渊",
+            "name": "深渊（每日）",
             "entry": "Task_Abyss",
             "option": [
                 "深渊战斗模式选择"
             ]
         },
         {
-            "name": "幻梦之境",
+            "name": "幻梦之境（周本）",
             "entry": "taskDreamBattle",
             "option": [
                 "幻梦之境战斗模式选择"
             ]
         },
         {
-            "name": "地牢",
+            "name": "黯影地牢（赛季本）",
             "entry": "Task_Dungeon",
             "option": [
                 "地牢无尽模式设置",
@@ -178,8 +178,8 @@
             "entry": "Activityautopush"
         },
         {
-            "name": "活动战斗(春夜腾龙令)",
-            "description": "在春夜腾龙令中自动刷最后一关，需要提前手动打到最后一关",
+            "name": "活动战斗(幻梦初醒静若河)",
+            "description": "在幻梦初醒静若河中自动刷最后一关，需要提前手动打到最后一关",
             "entry": "taskActivityBattle"
         },
         {
@@ -188,8 +188,8 @@
             "entry": "taskActivityBattle_2"
         },
         {
-            "name": "活动任务收取(春夜腾龙令)",
-            "description": "在春夜腾龙令中自动进入活动商店购买目标商品、领取活动任务奖励并完成每日签到后返回主界面",
+            "name": "活动任务收取(幻梦初醒静若河)",
+            "description": "在幻梦初醒静若河中自动进入活动商店购买目标商品、领取活动任务奖励并完成每日签到后返回主界面",
             "entry": "taskActivityMission"
         },
         {
@@ -203,7 +203,7 @@
             "entry": "Task_GetStamina"
         },
         {
-            "name": "回忆深潜",
+            "name": "回忆深潜（职阶天赋本）",
             "description": "自动进入回忆深潜并自动选择目标关卡和出战队伍，按照每5关的顺序跳着打，打到战斗失败后才会退出",
             "entry": "taskMemoryDive",
             "option": [
@@ -212,16 +212,17 @@
             ]
         },
         {
-            "name": "魔物阵列",
+            "name": "魔物阵列（赛季本）",
             "description": "打完已有的所有魔物阵列次数",
             "entry": "taskMonsterColumnMatrix"
         },
         {
             "name": "自动钓鱼",
-            "description": "自动完成钓鱼流程，包括下杆、等待上钩、拉扯和QTE。需要先进入钓鱼界面并选好饵料，默认单轮执行50次。",
+            "description": "自动完成钓鱼流程，包括下杆、等待上钩、拉扯和QTE。需要先进入钓鱼界面并选好饵料，默认执行50轮，可在选项中自定义轮数。",
             "entry": "Fully_Automatic_Fishing",
             "option": [
-                "钓鱼拉扯策略"
+                "钓鱼拉扯策略",
+                "自动钓鱼轮数设置"
             ]
         }
     ],
@@ -257,6 +258,34 @@
                     }
                 }
             ]
+        },
+        "自动钓鱼轮数设置": {
+            "type": "input",
+            "label": "自动钓鱼轮数",
+            "description": "设置自动钓鱼要执行的轮数，默认 50。",
+            "inputs": [
+                {
+                    "name": "钓鱼轮数",
+                    "label": "钓鱼轮数",
+                    "description": "请输入要执行的钓鱼轮数（正整数）",
+                    "default": "50",
+                    "pipeline_type": "int",
+                    "verify": "^[1-9]\\d*$",
+                    "pattern_msg": "请输入大于0的整数轮数"
+                }
+            ],
+            "pipeline_override": {
+                "Fully_Automatic_Fishing": {
+                    "custom_action_param": {
+                        "max_rounds": "{钓鱼轮数}"
+                    }
+                },
+                "Fishing_Conservative": {
+                    "custom_action_param": {
+                        "max_rounds": "{钓鱼轮数}"
+                    }
+                }
+            }
         },
         "礼物福袋购买设置": {
             "type": "switch",

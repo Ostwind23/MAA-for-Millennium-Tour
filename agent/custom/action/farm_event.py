@@ -200,6 +200,9 @@ WINDMILL_TARGET_POS = (1118, 468)  # 风车附近目标位置（靠近修理按�
 WINDMILL_ENTRY_POS = (1033, 262)   # 右侧栅栏上方入口点（再往右为空气墙）
 FARM_WATERING_START_POS = (627, 287)  # 农场右上方默认站位，用于修理后回到浇水起点
 
+# 光照故障修理路径点
+LIGHT_TARGET_POS = (714, 242)  # 照明灯附近目标位置（到位后点击修理按钮）
+
 # 浇水相关
 WATER_BUTTON_ROI = [1022, 435, 206, 244]  # 右下角浇水按钮区域
 WATER_BUTTON_TEMPLATE = f"{_FARM_IMG_DIR}/浇水按钮.png"
@@ -1188,6 +1191,9 @@ class FarmEventHandler(CustomAction):
             elif event_type == "windmill":
                 # 风车修理
                 success = self._handle_windmill_repair(context)
+            elif event_type == "light":
+                # 光照故障修理
+                success = self._handle_light_repair(context)
             elif event_type == "watering":
                 # 全农场浇水（16坑位遍历）
                 success = self._handle_watering_all_plots(context)
@@ -2626,6 +2632,71 @@ class FarmEventHandler(CustomAction):
         
         print("\n[风车修理] 风车修理完成！")
         return True
+
+    def _handle_light_repair(self, context: Context) -> bool:
+        """
+        处理光照故障事件
+
+        流程:
+        1. 使用 YOLOv8 检测角色位置并移动到照明灯附近 [714, 242]
+        2. 检测并点击修理按钮
+        3. 调用 Sub_Getreward 获取奖励
+
+        参数:
+            context: MAA 上下文
+
+        返回:
+            bool: 是否成功完成修理
+        """
+        print("\n" + "=" * 40)
+        print("[光照修理] 开始处理光照故障事件")
+        print("=" * 40)
+
+        # 步骤 1: 移动角色到照明灯附近
+        print("\n[光照修理] 步骤 1: 移动角色到照明灯位置...")
+        if not self._move_character_to_target(context, LIGHT_TARGET_POS):
+            print("[光照修理] [ERROR] 无法移动到照明灯附近")
+            return False
+
+        # 等待界面稳定
+        time.sleep(DEFAULT_WAIT)
+
+        # 步骤 2: 检测修理按钮（原地尝试3次）
+        print("\n[光照修理] 步骤 2: 检测修理按钮...")
+        max_static_attempts = 3
+        found = False
+        box = None
+
+        print(f"[光照修理] 在当前位置尝试检测修理按钮（最多{max_static_attempts}次）...")
+        for attempt in range(max_static_attempts):
+            print(f"[光照修理] 检测尝试 {attempt + 1}/{max_static_attempts}...")
+            context.tasker.controller.post_screencap().wait()
+            image = context.tasker.controller.cached_image
+            found, box = self._check_repair_button(context, image)
+            if found:
+                print(f"[光照修理] [OK] 在原地检测到修理按钮")
+                break
+            time.sleep(0.5)
+
+        if not found:
+            print("[光照修理] [ERROR] 未检测到修理按钮")
+            return False
+
+        # 步骤 3: 点击修理按钮
+        print("\n[光照修理] 步骤 3: 点击修理按钮...")
+        if not self._click_repair_button(context, box):
+            print("[光照修理] [ERROR] 点击修理按钮失败")
+            return False
+
+        # 等待修理完成和奖励弹窗
+        time.sleep(DEFAULT_WAIT)
+
+        # 步骤 4: 获取奖励
+        print("\n[光照修理] 步骤 4: 获取奖励...")
+        self._run_sub_getreward(context)
+
+        print("\n[光照修理] 光照修理完成！")
+        return True
     
     def _handle_worm_catching(self, context: Context, params: dict) -> bool:
         """
@@ -3101,6 +3172,26 @@ class FarmWindmillRepair(FarmEventHandler):
     ) -> CustomAction.RunResult:
         # 强制设置 event_type 为 windmill
         argv.custom_action_param = json.dumps({"event_type": "windmill"})
+        return super().run(context, argv)
+
+
+class FarmLightRepair(FarmEventHandler):
+    """
+    光照故障修理专用 Action（简化调用）
+
+    Pipeline 调用示例:
+    {
+        "custom_action": "FarmLightRepair"
+    }
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        # 强制设置 event_type 为 light
+        argv.custom_action_param = json.dumps({"event_type": "light"})
         return super().run(context, argv)
 
 

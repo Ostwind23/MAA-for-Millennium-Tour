@@ -22,6 +22,7 @@ import agent_register
 
 def main():
     Toolkit.init_option("./")
+    print("Loading custom action/recognition registry from agent_register...")
     if len(sys.argv) >1:
         socket_id = sys.argv[-1]
     else:

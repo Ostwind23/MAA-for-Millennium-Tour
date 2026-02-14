@@ -30,6 +30,7 @@ from .farm_event import (
     FarmEventHandler,      # 农场事件处理器（通用入口）
     FarmWaterwheelRepair,  # 水车修理专用
     FarmWindmillRepair,    # 风车修理专用
+    FarmLightRepair,       # 光照故障修理专用
     FarmWormCatching,      # 捉虫专用
     FarmWateringAll,       # 全农场浇水专用
 )
@@ -67,6 +68,7 @@ __all__ = [
     "FarmEventHandler",
     "FarmWaterwheelRepair",
     "FarmWindmillRepair",
+    "FarmLightRepair",
     "FarmWormCatching",
     "FarmWateringAll",
     # 测试工具

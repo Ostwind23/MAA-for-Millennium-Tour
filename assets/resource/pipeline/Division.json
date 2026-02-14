@@ -234,6 +234,7 @@
         "template": [
             "farm/罢工.png",
             "farm/水车损坏.png",
+            "farm/光照故障.png",
             "farm/风车故障.png",
             "farm/捉虫标志.png"
         ],
@@ -249,6 +250,7 @@
             "[JumpBack]Farm_Emergency_Waterwheel",
             "[JumpBack]Farm_Emergency_Windmill",
             "[JumpBack]Farm_Emergency_Worms",
+            "[JumpBack]Farm_Emergency_Light",
             "Subreturn_back"
         ]
     },
@@ -261,6 +263,7 @@
             215,
             147
         ],
+        "threshold": 0.85,
         "action": "Click",
         "target": [
             622,
@@ -284,6 +287,7 @@
             172,
             93
         ],
+        "threshold": 0.85,
         "action": "Custom",
         "custom_action": "FarmWaterwheelRepair",
         "custom_action_param": {
@@ -305,6 +309,7 @@
             172,
             93
         ],
+        "threshold": 0.85,
         "action": "Custom",
         "custom_action": "FarmWindmillRepair",
         "custom_action_param": {
@@ -316,10 +321,33 @@
             "Subreturn_back"
         ]
     },
+    "Farm_Emergency_Light": {
+        "doc": "农场光照故障事件 - 使用 YOLOv8 检测角色位置，操控移动到照明灯附近修理",
+        "recognition": "TemplateMatch",
+        "template": "farm/光照故障.png",
+        "roi": [
+            1103,
+            160,
+            172,
+            93
+        ],
+        "threshold": 0.85,
+        "action": "Custom",
+        "custom_action": "FarmLightRepair",
+        "custom_action_param": {
+            "event_type": "light"
+        },
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]Sub_Getreward",
+            "Subreturn_back"
+        ]
+    },
     "Farm_Emergency_Worms": {
-        "doc": "农场捉虫事件 - 使用 YOLOv8 检测虫子和角色位置，操控移动捕捉（待实现）",
+        "doc": "农场捉虫事件 - 使用 YOLOv8 检测虫子和角色位置，操控移动捕捉",
         "recognition": "TemplateMatch",
         "template": "farm/捉虫标志.png",
+        "threshold": 0.85,
         "action": "Custom",
         "custom_action": "FarmWormCatching",
         "next": [

@@ -50,10 +50,11 @@
         "post_delay": 3000
     },
     "ClosePage": {
-        "doc": "通用关闭按钮（公告/签到/详情页等）",
+        "doc": "通用关闭按钮（公告/签到/详情页等），activity_closepage.png 适用于大部分活动公告界面，announcement.png 适用于公告界面",
         "recognition": "TemplateMatch",
         "template": [
-            "announcement.png"
+            "announcement.png",
+            "activity_closepage.png"
         ],
         "action": "Click",
         "post_delay": 1000

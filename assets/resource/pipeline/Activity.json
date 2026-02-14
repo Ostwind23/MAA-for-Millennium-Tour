@@ -53,7 +53,7 @@
         "doc": "活动关卡列表中查找最后一关（文本包含 Final），优先选择最右侧/最后一个结果",
         "recognition": "OCR",
         "expected": [
-            "旅程再启"
+            "亥猪"
         ],
         "order_by": "Horizontal",
         "index": -1,
@@ -71,7 +71,7 @@
         "doc": "活动任务收取入口任务：活动商店购买目标商品 → 活动任务全部领取 → 活动签到并关闭界面，使用 JumpBack 进行异常兜底",
         "next": [
             "[JumpBack]checkOtherActivityEntryMission",
-            "openActivityShopFromHome",
+            "[JumpBack]openActivityShopFromHome",
             "[JumpBack]Sub_Getreward",
             "[JumpBack]CloseNotification",
             "[JumpBack]ClickEmptyArea",
@@ -165,6 +165,8 @@
             "香薰蜡烛",
             "遥控骰子",
             "魂石",
+            "心海",
+            "星斑玉",
             "晶精",
             "圣文石",
             "梦幻蛛晶",
@@ -184,7 +186,7 @@
         "max_hit": 1,
         "next": [
             "[JumpBack]maxPurchase",
-            "BackButton"
+            "[JumpBack]BackButton"
         ]
     },
     "openActivityMissionEntry": {
@@ -226,10 +228,10 @@
                 "recognition": "TemplateMatch",
                 "template": "Alert.png",
                 "roi": [
-                    1143,
-                    0,
-                    138,
-                    135
+                    258,
+                    377,
+                    149,
+                    332
                 ]
             },
             {
@@ -238,10 +240,10 @@
                     "activity/activity_signin.png"
                 ],
                 "roi": [
-                    1143,
-                    0,
-                    138,
-                    135
+                    258,
+                    377,
+                    149,
+                    332
                 ]
             }
         ],
@@ -258,10 +260,10 @@
         "recognition": "TemplateMatch",
         "template": "activity/activity_signin_today.png",
         "roi": [
-            33,
-            243,
-            1212,
-            383
+            25,
+            239,
+            1225,
+            155
         ],
         "order_by": "Horizontal",
         "index": 0,

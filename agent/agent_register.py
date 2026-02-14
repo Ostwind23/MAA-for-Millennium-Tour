@@ -27,6 +27,7 @@ from custom.action import (
     FarmEventHandler,
     FarmWaterwheelRepair,
     FarmWindmillRepair,
+    FarmLightRepair,
     FarmWormCatching,
     FarmWateringAll,
     # 测试工具
@@ -87,6 +88,10 @@ AgentServer.register_custom_action("FarmWaterwheelRepair", FarmWaterwheelRepair(
 # Pipeline 调用示例: {"custom_action": "FarmWindmillRepair"}
 AgentServer.register_custom_action("FarmWindmillRepair", FarmWindmillRepair())
 
+# 光照故障修理专用 - 简化调用，无需传参
+# Pipeline 调用示例: {"custom_action": "FarmLightRepair"}
+AgentServer.register_custom_action("FarmLightRepair", FarmLightRepair())
+
 # 捉虫专用 - 简化调用（待实现）
 # Pipeline 调用示例: {"custom_action": "FarmWormCatching"}
 AgentServer.register_custom_action("FarmWormCatching", FarmWormCatching())
@@ -126,6 +131,7 @@ REGISTERED_ACTIONS = [
     "FarmEventHandler",       # 通用入口
     "FarmWaterwheelRepair",   # 水车修理
     "FarmWindmillRepair",     # 风车修理
+    "FarmLightRepair",        # 光照故障修理
     "FarmWormCatching",       # 捉虫（待实现）
     "FarmWateringAll",        # 全农场浇水
     # 测试工具

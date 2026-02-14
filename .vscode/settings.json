@@ -42,5 +42,10 @@
     },
     "python-envs.defaultEnvManager": "ms-python.python:conda",
     "python-envs.defaultPackageManager": "ms-python.python:conda",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "text": "始终使用简体中文生成 Git 提交信息。遵循约定式提交规范（Conventional Commits），类型关键词保留英文（如 feat, fix, docs），描述部分使用中文。"
+        }
+    ]
 }
